@@ -37,7 +37,6 @@ alias t := test
     cargo install cargo-binstall
     cargo binstall --no-confirm cargo-deny
     cargo binstall --no-confirm cargo-hack
-    cargo binstall --no-confirm cargo-leptos
     cargo binstall --no-confirm cargo-llvm-cov
     cargo binstall --no-confirm cargo-nextest
     cargo binstall --no-confirm cargo-shear
