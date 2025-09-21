@@ -3,21 +3,21 @@
 use std::fmt;
 use std::str::FromStr;
 
-/// [`TraceFormat`]
+/// [`EventFormat`] indicates the event formatter that should be used.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
-pub enum TraceFormat {
+pub enum EventFormat {
     /// Compact traces
+    #[default]
     Compact,
     /// Emits full verbose traces
     Full,
     /// Prettier traces
-    #[default]
     Pretty,
 }
 
-impl fmt::Display for TraceFormat {
+impl fmt::Display for EventFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let value = match self {
             Self::Compact => "compact",
@@ -28,7 +28,7 @@ impl fmt::Display for TraceFormat {
     }
 }
 
-impl FromStr for TraceFormat {
+impl FromStr for EventFormat {
     type Err = String;
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         let trace_fmt = match value {
@@ -49,20 +49,20 @@ mod tests {
     use proptest::strategy::Strategy;
     use rstest::rstest;
 
-    use super::TraceFormat;
+    use super::EventFormat;
 
     #[rstest]
-    #[case(TraceFormat::Compact, "compact")]
-    #[case(TraceFormat::Full, "full")]
-    #[case(TraceFormat::Pretty, "pretty")]
-    fn display_correct_trace_format(#[case] trace_format: TraceFormat, #[case] display: &str) {
+    #[case(EventFormat::Compact, "compact")]
+    #[case(EventFormat::Full, "full")]
+    #[case(EventFormat::Pretty, "pretty")]
+    fn display_correct_trace_format(#[case] trace_format: EventFormat, #[case] display: &str) {
         assert_that!(trace_format.to_string(), eq(display))
     }
 
     proptest! {
         #[test]
         fn parse_valid_trace_format_successfully(fmt in "compact|full|pretty") {
-            let result: Result<TraceFormat,_> = fmt.parse();
+            let result: Result<EventFormat,_> = fmt.parse();
             assert_that!(result, ok(anything()))
         }
     }
@@ -73,7 +73,7 @@ mod tests {
             fmt in "[a-zA-Z]"
             .prop_filter("Values must not be in enumerated values",
                 |fmt| !["compact", "full", "pretty"].contains(&fmt.as_str()))) {
-                let result: Result<TraceFormat, _> = fmt.parse();
+                let result: Result<EventFormat, _> = fmt.parse();
                 assert_that!(result, err(anything()))
         }
     }
