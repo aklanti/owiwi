@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  # Run CI for PRs to `main` and to release branches
+  # It also runs when pushing directly to main.
+  push:
+  pull_request:
+    branches:
+      - main
+      - 'release-*'
+
+  workflow_dispatch:
+
+  # Run full CI on the `main` branch once a day to prime the GitHub Actions
+  # caches use by PRs.
+  schedule:
+  - cron: '13 4 * * *'
+
+env:
+  # Turn warnings in to hard error
+  RUSTFLAGS: "-D warnings"
+
+  # Retry network error five times
+  CARGO_NET_RETRY: 5 
+  # Save disk space by avoiding incremental compilation
+  CARGO_INCREMENTAL: 0
+  # Turn debuginfo from 2 to 0 to save disk space
+  CARGO_PROFILE_DEV_DEBUG: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
+  # Always show colored output.
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # Check code style using `rustfmt`
+  rustfmt:
+    timeout-minutes: 10
+    name: Rustfmt check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain: [beta, stable, 1.90.0]
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v5
+      - uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1.14.1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+        
+  # Check common mistakes
+  cargo-clippy:
+    timeout-minutes: 10
+    name: Check common mistakes
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain: [beta, stable, 1.90.0]
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v5
+      - uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1.14.1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: clippy
+      - uses: taiki-e/install-action@57511bcdf8cdb0eab6448cb7fa632952d9f25742 # v2.59.1
+        with:
+          tool: just
+      - run: just clippy
+
+  
+  # Checks combinations of features flags to ensure that features are all additive
+  # as required for feature unification.
+  cargo-hack:
+    timeout-minutes: 10
+    name: Features flag combinations check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain: [stable, 1.90.0]
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v5
+      - uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1.14.1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - uses: taiki-e/install-action@57511bcdf8cdb0eab6448cb7fa632952d9f25742 # v2.59.1
+        with:
+          tool: cargo-hack, just
+      - run: just hack
+
+  # Check whether the dependencies follow the established rules 
+  cargo-deny:
+    timeout-minutes: 10
+    name: Check dependencies conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v5
+      - uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1.14.1
+        with:
+          target: wasm32-unknown-unknown
+      - uses: taiki-e/install-action@57511bcdf8cdb0eab6448cb7fa632952d9f25742 # v2.59.1
+        with:
+          tool: cargo-deny, just
+      - run: just deny
+      
+  # Check for unused dependencies
+  cargo-shear:
+    timeout-minutes: 10
+    name: Check unused dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v5
+      - uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1.14.1
+      - uses: taiki-e/install-action@57511bcdf8cdb0eab6448cb7fa632952d9f25742 # v2.59.1
+        with:
+          tool: cargo-shear, just
+      - run: just shear
+
+  # Execute tests
+  cargo-tests:
+    timeout-minutes: 10
+    name: Run unit and integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v5
+      - uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1.14.1
+      - uses: taiki-e/install-action@57511bcdf8cdb0eab6448cb7fa632952d9f25742 # v2.59.1
+        with:
+          tool: cargo-nextest, just
+      - run: just test
+
+  # Generate code coverage
+  coverage:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v5
+      - uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1.14.1
+      - uses: taiki-e/install-action@57511bcdf8cdb0eab6448cb7fa632952d9f25742 # v2.59.1
+        with:
+          tool: cargo-llvm-cov, just, nextest
+      - run: just cov
+
+  # Build documentations
+  docs:
+    timeout-minutes: 10
+    name: Build docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v5
+      - uses: actions-rust-lang/setup-rust-toolchain@ac90e63697ac2784f4ecfe2964e1a285c304003a # v1.14.1
+      - uses: taiki-e/install-action@57511bcdf8cdb0eab6448cb7fa632952d9f25742 # v2.59.1
+        with:
+          tool: just
+      - run: just doc 
