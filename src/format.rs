@@ -1,7 +1,11 @@
 //! This module defines the trace formatting styles
 
 use std::fmt;
+use std::io::{self, IsTerminal};
 use std::str::FromStr;
+
+use tracing_subscriber::fmt::format::{Compact, Format, Full, Pretty};
+use tracing_subscriber::fmt::time::SystemTime;
 
 /// [`EventFormat`] indicates the event formatter that should be used.
 #[non_exhaustive]
@@ -15,6 +19,30 @@ pub enum EventFormat {
     Full,
     /// Prettier traces
     Pretty,
+}
+
+impl EventFormat {
+    /// Use a less verbose compacted out format
+    pub fn compact(&self) -> Format<Compact, ()> {
+        self.full()
+            .compact()
+            .with_target(false)
+            .with_thread_ids(false)
+            .with_thread_names(false)
+            .with_file(false)
+            .with_line_number(false)
+            .without_time()
+    }
+
+    /// Uses a full formatter trace output
+    pub fn full(&self) -> Format<Full, SystemTime> {
+        Format::default().with_ansi(io::stderr().is_terminal())
+    }
+
+    /// Pretty format event output
+    pub fn pretty(&self) -> Format<Pretty, SystemTime> {
+        self.full().pretty()
+    }
 }
 
 impl fmt::Display for EventFormat {

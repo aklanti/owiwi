@@ -4,7 +4,10 @@
 use clap::Args;
 #[cfg(feature = "clap")]
 use clap_verbosity_flag::Verbosity;
+use tracing::Subscriber;
 use tracing_subscriber::filter::Directive;
+use tracing_subscriber::layer::Layer;
+use tracing_subscriber::registry::LookupSpan;
 
 use crate::format::EventFormat;
 
@@ -24,7 +27,7 @@ pub struct Owiwi {
             help_heading = "Instrumentation options",
         )
     )]
-    pub event_formatter: EventFormat,
+    pub event_format: EventFormat,
 
     #[cfg(feature = "clap")]
     #[command(flatten)]
@@ -44,4 +47,28 @@ pub struct Owiwi {
         )
     )]
     pub tracing_directives: Vec<Directive>,
+}
+
+impl Owiwi {
+    impl_fmt_layer::define_layer!("Creates a compact event formatted tracing layer" => fmt_layer_compact => compact);
+    impl_fmt_layer::define_layer!("Creates a full tracing formatting layer" => fmt_layer_full => full);
+    impl_fmt_layer::define_layer!("Creates a pretty printed event formatting layer" => fmt_layer_pretty => pretty);
+}
+///  Formatting layer module
+mod impl_fmt_layer {
+    /// Defines a new formatting layer method.
+    macro_rules! define_layer {
+        ($doc:expr => $method:ident => $format: ident) => {
+            #[doc=$doc]
+            pub fn $method<S>(&self) -> impl Layer<S>
+            where
+                S: Subscriber + for<'span> LookupSpan<'span>,
+            {
+                let format = self.event_format.$format();
+                tracing_subscriber::fmt::layer().event_format(format)
+            }
+        };
+    }
+
+    pub(super) use define_layer;
 }
