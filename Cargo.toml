@@ -10,16 +10,41 @@ clap = ["dep:clap", "dep:clap-verbosity-flag"]
 serde = ["dep:serde"]
 
 [dependencies]
+# A command line argument parser
 clap = { version = "4.5.48", optional = true, features = ["derive", "env"] }
+# Easily add a `--verbose` flag to CLI
 clap-verbosity-flag = { version = "3.0.4", optional = true }
+# A parser and formatter for std::time::{Duration, SystemTime}
 humantime = "2.3.0"
+# Serde support for humantime
 humantime-serde = "1.1.1"
+# OpenTelemetry API
+opentelemetry = "0.30.0"
+# Exporter for OpenTelemetry collector
+opentelemetry-otlp = {version =  "0.30.0", default-features = false, features = ["grpc-tonic", "trace"]}
+# OpenTelemetry Sdout exporter
+opentelemetry-stdout = "0.30.0"
+# OpenTelemetry observability framework SDK
+opentelemetry_sdk = "0.30.0"
+# A simple secret keeping library
+secrecy = {version =  "0.10.3", features = ["serde"]}
+# Serialize and deserialize data structure
 serde = { version = "1.0.226", features = ["derive"], optional = true }
+# A gRPC over HTTP/2 implementation focused on high performance, interoperability, and flexibility.
+tonic = "0.13"
+# Provides `derive(Error)``
+thiserror = "2.0.16"
+# A framework for instrumentation
 tracing = "0.1.41"
+# Utilities for implementing and composing tracing subscribers
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+# URL library, based on the WHATWG URL standard
 url = { version = "2.5.7", features = ["serde"] }
 
 [dev-dependencies]
+# A rich assertion and matcher library inspired by GoogleTest for C++
 googletest = { version = "0.14.2", features = ["proptest"] }
+# A property-based testing and shrinking library
 proptest = "1.8.0"
+# Enable fixture based testing
 rstest = "0.26.1"

@@ -35,7 +35,7 @@ impl EventFormat {
             .without_time()
     }
 
-    /// Uses a full formatter trace output
+    /// Use a full formatter trace output
     pub fn full(&self) -> Format<Full, SystemTime> {
         Format::default().with_ansi(io::stderr().is_terminal())
     }
