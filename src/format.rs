@@ -4,13 +4,13 @@ use std::fmt;
 use std::io::{self, IsTerminal};
 use std::str::FromStr;
 
-use serde::Deserialize;
 use tracing_subscriber::fmt::format::{Compact, Format, Full, Pretty};
 use tracing_subscriber::fmt::time::SystemTime;
 
 /// [`EventFormat`] indicates the event formatter that should be used.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Deserialize)]
+#[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 pub enum EventFormat {
     /// Compact traces

@@ -7,6 +7,8 @@ use url::Url;
 use super::collector::Collector;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
+
+#[cfg(feature = "clap")]
 use crate::env_vars::EnvVars;
 
 /// Tracer provider configuration options
