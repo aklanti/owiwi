@@ -5,17 +5,21 @@ edition = "2024"
 license = "MIT"
 
 [features]
-default = ["clap"]
+default = ["clap", "serde"]
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
+serde = ["dep:serde"]
 
 [dependencies]
-clap = { version = "4.5.48", optional = true, features = ["derive"] }
+clap = { version = "4.5.48", optional = true, features = ["derive", "env"] }
 clap-verbosity-flag = { version = "3.0.4", optional = true }
+humantime = "2.3.0"
+humantime-serde = "1.1.1"
+serde = { version = "1.0.226", features = ["derive"], optional = true }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
+url = { version = "2.5.7", features = ["serde"] }
 
 [dev-dependencies]
 googletest = { version = "0.14.2", features = ["proptest"] }
 proptest = "1.8.0"
 rstest = "0.26.1"
-

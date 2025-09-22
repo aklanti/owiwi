@@ -1,20 +1,18 @@
 //! This module define the instrumentation type.
 
-#[cfg(feature = "clap")]
-use clap::Args;
-#[cfg(feature = "clap")]
-use clap_verbosity_flag::Verbosity;
 use tracing::Subscriber;
 use tracing_subscriber::filter::Directive;
 use tracing_subscriber::layer::Layer;
 use tracing_subscriber::registry::LookupSpan;
 
+#[cfg(feature = "clap")]
+use crate::HELP_HEADING;
 use crate::format::EventFormat;
 
 /// Instrumentation type.
 #[must_use]
 #[derive(Clone, Debug)]
-#[cfg_attr(feature = "clap", derive(Args))]
+#[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Owiwi {
     /// The event formatter to use
     #[cfg_attr(
@@ -24,14 +22,14 @@ pub struct Owiwi {
             long,
             value_enum,
             default_value_t = Default::default(),
-            help_heading = "Instrumentation options",
+            help_heading = HELP_HEADING,
         )
     )]
     pub event_format: EventFormat,
 
     #[cfg(feature = "clap")]
     #[command(flatten)]
-    pub verbose: Verbosity,
+    pub verbose: clap_verbosity_flag::Verbosity,
 
     /// Tracing filter directives
     ///
@@ -43,7 +41,7 @@ pub struct Owiwi {
             global = true,
             value_delimiter = ',',
             num_args = 0..,
-            help_heading = "Instrumentation options",
+            help_heading = HELP_HEADING,
         )
     )]
     pub tracing_directives: Vec<Directive>,
@@ -54,13 +52,14 @@ impl Owiwi {
     impl_fmt_layer::define_layer!("Creates a full tracing formatting layer" => fmt_layer_full => full);
     impl_fmt_layer::define_layer!("Creates a pretty printed event formatting layer" => fmt_layer_pretty => pretty);
 }
+
 ///  Formatting layer module
 mod impl_fmt_layer {
     /// Defines a new formatting layer method.
     macro_rules! define_layer {
-        ($doc:expr => $method:ident => $format: ident) => {
+        ($doc:expr => $func:ident => $format: ident) => {
             #[doc=$doc]
-            pub fn $method<S>(&self) -> impl Layer<S>
+            pub fn $func<S>(&self) -> impl Layer<S>
             where
                 S: Subscriber + for<'span> LookupSpan<'span>,
             {

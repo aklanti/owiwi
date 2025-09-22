@@ -4,12 +4,13 @@ use std::fmt;
 use std::io::{self, IsTerminal};
 use std::str::FromStr;
 
+use serde::Deserialize;
 use tracing_subscriber::fmt::format::{Compact, Format, Full, Pretty};
 use tracing_subscriber::fmt::time::SystemTime;
 
 /// [`EventFormat`] indicates the event formatter that should be used.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Deserialize)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 pub enum EventFormat {
     /// Compact traces
@@ -83,22 +84,20 @@ mod tests {
     #[case(EventFormat::Compact, "compact")]
     #[case(EventFormat::Full, "full")]
     #[case(EventFormat::Pretty, "pretty")]
-    fn display_correct_trace_format(#[case] trace_format: EventFormat, #[case] display: &str) {
-        assert_that!(trace_format.to_string(), eq(display))
+    fn display_correct_trace_format(#[case] event_format: EventFormat, #[case] display: &str) {
+        assert_that!(event_format.to_string(), eq(display))
     }
 
     proptest! {
         #[test]
-        fn parse_valid_trace_format_successfully(fmt in "compact|full|pretty") {
+        fn parse_valid_event_format_successfully(fmt in "compact|full|pretty") {
             let result: Result<EventFormat,_> = fmt.parse();
             assert_that!(result, ok(anything()))
         }
-    }
 
-    proptest! {
         #[gtest]
-        fn parsing_invalid_trace_format_fails(
-            fmt in "[a-zA-Z]"
+        fn parsing_invalid_event_format_fails(
+            fmt in "[a-zA-Z]*"
             .prop_filter("Values must not be in enumerated values",
                 |fmt| !["compact", "full", "pretty"].contains(&fmt.as_str()))) {
                 let result: Result<EventFormat, _> = fmt.parse();
