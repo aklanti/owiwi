@@ -57,8 +57,9 @@ pub struct TracerProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name = "otel-exporter-timeout",
+            name = "otel-exporter-endpoint",
             long,
+            default_value = "http://127.0.0.1:4317",
             env = EnvVars::OTEL_EXPORTER_OTLP_ENDPOINT,
             help_heading = HELP_HEADING,
         ),

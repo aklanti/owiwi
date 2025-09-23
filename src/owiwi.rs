@@ -36,6 +36,7 @@ pub struct Owiwi {
     )]
     pub event_format: EventFormat,
 
+    #[expect(missing_docs, reason = "is flatten command")]
     #[cfg(feature = "clap")]
     #[command(flatten)]
     pub verbose: clap_verbosity_flag::Verbosity,

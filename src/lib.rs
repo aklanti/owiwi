@@ -8,5 +8,9 @@ pub mod format;
 pub mod owiwi;
 pub mod provider;
 
+#[doc(inline)]
+pub use owiwi::Owiwi;
+
 #[cfg(feature = "clap")]
+/// Help heading for instrumentation options
 pub const HELP_HEADING: &str = "Instrumentation options";
