@@ -7,7 +7,7 @@ description = "A library to initial tracing with opentelemetry"
 license = "MIT OR Apache-2.0"
 categories = ["development-tools::debugging", "development-tools::profiling"]
 keywords = ["opentelemetry", "tracing", "metrics"]
-repository = "https://github.com/styvane/owiwi"
+repository = "https://github.com/aklanti/owiwi"
 
 [features]
 default = ["clap", "serde"]
