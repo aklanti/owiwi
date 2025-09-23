@@ -62,7 +62,7 @@ pub struct Owiwi {
 }
 
 impl Owiwi {
-    /// Initializes the tracer
+    /// Initializes the subscriber
     pub fn init(&self, service_name: &'static str) -> Result<(), Error> {
         let filter_layer = self.filter_layer()?;
         let resource = provider::init_resource(service_name);

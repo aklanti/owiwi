@@ -1,6 +1,6 @@
 //! # Owiwi
 //!
-//! This crate define opinionated OpenTelemetry tracer and metric initialization.
+//! Provides an opinionated abstraction to initialize Opentelemetry tracer and metric.
 pub mod collector;
 pub mod env_vars;
 pub mod error;
