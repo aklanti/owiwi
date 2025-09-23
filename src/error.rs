@@ -16,4 +16,22 @@ pub enum Error {
         #[from]
         source: opentelemetry_otlp::ExporterBuildError,
     },
+    #[error("parsing RUST_LOG directives: {source}")]
+    DirectiveParseError {
+        #[from]
+        source: std::env::VarError,
+    },
+
+    #[error("expected tracing level filter")]
+    MissingTracingLevel,
+    #[error("{source}")]
+    FilterParser {
+        #[from]
+        source: tracing_subscriber::filter::ParseError,
+    },
+    #[error("{source}")]
+    SubcriberInit {
+        #[from]
+        source: tracing_subscriber::util::TryInitError,
+    },
 }

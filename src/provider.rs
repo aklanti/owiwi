@@ -2,6 +2,7 @@
 
 use std::time::Duration;
 
+use opentelemetry::Value;
 use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
 use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
 use opentelemetry_sdk::Resource;
@@ -67,7 +68,7 @@ pub struct TracerProviderOptions {
 
 impl TracerProviderOptions {
     /// Initializes the tracer
-    pub fn provider(
+    pub fn init_provider(
         &self,
         api_key: SecretString,
         resource: Resource,
@@ -93,6 +94,7 @@ impl TracerProviderOptions {
         Ok(tracer_provider)
     }
 
+    /// Initializes the exporter
     pub fn init_exporter(&self, metadata: MetadataMap) -> Result<SpanExporter, Error> {
         let exporter = SpanExporter::builder()
             .with_tonic()
@@ -102,4 +104,9 @@ impl TracerProviderOptions {
             .build()?;
         Ok(exporter)
     }
+}
+
+/// Inititalizes the resource
+pub fn init_resource(service_name: impl Into<Value>) -> Resource {
+    Resource::builder().with_service_name(service_name).build()
 }

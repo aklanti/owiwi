@@ -1,13 +1,22 @@
 //! This module define the instrumentation type.
 
+use std::env::VarError;
+use std::error::Error as _;
+
+use opentelemetry::trace::TracerProvider as _;
+use secrecy::SecretString;
 use tracing::Subscriber;
-use tracing_subscriber::filter::Directive;
-use tracing_subscriber::layer::Layer;
+use tracing_error::ErrorLayer;
+use tracing_subscriber::filter::{Directive, EnvFilter};
+use tracing_subscriber::layer::{Layer, SubscriberExt as _};
 use tracing_subscriber::registry::LookupSpan;
+use tracing_subscriber::util::SubscriberInitExt as _;
 
 #[cfg(feature = "clap")]
-use crate::HELP_HEADING;
-use crate::format::EventFormat;
+use super::HELP_HEADING;
+use super::error::Error;
+use super::format::EventFormat;
+use super::provider::{self, TracerProviderOptions};
 
 /// Instrumentation type.
 #[must_use]
@@ -45,9 +54,78 @@ pub struct Owiwi {
         )
     )]
     pub tracing_directives: Vec<Directive>,
+
+    /// Tracer provider configuration options
+    #[cfg_attr(feature = "clap", command(flatten))]
+    pub tracer_provider_options: TracerProviderOptions,
 }
 
 impl Owiwi {
+    /// Initializes the tracer
+    pub fn init(&self, service_name: &'static str) -> Result<(), Error> {
+        let filter_layer = self.filter_layer()?;
+        let resource = provider::init_resource(service_name);
+        let tracer_provider = self
+            .tracer_provider_options
+            .init_provider(SecretString::default(), resource)?;
+        let tracer = tracer_provider.tracer(service_name);
+        let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+        let registry = tracing_subscriber::registry()
+            .with(otel_layer)
+            .with(ErrorLayer::default())
+            .with(filter_layer);
+        match self.event_format {
+            EventFormat::Compact => registry.with(self.fmt_layer_compact()).try_init()?,
+            EventFormat::Full => registry.with(self.fmt_layer_full()).try_init()?,
+            EventFormat::Pretty => registry.with(self.fmt_layer_pretty()).try_init()?,
+        }
+        Ok(())
+    }
+    /// Creates a the filter layer
+    #[tracing::instrument]
+    pub fn filter_layer(&self) -> Result<EnvFilter, Error> {
+        let mut layer = match EnvFilter::try_from_default_env() {
+            Ok(layer) => layer,
+            Err(err) => {
+                if let Some(source) = err.source() {
+                    match source.downcast_ref::<VarError>() {
+                        Some(VarError::NotPresent) => (),
+                        Some(err) => {
+                            tracing::error!("{err:?}");
+                            return Err(Error::DirectiveParseError {
+                                source: err.clone(),
+                            });
+                        }
+                        None => unreachable!(),
+                    }
+                }
+                if self.tracing_directives.is_empty() {
+                    #[cfg(feature = "clap")]
+                    let level = self
+                        .verbose
+                        .tracing_level()
+                        .ok_or_else(|| Error::MissingTracingLevel)?;
+
+                    #[cfg(not(feature = "clap"))]
+                    let level = tracing::Level::INFO;
+
+                    EnvFilter::try_new(format!(
+                        "{}={}",
+                        env!("CARGO_PKG_NAME").replace('-', "_"),
+                        level.as_str()
+                    ))?
+                } else {
+                    EnvFilter::try_new("")?
+                }
+            }
+        };
+
+        for directive in &self.tracing_directives {
+            layer = layer.add_directive(directive.clone());
+        }
+        Ok(layer)
+    }
+
     impl_fmt_layer::define_layer!("Creates a compact event formatted tracing layer" => fmt_layer_compact => compact);
     impl_fmt_layer::define_layer!("Creates a full tracing formatting layer" => fmt_layer_full => full);
     impl_fmt_layer::define_layer!("Creates a pretty printed event formatting layer" => fmt_layer_pretty => pretty);
