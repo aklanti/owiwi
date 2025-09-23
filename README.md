@@ -1,3 +1,4 @@
+Owiwi is a library for initializing tracing subscriber with OpenTelemetry
 
 ![LICENSE-MIT](https://img.shields.io/badge/license-MIT-blue)
 

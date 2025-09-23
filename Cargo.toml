@@ -1,9 +1,9 @@
 [package]
 name = "owiwi"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["Sede Soukossi"]
-description = "A library to initial tracing with opentelemetry"
+description = "A library to initialize tracing with opentelemetry"
 license = "MIT OR Apache-2.0"
 categories = ["development-tools::debugging", "development-tools::profiling"]
 keywords = ["opentelemetry", "tracing", "metrics"]
@@ -57,9 +57,6 @@ googletest = { version = "0.14", features = ["proptest"] }
 proptest = "1.8.0"
 # Enable fixture based testing
 rstest = "0.26"
-
-
-
 
 [lints.clippy]
 allow_attributes_without_reason = "warn"
