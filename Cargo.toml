@@ -1,6 +1,6 @@
 [package]
 name = "owiwi"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 authors = ["Sede Soukossi"]
 description = "A library to initialize tracing with opentelemetry"
@@ -12,10 +12,13 @@ rust-version = "1.90.0"
 
 [features]
 default = ["clap", "serde"]
+bon = ["dep:bon"]
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
 serde = ["dep:serde"]
 
 [dependencies]
+# Compile-time-checked builder generator
+bon = { version = "3.7.2", optional = true }
 # A command line argument parser
 clap = { version = "4.5", optional = true, features = ["derive", "env"] }
 # Easily add a `--verbose` flag to CLI

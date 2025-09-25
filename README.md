@@ -25,7 +25,7 @@ To use `owiwi`, add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-owiwi = "0.1"
+owiwi = "0.2"
 tracing = "0.1"
 ```
 
@@ -56,6 +56,12 @@ async fn main() {
 }
 ```
 
+The optional `bon` feature allows initializing the subscriber with non default exporter.
+
+## Optional features
+By default `owiwi` depends on `clap` and `serde`. There are optional features that enable 
+- `bon` adds [`bon::Builder`](https://docs.rs/bon/latest/bon/derive.Builder.html) implementation for [`TracerProviderOptions`](https://docs.rs/owiwi/latest/owiwi/provider/struct.TracerProviderOptions.html) and [`Owiwi`](https://docs.rs/owiwi/latest/owiwi/struct.Owiwi.html)
+
 ## Supported Rust Versions
 `Owiwi` currently only support the latest stable version.
 
@@ -69,3 +75,5 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in Owiwi by you, shall be licensed as MIT, without any additional
 terms or conditions.
 
+### Acknowledgments
+This project was inspired by this [blog](https://determinate.systems/blog/instrumenting-axum/) post.

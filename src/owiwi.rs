@@ -21,6 +21,7 @@ use super::provider::{self, TracerProviderOptions};
 /// Instrumentation type.
 #[must_use]
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "bon", derive(bon::Builder))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Owiwi {
     /// The event formatter to use
