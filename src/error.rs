@@ -1,7 +1,7 @@
 //! Error module
 use tonic::metadata::errors::InvalidMetadataValue;
 
-/// [`Result`] is an alias for std::result::Result with `Error` as error type.
+/// [`Result`] is an alias for [`std::result::Result`] with `Error` as error type.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// The error type for subcriber initialization operations.

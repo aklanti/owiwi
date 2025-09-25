@@ -3,6 +3,10 @@
 use std::fmt;
 use std::str::FromStr;
 
+use secrecy::SecretString;
+use serde::Deserialize;
+use url::Url;
+
 /// This type enumerates the telemetry exporters
 #[non_exhaustive]
 #[derive(Clone, Debug, Default)]
@@ -45,6 +49,26 @@ impl FromStr for Collector {
     }
 }
 
+/// Collector configuration data
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Deserialize))]
+pub enum ExporterConfig {
+    /// This is Jaeger's configuration data
+    #[serde(rename(deserialize = "jaeger"))]
+    Jaeger {
+        /// Connection endpoint
+        endpoint: Url,
+    },
+    /// This is the configuration data for honeycomb.io
+    #[serde(rename(deserialize = "honeycomb"))]
+    Honeycomb {
+        /// Connection endpoint
+        endpoint: Url,
+        /// API Key
+        api_key: SecretString,
+    },
+}
+
 #[cfg(test)]
 mod tests {
     use googletest::matchers::{anything, eq, err, ok};
@@ -68,7 +92,7 @@ mod tests {
         #[gtest]
         fn parse_valid_collector_from_string_successfully(value in "console|honeycomb|jaeger") {
             let result: Result<Collector,_> = value.parse();
-            assert_that!(result,ok(anything()))
+            assert_that!(result,ok(anything()));
         }
 
         #[gtest]
@@ -77,7 +101,7 @@ mod tests {
                 .prop_filter("Value must be a valid variant",
                     |v| !["console", "honeycomb", "jaeger"].contains(&v.as_str()))) {
             let result: Result<Collector,_> = value.parse();
-            assert_that!(result,err(anything()))
+            assert_that!(result,err(anything()));
         }
     }
 }

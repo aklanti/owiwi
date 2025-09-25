@@ -4,6 +4,7 @@ use std::env::VarError;
 use std::error::Error as _;
 
 use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_sdk::trace::SdkTracerProvider;
 use secrecy::SecretString;
 use tracing::Subscriber;
 use tracing_error::ErrorLayer;
@@ -21,7 +22,6 @@ use super::provider::{self, TracerProviderOptions};
 /// Instrumentation type.
 #[must_use]
 #[derive(Clone, Debug)]
-#[cfg_attr(feature = "bon", derive(bon::Builder))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Owiwi {
     /// The event formatter to use
@@ -63,13 +63,13 @@ pub struct Owiwi {
 }
 
 impl Owiwi {
-    /// Initializes the subscriber
-    pub fn init(&self, service_name: &'static str) -> Result<(), Error> {
+    /// Initializes the tracer
+    pub fn init(&self, service_name: &'static str) -> Result<OwiwiGuard, Error> {
         let filter_layer = self.filter_layer()?;
         let resource = provider::init_resource(service_name);
         let tracer_provider = self
             .tracer_provider_options
-            .init_provider(SecretString::default(), resource)?;
+            .init_provider(&SecretString::default(), resource)?;
         let tracer = tracer_provider.tracer(service_name);
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         let registry = tracing_subscriber::registry()
@@ -81,7 +81,7 @@ impl Owiwi {
             EventFormat::Full => registry.with(self.fmt_layer_full()).try_init()?,
             EventFormat::Pretty => registry.with(self.fmt_layer_pretty()).try_init()?,
         }
-        Ok(())
+        Ok(OwiwiGuard { tracer_provider })
     }
     /// Creates a the filter layer
     #[tracing::instrument]
@@ -150,4 +150,19 @@ mod impl_fmt_layer {
     }
 
     pub(super) use define_layer;
+}
+
+/// Owiwi guard
+#[derive(Debug)]
+pub struct OwiwiGuard {
+    /// SDK tracer provider
+    tracer_provider: SdkTracerProvider,
+}
+
+impl Drop for OwiwiGuard {
+    fn drop(&mut self) {
+        if let Err(err) = self.tracer_provider.shutdown() {
+            tracing::error!("failed to shutdown tracer provider {err}");
+        }
+    }
 }

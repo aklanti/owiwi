@@ -24,6 +24,7 @@ pub enum EventFormat {
 
 impl EventFormat {
     /// Use a less verbose compacted out format
+    #[must_use]
     pub fn compact(&self) -> Format<Compact, ()> {
         self.full()
             .compact()
@@ -36,11 +37,13 @@ impl EventFormat {
     }
 
     /// Use a full formatter trace output
+    #[must_use]
     pub fn full(&self) -> Format<Full, SystemTime> {
         Format::default().with_ansi(io::stderr().is_terminal())
     }
 
     /// Pretty format event output
+    #[must_use]
     pub fn pretty(&self) -> Format<Pretty, SystemTime> {
         self.full().pretty()
     }
@@ -85,14 +88,14 @@ mod tests {
     #[case(EventFormat::Full, "full")]
     #[case(EventFormat::Pretty, "pretty")]
     fn display_correct_trace_format(#[case] event_format: EventFormat, #[case] display: &str) {
-        assert_that!(event_format.to_string(), eq(display))
+        assert_that!(event_format.to_string(), eq(display));
     }
 
     proptest! {
         #[test]
         fn parse_valid_event_format_successfully(fmt in "compact|full|pretty") {
             let result: Result<EventFormat,_> = fmt.parse();
-            assert_that!(result, ok(anything()))
+            assert_that!(result, ok(anything()));
         }
 
         #[gtest]
@@ -101,7 +104,7 @@ mod tests {
             .prop_filter("Values must not be in enumerated values",
                 |fmt| !["compact", "full", "pretty"].contains(&fmt.as_str()))) {
                 let result: Result<EventFormat, _> = fmt.parse();
-                assert_that!(result, err(anything()))
+                assert_that!(result, err(anything()));
         }
     }
 }

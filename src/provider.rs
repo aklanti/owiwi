@@ -72,7 +72,7 @@ impl TracerProviderOptions {
     /// Initializes the tracer
     pub fn init_provider(
         &self,
-        api_key: SecretString,
+        api_key: &SecretString,
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
