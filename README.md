@@ -1,11 +1,25 @@
-![LICENSE-MIT](https://img.shields.io/badge/license-MIT-blue)
+[![Crates.io][crates-badge]][crates-url]
+[![Documentation][docs-badge]][docs-url]
+[![MIT licensed][mit-badge]][mit-license]
+[![Build Status][actions-badge]][actions-url]
 
-# Overview
+[crates-badge]: https://img.shields.io/crates/v/owiwi
+[crates-url]: https://crates.io/crates/owiwi
+[docs-badge]: https://img.shields.io/docsrs/owiwi/latest
+[docs-url]: https://docs.rs/owiwi/latest/owiwi/
+[mit-badge]: https://img.shields.io/badge/license-MIT-blue
+[mit-license]: LICENSE
+[actions-badge]: https://github.com/aklanti/owiwi/workflows/CI/badge.svg
+[actions-url]: https://github.com/aklanti/owiwi/actions/workflows/main.yaml
+
+
+
+## Overview
 
 Owiwi is a library for initializing tracing subscriber with OpenTelemetry
 
 
-# Usage
+## Usage
 
 To use `owiwi`, add the following to your `Cargo.toml`
 
@@ -19,11 +33,12 @@ Then initiate the subscriber using the `init()` method
 
 ```rust
 use owiwi::Owiwi
-use tracing::info;
 
 fn main() {
+  // Initialize the subscriber with an exporter that prints telemetry
+  // (logs, metrics and traces) to the standard output.
   Owiwi::init("demo-service");
-  info!("All good!");
+  tracing::info!("All good!");
 }
 ```
 
@@ -34,12 +49,14 @@ use owiwi::Owiwi
 use tracing::info;
 
 async fn main() {
+  // Initialize the subscriber with an exporter that prints telemetry
+  // (logs, metrics and traces) to the standard output.
   Owiwi::init("demo-service");
-  info!("All good!");
+  tracing::info!("All good!");
 }
 ```
 
-# Supported Rust Versions
+## Supported Rust Versions
 `Owiwi` currently only support the latest stable version.
 
 ## License

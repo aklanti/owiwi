@@ -8,6 +8,7 @@ license = "MIT"
 categories = ["development-tools::debugging", "development-tools::profiling"]
 keywords = ["opentelemetry", "tracing", "metrics"]
 repository = "https://github.com/aklanti/owiwi"
+rust-version = "1.90.0"
 
 [features]
 default = ["clap", "serde"]
