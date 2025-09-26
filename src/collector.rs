@@ -4,7 +4,6 @@ use std::fmt;
 use std::str::FromStr;
 
 use secrecy::SecretString;
-use serde::Deserialize;
 use url::Url;
 
 /// This type enumerates the telemetry exporters
@@ -51,16 +50,16 @@ impl FromStr for Collector {
 
 /// Collector configuration data
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub enum ExporterConfig {
     /// This is Jaeger's configuration data
-    #[serde(rename(deserialize = "jaeger"))]
+    #[cfg_attr(feature = "serde", serde(rename(deserialize = "jaeger")))]
     Jaeger {
         /// Connection endpoint
         endpoint: Url,
     },
     /// This is the configuration data for honeycomb.io
-    #[serde(rename(deserialize = "honeycomb"))]
+    #[cfg_attr(feature = "serde", serde(rename(deserialize = "honeycomb")))]
     Honeycomb {
         /// Connection endpoint
         endpoint: Url,
