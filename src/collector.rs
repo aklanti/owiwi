@@ -71,6 +71,20 @@ pub enum ExporterConfig {
     },
 }
 
+impl ExporterConfig {
+    /// Construct a new Honeycomb configuration
+    #[must_use]
+    pub fn from_honeycomb(endpoint: Url, api_key: SecretString) -> Self {
+        Self::Honeycomb { endpoint, api_key }
+    }
+
+    /// Construct a new Jaeger configuration
+    #[must_use]
+    pub fn from_jaeger(endpoint: Url) -> Self {
+        Self::Jaeger { endpoint }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use googletest::matchers::{anything, eq, err, ok};

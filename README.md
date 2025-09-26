@@ -56,12 +56,9 @@ async fn main() {
 }
 ```
 
-The optional `bon` feature allows initializing the subscriber with non default exporter.
-
 ## Optional features
 By default `owiwi` depends on `clap` and `serde`. There are optional features that enable 
-- `bon` adds [`bon::Builder`](https://docs.rs/bon/latest/bon/derive.Builder.html) implementation for [`TracerProviderOptions`](https://docs.rs/owiwi/latest/owiwi/provider/struct.TracerProviderOptions.html) and [`Owiwi`](https://docs.rs/owiwi/latest/owiwi/struct.Owiwi.html)
-
+- `bon` adds [`bon::Builder`][bon-builder-url] implementation for [`TracerProviderOptions`][tracer-provider-doc] and [`Owiwi`][owiwi-doc]
 ## Supported Rust Versions
 `Owiwi` currently only support the latest stable version.
 
@@ -76,4 +73,10 @@ for inclusion in Owiwi by you, shall be licensed as MIT, without any additional
 terms or conditions.
 
 ### Acknowledgments
-This project was inspired by this [blog](https://determinate.systems/blog/instrumenting-axum/) post.
+This project was inspired by this [blog][instrumenting-axum] post.
+
+
+[bon-builder-url]: https://docs.rs/bon/latest/bon/derive.Builder.html
+[tracer-provider-doc]: https://docs.rs/owiwi/latest/owiwi/provider/struct.TracerProviderOptions.html 
+[owiwi-doc]: https://docs.rs/owiwi/latest/owiwi/struct.Owiwi.html
+[instrumenting-axum]: https://determinate.systems/blog/instrumenting-axum/ 
