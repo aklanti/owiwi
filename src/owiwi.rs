@@ -94,7 +94,7 @@ impl Owiwi {
                         Some(VarError::NotPresent) => (),
                         Some(err) => {
                             tracing::error!("{err:?}");
-                            return Err(Error::DirectiveParseError {
+                            return Err(Error::ParseDirectiveError {
                                 source: err.clone(),
                             });
                         }
@@ -106,7 +106,7 @@ impl Owiwi {
                     let level = self
                         .verbose
                         .tracing_level()
-                        .ok_or_else(|| Error::MissingTracingLevel)?;
+                        .ok_or_else(|| Error::TraceLevelMissing)?;
 
                     #[cfg(not(feature = "clap"))]
                     let level = tracing::Level::INFO;
