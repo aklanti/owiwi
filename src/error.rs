@@ -1,7 +1,9 @@
 //! Error module
 use tonic::metadata::errors::InvalidMetadataValue;
 
-/// [`Result`] is an alias for [`std::result::Result`] with `Error` as error type.
+/// A specialized [`std::result::Result`] type for telemetry setup operation.
+///
+/// This type is  used to avoid writing out [`owiwi::Error`](crate::Error);
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// The error type for subcriber initialization operations.
