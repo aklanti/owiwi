@@ -49,9 +49,12 @@ impl FromStr for Collector {
 }
 
 /// Collector configuration data
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub enum ExporterConfig {
+    /// This is the default configuration representing `std::io::stdout`
+    #[default]
+    Console,
     /// This is Jaeger's configuration data
     #[cfg_attr(feature = "serde", serde(rename(deserialize = "jaeger")))]
     Jaeger {
