@@ -5,7 +5,6 @@ use std::error::Error as _;
 
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_sdk::trace::SdkTracerProvider;
-use secrecy::SecretString;
 use tracing::Subscriber;
 use tracing_error::ErrorLayer;
 use tracing_subscriber::filter::{Directive, EnvFilter};
@@ -18,6 +17,8 @@ use super::HELP_HEADING;
 use super::error::Error;
 use super::format::EventFormat;
 use super::provider::{self, TracerProviderOptions};
+
+use crate::collector::ExporterConfig;
 
 /// Instrumentation type.
 #[must_use]
@@ -64,12 +65,16 @@ pub struct Owiwi {
 
 impl Owiwi {
     /// Initializes the tracer
-    pub fn init(&self, service_name: &'static str) -> Result<OwiwiGuard, Error> {
+    pub fn init(
+        &self,
+        service_name: &'static str,
+        exporter_config: ExporterConfig,
+    ) -> Result<OwiwiGuard, Error> {
         let filter_layer = self.filter_layer()?;
         let resource = provider::init_resource(service_name);
         let tracer_provider = self
             .tracer_provider_options
-            .init_provider(&SecretString::default(), resource)?;
+            .init_provider(exporter_config, resource)?;
         let tracer = tracer_provider.tracer(service_name);
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         let registry = tracing_subscriber::registry()

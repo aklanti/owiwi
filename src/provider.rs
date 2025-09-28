@@ -7,10 +7,10 @@ use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
 use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::ExposeSecret;
 use url::Url;
 
-use super::collector::Collector;
+use super::collector::{Collector, ExporterConfig};
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 #[cfg(feature = "clap")]
@@ -72,7 +72,7 @@ impl TracerProviderOptions {
     /// Initializes the tracer
     pub fn init_provider(
         &self,
-        api_key: &SecretString,
+        exporter_config: ExporterConfig,
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
@@ -82,7 +82,13 @@ impl TracerProviderOptions {
                 .build(),
             Collector::Honeycomb => {
                 let mut metadata = MetadataMap::with_capacity(1);
-                metadata.insert("x-honeycomb-team", api_key.expose_secret().try_into()?);
+                let config = exporter_config
+                    .honeycomb()
+                    .ok_or(Error::ExportConfigError)?;
+                metadata.insert(
+                    "x-honeycomb-team",
+                    config.api_key.expose_secret().try_into()?,
+                );
                 let exporter = self.init_exporter(metadata)?;
                 provider_builder.with_batch_exporter(exporter).build()
             }

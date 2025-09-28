@@ -57,32 +57,68 @@ pub enum ExporterConfig {
     Console,
     /// This is Jaeger's configuration data
     #[cfg_attr(feature = "serde", serde(rename(deserialize = "jaeger")))]
-    Jaeger {
-        /// Connection endpoint
-        endpoint: Url,
-    },
+    Jaeger(JaegerExporter),
     /// This is the configuration data for honeycomb.io
     #[cfg_attr(feature = "serde", serde(rename(deserialize = "honeycomb")))]
-    Honeycomb {
-        /// Connection endpoint
-        endpoint: Url,
-        /// API Key
-        api_key: SecretString,
-    },
+    Honeycomb(HoneycombExporter),
 }
 
 impl ExporterConfig {
-    /// Construct a new Honeycomb configuration
+    /// Convert the `ExporterConfig` to an `Option<HoneycombExporter>`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use owiwi::collector::{ExporterConfig, HoneycombExporter};
+    /// let honey_config = HoneycombExporter {endpoint: "https://honeycom.io".parse()?, api_key: "".into()};
+    /// let exporter_config = ExporterConfig::Honeycomb(honey_config.clone());
+    /// assert!(exporter_config.honeycomb().is_some_and(|config| config.endpoint == honey_config.endpoint));
+    /// # Ok::<_, Box<dyn std::error::Error>>(())
+    /// ```
     #[must_use]
-    pub fn from_honeycomb(endpoint: Url, api_key: SecretString) -> Self {
-        Self::Honeycomb { endpoint, api_key }
+    pub fn honeycomb(self) -> Option<HoneycombExporter> {
+        match self {
+            Self::Honeycomb(config) => Some(config),
+            _ => None,
+        }
     }
 
-    /// Construct a new Jaeger configuration
+    /// Convert the `ExporterConfig` to an `Option<JaegerExporter>`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use owiwi::collector::{ExporterConfig, JaegerExporter};
+    /// let jaeger_config = JaegerExporter{endpoint: "http://localhost:4317".parse()?};
+    /// let exporter_config = ExporterConfig::Jaeger(jaeger_config.clone());
+    /// assert!(exporter_config.jaeger().is_some_and(|config| config.endpoint == jaeger_config.endpoint));
+    /// # Ok::<_, Box<dyn std::error::Error>>(())
+    /// ```
     #[must_use]
-    pub fn from_jaeger(endpoint: Url) -> Self {
-        Self::Jaeger { endpoint }
+    pub fn jaeger(self) -> Option<JaegerExporter> {
+        match self {
+            Self::Jaeger(config) => Some(config),
+            _ => None,
+        }
     }
+}
+
+/// This is the configuration data for honeycomb.io
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+pub struct HoneycombExporter {
+    /// Connection endpoint
+    pub endpoint: Url,
+    /// API Key
+    pub api_key: SecretString,
+}
+
+/// This is the configuration data for Jaeger
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+pub struct JaegerExporter {
+    /// Connection endpoint
+    pub endpoint: Url,
 }
 
 #[cfg(test)]
@@ -93,7 +129,7 @@ mod tests {
     use proptest::strategy::Strategy;
     use rstest::rstest;
 
-    use super::Collector;
+    use super::{Collector, ExporterConfig, HoneycombExporter, JaegerExporter};
 
     #[gtest]
     #[rstest]
@@ -119,5 +155,43 @@ mod tests {
             let result: Result<Collector,_> = value.parse();
             assert_that!(result,err(anything()));
         }
+    }
+
+    #[test]
+    fn get_honeycomb_config() {
+        let honey_config = HoneycombExporter {
+            endpoint: "https://honeycom.io"
+                .parse()
+                .expect("it's a well formatter URL"),
+            api_key: "".into(),
+        };
+        let exporter_config = ExporterConfig::Honeycomb(honey_config.clone());
+        assert!(
+            exporter_config
+                .honeycomb()
+                .is_some_and(|config| config.endpoint == honey_config.endpoint)
+        );
+    }
+
+    #[test]
+    fn get_jaeger_config() {
+        let jaeger_config = JaegerExporter {
+            endpoint: "https://127.0.0.1:4317"
+                .parse()
+                .expect("it's a well formatter URL"),
+        };
+        let exporter_config = ExporterConfig::Jaeger(jaeger_config.clone());
+        assert!(
+            exporter_config
+                .jaeger()
+                .is_some_and(|config| config.endpoint == jaeger_config.endpoint)
+        );
+    }
+
+    #[test]
+    fn console_does_not_have_config() {
+        let exporter_config = ExporterConfig::Console;
+        assert!(exporter_config.clone().honeycomb().is_none());
+        assert!(exporter_config.jaeger().is_none());
     }
 }
