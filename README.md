@@ -3,36 +3,36 @@
 [![MIT licensed][mit-badge]][mit-license]
 [![Build Status][actions-badge]][actions-url]
 
-[crates-badge]: https://img.shields.io/crates/v/owiwi
-[crates-url]: https://crates.io/crates/owiwi
-[docs-badge]: https://img.shields.io/docsrs/owiwi/latest
-[docs-url]: https://docs.rs/owiwi/latest/owiwi/
+[crates-badge]: https://img.shields.io/crates/v/owiwi-tracing-opentelemetry
+[crates-url]: https://crates.io/crates/owiwi-tracing-opentelemetry
+[docs-badge]: https://img.shields.io/docsrs/owiwi-tracing-opentelemetry/latest
+[docs-url]: https://docs.rs/owiwi/latest/owiwi-tracing-opentelemetry/
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue
 [mit-license]: LICENSE
-[actions-badge]: https://github.com/aklanti/owiwi/workflows/CI/badge.svg
-[actions-url]: https://github.com/aklanti/owiwi/actions/workflows/main.yaml
+[actions-badge]: https://github.com/aklanti/owiwi-tracing-opentelemetry/workflows/CI/badge.svg
+[actions-url]: https://github.com/aklanti/owiwi-tracing-opentelemetry/actions/workflows/main.yaml
 
 
 
 ## Overview
 
-Owiwi is a library for initializing tracing subscriber with OpenTelemetry
+`owiwi-tracing-opentelemetry` is a library for initializing tracing subscriber with OpenTelemetry
 
 
 ## Usage
 
-To use `owiwi`, add the following to your `Cargo.toml`
+To use `owiwi-tracing-opentelemetry`, add the following to your `Cargo.toml`
 
 ```toml
 [dependencies]
-owiwi = "0.2"
+owiwi-tracing-opentelemtry = "0.1"
 tracing = "0.1"
 ```
 
 Then initiate the subscriber using the `init()` method
 
 ```rust
-use owiwi::Owiwi
+use owiwi_tracing_opentelemetry::Owiwi
 
 fn main() {
   // Initialize the subscriber with an exporter that prints telemetry
@@ -45,7 +45,7 @@ fn main() {
 You can also initialize the subscriber in asynchronous code.
 
 ```rust
-use owiwi::Owiwi
+use owiwi_tracing_opentelemetry::Owiwi
 use tracing::info;
 
 async fn main() {
