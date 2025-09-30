@@ -77,7 +77,4 @@ terms or conditions.
 This project was inspired by this [blog][instrumenting-axum] post.
 
 
-[bon-builder-url]: https://docs.rs/bon/latest/bon/derive.Builder.html
-[tracer-provider-doc]: https://docs.rs/owiwi/latest/owiwi/provider/struct.TracerProviderOptions.html 
-[owiwi-doc]: https://docs.rs/owiwi/latest/owiwi/struct.Owiwi.html
 [instrumenting-axum]: https://determinate.systems/blog/instrumenting-axum/ 

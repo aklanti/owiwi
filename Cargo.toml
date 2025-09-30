@@ -1,13 +1,13 @@
 [package]
 name = "owiwi-tracing-opentelemetry"
-version = "0.3.0"
+version = "0.1.0"
 edition = "2024"
 authors = ["Sede Soukossi"]
 description = "A library to initialize tracing with opentelemetry"
 license = "MIT"
 categories = ["development-tools::debugging", "development-tools::profiling"]
 keywords = ["opentelemetry", "tracing", "metrics"]
-repository = "https://github.com/aklanti/owiwi"
+repository = "https://github.com/aklanti/owiwi-tracing-opentelemetry"
 rust-version = "1.90.0"
 
 [features]
