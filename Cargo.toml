@@ -1,5 +1,5 @@
 [package]
-name = "owiwi"
+name = "owiwi-tracing-opentelemetry"
 version = "0.3.0"
 edition = "2024"
 authors = ["Sede Soukossi"]
@@ -12,13 +12,12 @@ rust-version = "1.90.0"
 
 [features]
 default = ["clap", "serde"]
-bon = ["dep:bon"]
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
 serde = ["dep:serde"]
 
 [dependencies]
 # Compile-time-checked builder generator
-bon = { version = "3.7.2", optional = true }
+bon = "3.7.2"
 # A command line argument parser
 clap = { version = "4.5", optional = true, features = ["derive", "env"] }
 # Easily add a `--verbose` flag to CLI
@@ -30,11 +29,11 @@ humantime-serde = "1.1.1"
 # OpenTelemetry API
 opentelemetry = "0.30.0"
 # Exporter for OpenTelemetry collector
-opentelemetry-otlp = { version = "0.30.0", default-features = false, features = ["grpc-tonic", "trace"] }
+opentelemetry-otlp = { version = "0.30.0", default-features = false, features = ["grpc-tonic", "trace", "tls-roots", "tls"] }
 # OpenTelemetry Sdout exporter
 opentelemetry-stdout = "0.30.0"
 # OpenTelemetry observability framework SDK
-opentelemetry_sdk = "0.30.0"
+opentelemetry_sdk = { version = "0.30.0", features = ["rt-tokio"] }
 # A simple secret keeping library
 secrecy = { version = "0.10", features = ["serde"] }
 # Serialize and deserialize data structure
@@ -42,7 +41,7 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 # Provides `derive(Error)``
 thiserror = "2.0"
 # A gRPC over HTTP/2 implementation focused on high performance, interoperability, and flexibility.
-tonic = "0.13"
+tonic = {version = "0.13", features = ["tls-aws-lc"] }
 # A framework for instrumentation
 tracing = "0.1"
 # Utilities for enriching error handling with tracing diagnostic information.

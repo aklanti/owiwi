@@ -16,9 +16,9 @@ pub enum Error {
         #[from]
         source: opentelemetry_otlp::ExporterBuildError,
     },
-    /// Exporter configuration error
-    #[error("exporter configuration error")]
-    ExportConfigError,
+    /// Collector configuration error
+    #[error("collector configuration error")]
+    CollectorConfigError,
     /// The subscriber initialization failed.
     #[error("{source}")]
     InitSubscriberError {
@@ -50,4 +50,7 @@ pub enum Error {
     /// The log or level or trace directive is not set.
     #[error("expected tracing level filter")]
     TraceLevelMissing,
+    /// Unsupported collector
+    #[error("unsupported collector")]
+    UnsupportedCollectorKind,
 }

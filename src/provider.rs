@@ -2,15 +2,14 @@
 
 use std::time::Duration;
 
+use bon::Builder;
 use opentelemetry::Value;
-use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
-use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
+use opentelemetry_otlp::SpanExporter;
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
-use secrecy::ExposeSecret;
 use url::Url;
 
-use super::collector::{Collector, ExporterConfig};
+use super::collector::{Collector, CollectorConfig};
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 #[cfg(feature = "clap")]
@@ -19,8 +18,7 @@ use crate::error::Error;
 
 /// Tracer provider configuration options
 #[must_use]
-#[derive(Clone, Debug)]
-#[cfg_attr(feature = "bon", derive(bon::Builder))]
+#[derive(Clone, Debug, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct TracerProviderOptions {
@@ -48,11 +46,10 @@ pub struct TracerProviderOptions {
             name = "otel-exporter-timeout",
             long,
             value_parser = humantime::parse_duration,
-            default_value = "10s",
             help_heading = HELP_HEADING,
         )
     )]
-    pub exporter_timeout: Duration,
+    pub exporter_timeout: Option<Duration>,
 
     /// Set exporter endpoint
     #[cfg_attr(
@@ -60,19 +57,18 @@ pub struct TracerProviderOptions {
         arg(
             name = "otel-exporter-endpoint",
             long,
-            default_value = "http://127.0.0.1:4317",
             env = EnvVars::OTEL_EXPORTER_OTLP_ENDPOINT,
             help_heading = HELP_HEADING,
         ),
     )]
-    pub exporter_endpoint: Url,
+    pub exporter_endpoint: Option<Url>,
 }
 
 impl TracerProviderOptions {
     /// Initializes the tracer
     pub fn init_provider(
         &self,
-        exporter_config: ExporterConfig,
+        collector_config: CollectorConfig,
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
@@ -81,36 +77,39 @@ impl TracerProviderOptions {
                 .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
                 .build(),
             Collector::Honeycomb => {
-                let mut metadata = MetadataMap::with_capacity(1);
-                let config = exporter_config
+                let mut config = collector_config
                     .honeycomb()
-                    .ok_or(Error::ExportConfigError)?;
-                metadata.insert(
-                    "x-honeycomb-team",
-                    config.api_key.expose_secret().try_into()?,
-                );
-                let exporter = self.init_exporter(metadata)?;
+                    .ok_or(Error::CollectorConfigError)?;
+
+                if let Some(endpoint) = self.exporter_endpoint.clone() {
+                    config.endpoint = endpoint;
+                }
+
+                if let Some(timeout) = self.exporter_timeout {
+                    config.timeout = timeout;
+                }
+
+                let exporter: SpanExporter = config.try_into()?;
                 provider_builder.with_batch_exporter(exporter).build()
             }
             Collector::Jaeger => {
-                let metadata = MetadataMap::with_capacity(1);
-                let exporter = self.init_exporter(metadata)?;
+                let mut config = collector_config
+                    .jaeger()
+                    .ok_or(Error::CollectorConfigError)?;
+                if let Some(endpoint) = self.exporter_endpoint.clone() {
+                    config.endpoint = endpoint;
+                }
+
+                if let Some(timeout) = self.exporter_timeout {
+                    config.timeout = timeout;
+                }
+
+                let exporter: SpanExporter = config.try_into()?;
                 provider_builder.with_batch_exporter(exporter).build()
             }
         };
 
         Ok(tracer_provider)
-    }
-
-    /// Initializes the exporter
-    pub fn init_exporter(&self, metadata: MetadataMap) -> Result<SpanExporter, Error> {
-        let exporter = SpanExporter::builder()
-            .with_tonic()
-            .with_timeout(self.exporter_timeout)
-            .with_endpoint(self.exporter_endpoint.as_ref())
-            .with_metadata(metadata)
-            .build()?;
-        Ok(exporter)
     }
 }
 

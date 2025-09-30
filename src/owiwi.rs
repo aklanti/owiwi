@@ -18,7 +18,7 @@ use super::error::Error;
 use super::format::EventFormat;
 use super::provider::{self, TracerProviderOptions};
 
-use crate::collector::ExporterConfig;
+use crate::collector::CollectorConfig;
 
 /// Instrumentation type.
 #[must_use]
@@ -68,13 +68,13 @@ impl Owiwi {
     pub fn init(
         &self,
         service_name: &'static str,
-        exporter_config: ExporterConfig,
+        collector_config: CollectorConfig,
     ) -> Result<OwiwiGuard, Error> {
         let filter_layer = self.filter_layer()?;
         let resource = provider::init_resource(service_name);
         let tracer_provider = self
             .tracer_provider_options
-            .init_provider(exporter_config, resource)?;
+            .init_provider(collector_config, resource)?;
         let tracer = tracer_provider.tracer(service_name);
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         let registry = tracing_subscriber::registry()
