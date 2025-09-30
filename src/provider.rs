@@ -29,11 +29,10 @@ pub struct TracerProviderOptions {
              name = "otel-collector",
              long,
              env = EnvVars::OTEL_TRACES_EXPORTER,
-             default_value_t = Default::default(),
              help_heading = HELP_HEADING,
          )
     )]
-    pub collector: Collector,
+    pub collector: Option<Collector>,
 
     /// Set export timeout duration
     #[cfg_attr(
@@ -72,15 +71,11 @@ impl TracerProviderOptions {
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
-        let tracer_provider = match self.collector {
-            Collector::Console => provider_builder
+        let tracer_provider = match collector_config {
+            CollectorConfig::Console => provider_builder
                 .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
                 .build(),
-            Collector::Honeycomb => {
-                let mut config = collector_config
-                    .honeycomb()
-                    .ok_or(Error::CollectorConfigError)?;
-
+            CollectorConfig::Honeycomb(mut config) => {
                 if let Some(endpoint) = self.exporter_endpoint.clone() {
                     config.endpoint = endpoint;
                 }
@@ -92,10 +87,7 @@ impl TracerProviderOptions {
                 let exporter: SpanExporter = config.try_into()?;
                 provider_builder.with_batch_exporter(exporter).build()
             }
-            Collector::Jaeger => {
-                let mut config = collector_config
-                    .jaeger()
-                    .ok_or(Error::CollectorConfigError)?;
+            CollectorConfig::Jaeger(mut config) => {
                 if let Some(endpoint) = self.exporter_endpoint.clone() {
                     config.endpoint = endpoint;
                 }

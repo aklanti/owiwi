@@ -15,7 +15,11 @@ use crate::Error;
 /// This type enumerates the telemetry exporters
 #[non_exhaustive]
 #[derive(Clone, Debug, Default)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Deserialize),
+    serde(rename_all(deserialize = "lowercase"))
+)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 pub enum Collector {
     /// Export traces to `std::io::stdout`

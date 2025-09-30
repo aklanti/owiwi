@@ -56,9 +56,6 @@ async fn main() {
 }
 ```
 
-## Optional features
-By default `owiwi` depends on `clap` and `serde`. There are optional features that enable 
-- `bon` adds [`bon::Builder`][bon-builder-url] implementation for [`TracerProviderOptions`][tracer-provider-doc] and [`Owiwi`][owiwi-doc]
 ## Supported Rust Versions
 `Owiwi` currently only support the latest stable version.
 
