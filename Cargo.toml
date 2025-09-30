@@ -13,7 +13,7 @@ rust-version = "1.90.0"
 [features]
 default = ["clap", "serde"]
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
-serde = ["dep:serde"]
+serde = ["dep:serde", "dep:humantime-serde"]
 
 [dependencies]
 # Compile-time-checked builder generator
@@ -25,7 +25,7 @@ clap-verbosity-flag = { version = "3.0", optional = true, default-features = fal
 # A parser and formatter for std::time::{Duration, SystemTime}
 humantime = "2.3.0"
 # Serde support for humantime
-humantime-serde = "1.1.1"
+humantime-serde = { version = "1.1.1", optional = true }
 # OpenTelemetry API
 opentelemetry = "0.30.0"
 # Exporter for OpenTelemetry collector
