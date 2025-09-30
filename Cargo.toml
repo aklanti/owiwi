@@ -41,7 +41,7 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 # Provides `derive(Error)``
 thiserror = "2.0"
 # A gRPC over HTTP/2 implementation focused on high performance, interoperability, and flexibility.
-tonic = {version = "0.13", features = ["tls-aws-lc"] }
+tonic = { version = "0.13", features = ["tls-aws-lc"] }
 # A framework for instrumentation
 tracing = "0.1"
 # Utilities for enriching error handling with tracing diagnostic information.
