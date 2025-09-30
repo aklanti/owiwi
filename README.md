@@ -33,12 +33,14 @@ Then initiate the subscriber using the `init()` method
 
 ```rust
 use owiwi_tracing_opentelemetry::Owiwi
+use owiwi_tracing_opentelemetry::collector::CollectorConfig;
 
 fn main() {
   // Initialize the subscriber with an exporter that prints telemetry
   // (logs, metrics and traces) to the standard output.
+  let config = CollectorConfig::default();
   Owiwi::init("demo-service");
-  tracing::info!("All good!");
+  tracing::info!("All good!", config);
 }
 ```
 
@@ -46,12 +48,14 @@ You can also initialize the subscriber in asynchronous code.
 
 ```rust
 use owiwi_tracing_opentelemetry::Owiwi
+use owiwi_tracing_opentelemetry::collector::CollectorConfig;
 use tracing::info;
 
 async fn main() {
   // Initialize the subscriber with an exporter that prints telemetry
   // (logs, metrics and traces) to the standard output.
-  Owiwi::init("demo-service");
+  let config = CollectorConfig::default();
+  Owiwi::init("demo-service", config);
   tracing::info!("All good!");
 }
 ```
