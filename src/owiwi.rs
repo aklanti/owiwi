@@ -17,6 +17,8 @@ use super::HELP_HEADING;
 use super::error::Error;
 use super::format::EventFormat;
 use super::provider::{self, TracerProviderOptions};
+#[cfg(feature = "clap")]
+use clap_verbosity_flag::Verbosity;
 
 use crate::collector::CollectorConfig;
 
@@ -41,7 +43,7 @@ pub struct Owiwi {
     #[expect(missing_docs, reason = "is flatten command")]
     #[cfg(feature = "clap")]
     #[command(flatten)]
-    pub verbose: clap_verbosity_flag::Verbosity,
+    pub verbose: Verbosity,
 
     /// Tracing filter directives
     ///
@@ -50,7 +52,6 @@ pub struct Owiwi {
         feature = "clap",
         arg(
             long = "trace-directive",
-            global = true,
             value_delimiter = ',',
             num_args = 0..,
             help_heading = HELP_HEADING,
@@ -63,7 +64,34 @@ pub struct Owiwi {
     pub tracer_provider_options: TracerProviderOptions,
 }
 
+impl Default for Owiwi {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Owiwi {
+    /// Creates new subscriber
+    #[cfg(not(feature = "clap"))]
+    pub fn new() -> Self {
+        Self {
+            event_format: EventFormat::default(),
+            tracing_directives: Vec::new(),
+            tracer_provider_options: TracerProviderOptions::default(),
+        }
+    }
+
+    /// Creates new subscriber
+    #[cfg(feature = "clap")]
+    pub fn new() -> Self {
+        Self {
+            event_format: EventFormat::default(),
+            tracing_directives: Vec::new(),
+            tracer_provider_options: TracerProviderOptions::default(),
+            verbose: Verbosity::default(),
+        }
+    }
+
     /// Initializes the tracer
     pub fn init(
         &self,
@@ -89,7 +117,6 @@ impl Owiwi {
         Ok(OwiwiGuard { tracer_provider })
     }
     /// Creates a the filter layer
-    #[tracing::instrument]
     pub fn filter_layer(&self) -> Result<EnvFilter, Error> {
         let mut layer = match EnvFilter::try_from_default_env() {
             Ok(layer) => layer,

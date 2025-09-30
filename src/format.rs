@@ -14,9 +14,9 @@ use tracing_subscriber::fmt::time::SystemTime;
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 pub enum EventFormat {
     /// Compact traces
-    #[default]
     Compact,
     /// Emits full verbose traces
+    #[default]
     Full,
     /// Prettier traces
     Pretty,

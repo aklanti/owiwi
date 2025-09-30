@@ -11,7 +11,7 @@ repository = "https://github.com/aklanti/owiwi-tracing-opentelemetry"
 rust-version = "1.90.0"
 
 [features]
-default = ["clap", "serde"]
+default = []
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
 serde = ["dep:serde", "dep:humantime-serde"]
 

@@ -16,49 +16,80 @@
 
 ## Overview
 
-`owiwi-tracing-opentelemetry` is a library for initializing tracing subscriber with OpenTelemetry
+`owiwi-tracing-opentelemetry` is a crate that provides an opinionated abstraction for initializing tracing subscriber with OpenTelemetry.
 
+It allows sending telemetry to any of the collector define in [`collector::Collector`].
 
 ## Usage
 
-To use `owiwi-tracing-opentelemetry`, add the following to your `Cargo.toml`
+The `owiwi-tracing-opentelemetry` crate is [on crates.io](https://crates.io/crates/owiwi-tracing-opentelemetry) and can be
+used by adding `owiwi-tracing-opentelemetry` to your dependencies in your project's `Cargo.toml`.
+Or more simply, just run `cargo add owiwi-tracing-opentelemetry`.
+
+Additionally, You must add the tracing crate to your dependencies.
+
+### Example with the feature `clap`
+
+The main type of this crate is originally design to work binary application that defines a command line interface, we need to enable the `clap` flag.
 
 ```toml
 [dependencies]
-owiwi-tracing-opentelemtry = "0.1"
+clap = { version = "4.5.48", features = ["derive"] }
+owiwi-tracing-opentelemetry = { version = "0.1.0", features = ["clap"] }
 tracing = "0.1"
 ```
 
-Then initiate the subscriber using the `init()` method
+The following is a complete program that initializes a subscriber and emit some traces.
 
 ```rust
-use owiwi_tracing_opentelemetry::Owiwi
-use owiwi_tracing_opentelemetry::collector::CollectorConfig;
+use clap::Parser;
+use owiwi_tracing_opentelemetry::Owiwi;
+use owiwi_tracing_opentelemetry::collector::{CollectorConfig, HoneycombConfig};
+
+#[derive(Debug, Clone, Parser)]
+struct Cli {
+     #[command(flatten)]
+     owiwi: Owiwi,
+}
 
 fn main() {
-  // Initialize the subscriber with an exporter that prints telemetry
-  // (logs, metrics and traces) to the standard output.
-  let config = CollectorConfig::default();
-  Owiwi::init("demo-service");
-  tracing::info!("All good!", config);
+     let cli = Cli::parse();
+     // Create a configuration to send traces to honeycomb.io
+     let honeycomb_config = HoneycombConfig.builder()
+         .endpoint("https://api.honeycomb.io/traces/api".parse().expect("to be valid URL"))
+         .api_key("super_secret_key".into()),
+         .timeout(std::time::Duration::from_secs(5));
+     let collector_config = CollectorConfig::Honeycomb(honeycomb_config);
+     let _guard = cli.owiwi.init("example", collector_config);
+     tracing::info!("the subscriber was initialized");
 }
+
 ```
 
-You can also initialize the subscriber in asynchronous code.
+### Example without the feature `clap`
+
+The following is a complete program that initializes a subscriber and emit some traces.
 
 ```rust
-use owiwi_tracing_opentelemetry::Owiwi
+use owiwi_tracing_opentelemetry::Owiwi;
 use owiwi_tracing_opentelemetry::collector::CollectorConfig;
-use tracing::info;
+use owiwi_tracing_opentelemetry::format::EventFormat;
 
-async fn main() {
-  // Initialize the subscriber with an exporter that prints telemetry
-  // (logs, metrics and traces) to the standard output.
-  let config = CollectorConfig::default();
-  Owiwi::init("demo-service", config);
-  tracing::info!("All good!");
+fn main() {
+     // The default collector configuration sends traces to std::io::stdout
+     let collector_config = CollectorConfig::default();
+     let service_name = "example";
+     // Initializes the subscriber
+     let _guard = Owiwi::default().init(service_name,  collector_config);
+     tracing::info!("the Subscriber was initialized!");
 }
 ```
+
+## Crates features
+
+There are some optional features that enable additional dependencies:
+- `serde` adds [`Deserialize`][deserialize] implementations for some types. It also allow deserializing [`humantime`](https://docs.rs/humantime/2/humantime/) using [`humantime-serde`](https://docs.rs/humantime-serde/1/humantime_serde/)
+- `clap`: adds [`Args`][clap-args] implementation to [`Owiwi`] and various other types.
 
 ## Supported Rust Versions
 `Owiwi` currently only support the latest stable version.
@@ -77,4 +108,6 @@ terms or conditions.
 This project was inspired by this [blog][instrumenting-axum] post.
 
 
+[deserialize]: https://docs.rs/serde/1/serde/trait.Deserialize.html
+[clap-args]: https://docs.rs/clap/4/clap/trait.Args.html
 [instrumenting-axum]: https://determinate.systems/blog/instrumenting-axum/ 

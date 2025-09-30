@@ -18,7 +18,7 @@ use crate::error::Error;
 
 /// Tracer provider configuration options
 #[must_use]
-#[derive(Clone, Debug, Builder)]
+#[derive(Clone, Debug, Default, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct TracerProviderOptions {

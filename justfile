@@ -8,7 +8,7 @@ alias t := test
 
 # Build the documentation.
 @doc *args:
-    cargo doc --all-features
+    cargo doc --no-deps {{ args }}
 
 # Run test coverage.
 @cov *args:
