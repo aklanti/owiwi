@@ -10,10 +10,13 @@ keywords = ["opentelemetry", "tracing", "metrics"]
 repository = "https://github.com/aklanti/owiwi-tracing-opentelemetry"
 rust-version = "1.90.0"
 
+[package.metadata.docs.rs]
+features = ["full"]
+
 [features]
-default = []
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
 serde = ["dep:serde", "dep:humantime-serde"]
+full = ["clap", "serde"]
 
 [dependencies]
 # Compile-time-checked builder generator

@@ -12,8 +12,6 @@
 [actions-badge]: https://github.com/aklanti/owiwi-tracing-opentelemetry/workflows/CI/badge.svg
 [actions-url]: https://github.com/aklanti/owiwi-tracing-opentelemetry/actions/workflows/main.yaml
 
-
-
 ## Overview
 
 `owiwi-tracing-opentelemetry` is a crate that provides an opinionated abstraction for initializing tracing subscriber with OpenTelemetry.
@@ -57,8 +55,9 @@ fn main() {
      // Create a configuration to send traces to honeycomb.io
      let honeycomb_config = HoneycombConfig.builder()
          .endpoint("https://api.honeycomb.io/traces/api".parse().expect("to be valid URL"))
-         .api_key("super_secret_key".into()),
-         .timeout(std::time::Duration::from_secs(5));
+         .api_key("super_secret_key".into())
+         .timeout(std::time::Duration::from_secs(5))
+         .build();
      let collector_config = CollectorConfig::Honeycomb(honeycomb_config);
      let _guard = cli.owiwi.init("example", collector_config);
      tracing::info!("the subscriber was initialized");
@@ -85,14 +84,14 @@ fn main() {
 }
 ```
 
-## Crates features
+## Optional features
 
 There are some optional features that enable additional dependencies:
 - `serde` adds [`Deserialize`][deserialize] implementations for some types. It also allow deserializing [`humantime`](https://docs.rs/humantime/2/humantime/) using [`humantime-serde`](https://docs.rs/humantime-serde/1/humantime_serde/)
-- `clap`: adds [`Args`][clap-args] implementation to [`Owiwi`] and various other types.
+- `clap`: adds [`Args`][clap-args] implementation to [`Owiwi`][owiwi] and various other types.
 
 ## Supported Rust Versions
-`Owiwi` currently only support the latest stable version.
+`owiwi-tracing-opentelemetry` currently only supports the latest stable version.
 
 ## License
 
@@ -101,7 +100,7 @@ This project is licensed under the [MIT license](LICENSE).
 ### Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in Owiwi by you, shall be licensed as MIT, without any additional
+for inclusion in `owiwi-tracing-opentelemetry` by you, shall be licensed as MIT, without any additional
 terms or conditions.
 
 ### Acknowledgments
@@ -110,4 +109,5 @@ This project was inspired by this [blog][instrumenting-axum] post.
 
 [deserialize]: https://docs.rs/serde/1/serde/trait.Deserialize.html
 [clap-args]: https://docs.rs/clap/4/clap/trait.Args.html
+[owiwi]: https://docs.rs/owiwi-tracing-opentelemetry/latest/owiwi/struct.Owiwi.html
 [instrumenting-axum]: https://determinate.systems/blog/instrumenting-axum/ 
