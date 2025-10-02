@@ -20,7 +20,7 @@ It allows sending telemetry to any of the collector define in [`collector::Colle
 
 ## Usage
 
-The `owiwi-tracing-opentelemetry` crate is [on crates.io](https://crates.io/crates/owiwi-tracing-opentelemetry) and can be
+The `owiwi-tracing-opentelemetry` crate is [on crates.io][crates-url] and can be
 used by adding `owiwi-tracing-opentelemetry` to your dependencies in your project's `Cargo.toml`.
 Or more simply, just run `cargo add owiwi-tracing-opentelemetry`.
 
@@ -87,7 +87,7 @@ fn main() {
 ## Optional features
 
 There are some optional features that enable additional dependencies:
-- `serde` adds [`Deserialize`][deserialize] implementations for some types. It also allow deserializing [`humantime`](https://docs.rs/humantime/2/humantime/) using [`humantime-serde`](https://docs.rs/humantime-serde/1/humantime_serde/)
+- `serde` adds [`Deserialize`][deserialize] implementations for some types. It also allow deserializing [`humantime`][humantime] using [`humantime-serde`][humantime-serde]
 - `clap`: adds [`Args`][clap-args] implementation to [`Owiwi`][owiwi] and various other types.
 
 ## Supported Rust Versions
@@ -108,6 +108,8 @@ This project was inspired by this [blog][instrumenting-axum] post.
 
 
 [deserialize]: https://docs.rs/serde/1/serde/trait.Deserialize.html
+[humantime]: https://docs.rs/humantime/2/humantime/
+[humantime-serde]: https://docs.rs/humantime-serde/1/humantime_serde/
 [clap-args]: https://docs.rs/clap/4/clap/trait.Args.html
 [owiwi]: https://docs.rs/owiwi-tracing-opentelemetry/latest/owiwi/struct.Owiwi.html
 [instrumenting-axum]: https://determinate.systems/blog/instrumenting-axum/ 
