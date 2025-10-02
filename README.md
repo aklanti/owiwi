@@ -6,7 +6,7 @@
 [crates-badge]: https://img.shields.io/crates/v/owiwi-tracing-opentelemetry
 [crates-url]: https://crates.io/crates/owiwi-tracing-opentelemetry
 [docs-badge]: https://img.shields.io/docsrs/owiwi-tracing-opentelemetry/latest
-[docs-url]: https://docs.rs/owiwi/latest/owiwi-tracing-opentelemetry/
+[docs-url]: https://docs.rs/owiwi-tracing-opentelemetry/latest/owiwi-tracing-opentelemetry/
 [mit-badge]: https://img.shields.io/badge/license-MIT-blue
 [mit-license]: LICENSE
 [actions-badge]: https://github.com/aklanti/owiwi-tracing-opentelemetry/workflows/CI/badge.svg
