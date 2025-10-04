@@ -15,12 +15,10 @@ use tracing_subscriber::util::SubscriberInitExt as _;
 #[cfg(feature = "clap")]
 use super::HELP_HEADING;
 use super::error::Error;
-use super::format::EventFormat;
-use super::provider::{self, TracerProviderOptions};
+use super::trace::format::EventFormat;
+use super::trace::{TraceCollectorConfig, TracerProviderOptions, provider};
 #[cfg(feature = "clap")]
 use clap_verbosity_flag::Verbosity;
-
-use crate::collector::CollectorConfig;
 
 /// Instrumentation type.
 #[must_use]
@@ -96,7 +94,7 @@ impl Owiwi {
     pub fn init(
         &self,
         service_name: &'static str,
-        collector_config: CollectorConfig,
+        collector_config: TraceCollectorConfig,
     ) -> Result<OwiwiGuard, Error> {
         let filter_layer = self.filter_layer()?;
         let resource = provider::init_resource(service_name);

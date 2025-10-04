@@ -16,7 +16,7 @@
 
 `owiwi-tracing-opentelemetry` is a crate that provides an opinionated abstraction for initializing tracing subscriber with OpenTelemetry.
 
-It allows sending telemetry to any of the collector define in [`collector::Collector`].
+It allows sending telemetry to any of the collector define in [`trace::collector::Collector`].
 
 ## Usage
 
@@ -42,7 +42,8 @@ The following is a complete program that initializes a subscriber and emit some 
 ```rust
 use clap::Parser;
 use owiwi_tracing_opentelemetry::Owiwi;
-use owiwi_tracing_opentelemetry::collector::{CollectorConfig, HoneycombConfig};
+use owiwi_tracing_opentelemetry::trace::TraceCollectorConfig;
+use owiwi_tracing_opentelemetry::trace::collector::HoneycombConfig;
 
 #[derive(Debug, Clone, Parser)]
 struct Cli {
@@ -58,7 +59,7 @@ fn main() {
          .api_key("super_secret_key".into())
          .timeout(std::time::Duration::from_secs(5))
          .build();
-     let collector_config = CollectorConfig::Honeycomb(honeycomb_config);
+     let collector_config = TraceCollectorConfig::Honeycomb(honeycomb_config);
      let _guard = cli.owiwi.init("example", collector_config);
      tracing::info!("the subscriber was initialized");
 }
@@ -71,12 +72,12 @@ The following is a complete program that initializes a subscriber and emit some 
 
 ```rust
 use owiwi_tracing_opentelemetry::Owiwi;
-use owiwi_tracing_opentelemetry::collector::CollectorConfig;
+use owiwi_tracing_opentelemetry::trace::TraceCollectorConfig;
 use owiwi_tracing_opentelemetry::format::EventFormat;
 
 fn main() {
      // The default collector configuration sends traces to std::io::stdout
-     let collector_config = CollectorConfig::default();
+     let collector_config = TraceCollectorConfig::default();
      let service_name = "example";
      // Initializes the subscriber
      let _guard = Owiwi::default().init(service_name,  collector_config);

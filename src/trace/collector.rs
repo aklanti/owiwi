@@ -7,6 +7,7 @@ use std::time::Duration;
 use bon::Builder;
 use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
 use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
+
 use secrecy::{ExposeSecret, SecretString};
 use url::Url;
 
@@ -21,7 +22,7 @@ use crate::Error;
     serde(rename_all(deserialize = "lowercase"))
 )]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
-pub enum Collector {
+pub enum TraceCollector {
     /// Export traces to `std::io::stdout`
     /// This variant is only suitable for development and debugging
     #[default]
@@ -32,7 +33,7 @@ pub enum Collector {
     Jaeger,
 }
 
-impl fmt::Display for Collector {
+impl fmt::Display for TraceCollector {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Console => "console".fmt(f),
@@ -42,7 +43,7 @@ impl fmt::Display for Collector {
     }
 }
 
-impl FromStr for Collector {
+impl FromStr for TraceCollector {
     type Err = Error;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
@@ -50,17 +51,17 @@ impl FromStr for Collector {
             "console" => Self::Console,
             "honeycomb" => Self::Honeycomb,
             "jaeger" => Self::Jaeger,
-            _ => return Err(Error::UnsupportedCollectorKind),
+            _ => return Err(Error::UnsupportedTracesCollector(value.to_owned())),
         };
         Ok(this)
     }
 }
 
-/// Collector configuration data
+/// `TraceCollector` configuration data
 #[non_exhaustive]
 #[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
-pub enum CollectorConfig {
+pub enum TraceCollectorConfig {
     /// This is the default configuration representing `std::io::stdout`
     #[default]
     Console,
@@ -72,16 +73,21 @@ pub enum CollectorConfig {
     Honeycomb(HoneycombConfig),
 }
 
-impl CollectorConfig {
-    /// Convert the `CollectorConfig` to an `Option<HoneycombConfig>`
+impl TraceCollectorConfig {
+    /// Convert the `TraceCollectorConfig` to an `Option<HoneycombConfig>`
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::time::Duration;
-    /// # use owiwi_tracing_opentelemetry::collector::{CollectorConfig, HoneycombConfig};
-    /// let honey_config = HoneycombConfig{endpoint: "https://honeycom.io".parse()?, api_key: "".into(), timeout: Duration::from_millis(0)};
-    /// let exporter_config = CollectorConfig::Honeycomb(honey_config.clone());
+    /// # use owiwi_tracing_opentelemetry::trace::TraceCollectorConfig;
+    /// # use owiwi_tracing_opentelemetry::trace::collector::HoneycombConfig;
+    /// let honey_config = HoneycombConfig{
+    ///     endpoint: "https://honeycom.io".parse()?,
+    ///     api_key: "".into(),
+    ///     timeout: Duration::from_millis(0)
+    /// };
+    /// let exporter_config = TraceCollectorConfig::Honeycomb(honey_config.clone());
     /// assert!(exporter_config.honeycomb().is_some_and(|config| config.endpoint == honey_config.endpoint));
     /// # Ok::<_, Box<dyn std::error::Error>>(())
     /// ```
@@ -93,15 +99,19 @@ impl CollectorConfig {
         }
     }
 
-    /// Convert the `CollectorConfig` to an `Option<JaegerConfig>`
+    /// Convert the `TraceCollectorConfig` to an `Option<JaegerConfig>`
     ///
     /// # Examples
     ///
     /// ```
     /// # use std::time::Duration;
-    /// # use owiwi_tracing_opentelemetry::collector::{CollectorConfig, JaegerConfig};
-    /// let jaeger_config = JaegerConfig{endpoint: "http://localhost:4317".parse()?, timeout: Duration::from_millis(0)};
-    /// let exporter_config = CollectorConfig::Jaeger(jaeger_config.clone());
+    /// # use owiwi_tracing_opentelemetry::trace::TraceCollectorConfig;
+    /// # use owiwi_tracing_opentelemetry::trace::collector::JaegerConfig;
+    /// let jaeger_config = JaegerConfig{
+    ///     endpoint: "http://localhost:4317".parse()?,
+    ///     timeout: Duration::from_millis(0)
+    /// };
+    /// let exporter_config = TraceCollectorConfig::Jaeger(jaeger_config.clone());
     /// assert!(exporter_config.jaeger().is_some_and(|config| config.endpoint == jaeger_config.endpoint));
     /// # Ok::<_, Box<dyn std::error::Error>>(())
     /// ```
@@ -200,21 +210,21 @@ mod tests {
     use proptest::strategy::Strategy;
     use rstest::rstest;
 
-    use super::{Collector, CollectorConfig, HoneycombConfig, JaegerConfig};
+    use super::{HoneycombConfig, JaegerConfig, TraceCollector, TraceCollectorConfig};
 
     #[gtest]
     #[rstest]
-    #[case(Collector::Console, "console")]
-    #[case(Collector::Honeycomb, "honeycomb")]
-    #[case(Collector::Jaeger, "jaeger")]
-    fn display_correct_collector_value(#[case] collector: Collector, #[case] display: &str) {
+    #[case(TraceCollector::Console, "console")]
+    #[case(TraceCollector::Honeycomb, "honeycomb")]
+    #[case(TraceCollector::Jaeger, "jaeger")]
+    fn display_correct_collector_value(#[case] collector: TraceCollector, #[case] display: &str) {
         assert_that!(collector.to_string(), eq(display));
     }
 
     proptest! {
         #[gtest]
         fn parse_valid_collector_from_string_successfully(value in "console|honeycomb|jaeger") {
-            let result: Result<Collector,_> = value.parse();
+            let result: Result<TraceCollector,_> = value.parse();
             assert_that!(result,ok(anything()));
         }
 
@@ -223,7 +233,7 @@ mod tests {
             value in "[a-zA-Z]*"
                 .prop_filter("Value must be a valid variant",
                     |v| !["console", "honeycomb", "jaeger"].contains(&v.as_str()))) {
-            let result: Result<Collector,_> = value.parse();
+            let result: Result<TraceCollector,_> = value.parse();
             assert_that!(result,err(anything()));
         }
     }
@@ -237,7 +247,7 @@ mod tests {
             api_key: "".into(),
             timeout: Duration::from_millis(1),
         };
-        let exporter_config = CollectorConfig::Honeycomb(honey_config.clone());
+        let exporter_config = TraceCollectorConfig::Honeycomb(honey_config.clone());
         assert!(
             exporter_config
                 .honeycomb()
@@ -255,7 +265,7 @@ mod tests {
             )
             .timeout(Duration::from_millis(1))
             .build();
-        let exporter_config = CollectorConfig::Jaeger(jaeger_config.clone());
+        let exporter_config = TraceCollectorConfig::Jaeger(jaeger_config.clone());
         assert!(
             exporter_config
                 .jaeger()
@@ -265,7 +275,7 @@ mod tests {
 
     #[test]
     fn console_does_not_have_config() {
-        let exporter_config = CollectorConfig::Console;
+        let exporter_config = TraceCollectorConfig::Console;
         assert!(exporter_config.clone().honeycomb().is_none());
         assert!(exporter_config.jaeger().is_none());
     }

@@ -18,7 +18,7 @@ pub enum Error {
     },
     /// Collector configuration error
     #[error("collector configuration error")]
-    CollectorConfigError,
+    TraceCollectorConfigError,
     /// The subscriber initialization failed.
     #[error("{source}")]
     InitSubscriberError {
@@ -50,7 +50,11 @@ pub enum Error {
     /// The log or level or trace directive is not set.
     #[error("expected tracing level filter")]
     TraceLevelMissing,
-    /// Unsupported collector
-    #[error("unsupported collector")]
-    UnsupportedCollectorKind,
+    /// Unsupported traces collector
+    #[error("unsupported traces collector: {0}")]
+    UnsupportedTracesCollector(String),
+
+    /// Unsupported metrics collector
+    #[error("unsupported metrics collector: {0}")]
+    UnsupportedMetricsCollector(String),
 }

@@ -10,7 +10,7 @@
 //!
 //! `owiwi-tracing-opentelemetry` is a crate that provides an opinionated abstraction for initializing tracing subscriber with OpenTelemetry.
 //!
-//! It allows sending telemetry to any of the collector define in [`collector::Collector`].
+//! It allows sending telemetry to any of the collector define in [`trace::collector::Collector`].
 //!
 //! <br/>
 //!
@@ -39,7 +39,7 @@
 //! ```ignore
 //! use clap::Parser;
 //! use owiwi_tracing_opentelemetry::Owiwi;
-//! use owiwi_tracing_opentelemetry::collector::{CollectorConfig, HoneycombConfig};
+//! use owiwi_tracing_opentelemetry::trace::{TraceCollectorConfig, HoneycombConfig};
 //!
 //! #[derive(Debug, Clone, Parser)]
 //! struct Cli {
@@ -69,12 +69,11 @@
 //!
 //! ```
 //! use owiwi_tracing_opentelemetry::Owiwi;
-//! use owiwi_tracing_opentelemetry::collector::CollectorConfig;
-//! use owiwi_tracing_opentelemetry::format::EventFormat;
+//! use owiwi_tracing_opentelemetry::trace::TraceCollectorConfig;
 //!
 //! fn main() {
 //!     // The default collector configuration sends traces to std::io::stdout
-//!     let collector_config = CollectorConfig::default();
+//!     let collector_config = TraceCollectorConfig::default();
 //!     let service_name = "example";
 //!     // Initializes the subscriber
 //!     let _guard = Owiwi::default().init(service_name,  collector_config);
@@ -92,12 +91,13 @@
 //!
 #![cfg_attr(test, deny(warnings))]
 
-pub mod collector;
+pub mod trace;
+
 pub mod env_vars;
 pub mod error;
-pub mod format;
+#[cfg(feature = "tower")]
+pub mod metrics;
 pub mod owiwi;
-pub mod provider;
 
 #[doc(inline)]
 pub use error::{Error, Result};

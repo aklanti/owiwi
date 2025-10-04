@@ -15,8 +15,10 @@ features = ["full"]
 
 [features]
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
+full = ["clap", "serde", "tower"]
 serde = ["dep:serde", "dep:humantime-serde"]
-full = ["clap", "serde"]
+tower = ["dep:opentelemetry-instrumentation-tower", "opentelemetry-otlp/metrics"]
+prometheus = ["dep:metrics-exporter-prometheus"]
 
 [dependencies]
 # Compile-time-checked builder generator
@@ -55,6 +57,10 @@ tracing-opentelemetry = "0.32"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # URL library, based on the WHATWG URL standard
 url = { version = "2.5", features = ["serde"] }
+# OpenTelemetry Metrics Middleware for Tower-compatible Rust HTTP servers.
+opentelemetry-instrumentation-tower = { version = "0.17", optional = true }
+# A metrics-compatible exporter for sending metrics to Prometheus.
+metrics-exporter-prometheus = {  version = "0.17",  optional = true}
 
 [dev-dependencies]
 # A rich assertion and matcher library inspired by GoogleTest for C++
