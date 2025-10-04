@@ -10,13 +10,14 @@
 //!
 //! `owiwi-tracing-opentelemetry` is a crate that provides an opinionated abstraction for initializing tracing subscriber with OpenTelemetry.
 //!
-//! It allows sending telemetry to any of the collector define in [`trace::collector::Collector`].
+//! It allows sending traces to any of the collector define in the [`trace::collector`] module.
+//!
 //!
 //! <br/>
 //!
 //! # Usage
 //!
-//!The `owiwi-tracing-opentelemetry` crate is [on crates.io](https://crates.io/crates/owiwi-tracing-opentelemetry) and can be
+//!The `owiwi-tracing-opentelemetry` crate is [on crates.io][crate-url] and can be
 //! used by adding `owiwi-tracing-opentelemetry` to your dependencies in your project's `Cargo.toml`.
 //! Or more simply, just run `cargo add owiwi-tracing-opentelemetry`.
 //!
@@ -91,13 +92,12 @@
 //!
 #![cfg_attr(test, deny(warnings))]
 
-pub mod trace;
-
 pub mod env_vars;
 pub mod error;
-#[cfg(feature = "tower")]
+#[cfg(any(feature = "metrics", feature = "otel-metrics"))]
 pub mod metrics;
 pub mod owiwi;
+pub mod trace;
 
 #[doc(inline)]
 pub use error::{Error, Result};

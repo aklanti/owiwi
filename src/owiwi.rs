@@ -3,6 +3,8 @@
 use std::env::VarError;
 use std::error::Error as _;
 
+#[cfg(feature = "clap")]
+use clap_verbosity_flag::Verbosity;
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use tracing::Subscriber;
@@ -15,10 +17,10 @@ use tracing_subscriber::util::SubscriberInitExt as _;
 #[cfg(feature = "clap")]
 use super::HELP_HEADING;
 use super::error::Error;
+#[cfg(any(feature = "metrics", feature = "otel-metrics"))]
+use super::metrics::{MetricCollectorConfig, MetricOptions};
 use super::trace::format::EventFormat;
 use super::trace::{TraceCollectorConfig, TracerProviderOptions, provider};
-#[cfg(feature = "clap")]
-use clap_verbosity_flag::Verbosity;
 
 /// Instrumentation type.
 #[must_use]
@@ -60,6 +62,11 @@ pub struct Owiwi {
     /// Tracer provider configuration options
     #[cfg_attr(feature = "clap", command(flatten))]
     pub tracer_provider_options: TracerProviderOptions,
+
+    ///  Metrics configuration options
+    #[cfg(any(feature = "metrics", feature = "otel-metrics"))]
+    #[cfg_attr(feature = "clap", command(flatten))]
+    metrics_options: MetricOptions,
 }
 
 impl Default for Owiwi {
@@ -70,28 +77,20 @@ impl Default for Owiwi {
 
 impl Owiwi {
     /// Creates new subscriber
-    #[cfg(not(feature = "clap"))]
     pub fn new() -> Self {
         Self {
             event_format: EventFormat::default(),
             tracing_directives: Vec::new(),
             tracer_provider_options: TracerProviderOptions::default(),
-        }
-    }
-
-    /// Creates new subscriber
-    #[cfg(feature = "clap")]
-    pub fn new() -> Self {
-        Self {
-            event_format: EventFormat::default(),
-            tracing_directives: Vec::new(),
-            tracer_provider_options: TracerProviderOptions::default(),
+            #[cfg(feature = "clap")]
             verbose: Verbosity::default(),
+            #[cfg(any(feature = "metrics", feature = "otel-metrics"))]
+            metrics_options: MetricOptions::default(),
         }
     }
 
     /// Initializes the tracer
-    pub fn init(
+    pub fn try_init_subscriber(
         &self,
         service_name: &'static str,
         collector_config: TraceCollectorConfig,
@@ -112,10 +111,18 @@ impl Owiwi {
             EventFormat::Full => registry.with(self.fmt_layer_full()).try_init()?,
             EventFormat::Pretty => registry.with(self.fmt_layer_pretty()).try_init()?,
         }
+
         Ok(OwiwiGuard { tracer_provider })
     }
+
+    #[cfg(any(feature = "metrics", feature = "otel-metrics"))]
+    /// Initialize metrics
+    pub fn try_init_metrics(&self, config: MetricCollectorConfig) -> Result<(), Error> {
+        self.metrics_options.try_init(config)
+    }
+
     /// Creates a the filter layer
-    pub fn filter_layer(&self) -> Result<EnvFilter, Error> {
+    fn filter_layer(&self) -> Result<EnvFilter, Error> {
         let mut layer = match EnvFilter::try_from_default_env() {
             Ok(layer) => layer,
             Err(err) => {

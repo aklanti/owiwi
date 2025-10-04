@@ -26,7 +26,7 @@ pub struct TracerProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-             name = "otel-collector",
+             name = "trace-collector",
              long,
              env = EnvVars::OTEL_TRACES_EXPORTER,
              help_heading = HELP_HEADING,
@@ -42,7 +42,7 @@ pub struct TracerProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name = "otel-exporter-timeout",
+            name = "trace-exporter-timeout",
             long,
             value_parser = humantime::parse_duration,
             help_heading = HELP_HEADING,
@@ -54,7 +54,7 @@ pub struct TracerProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name = "otel-exporter-endpoint",
+            name = "trace-exporter-endpoint",
             long,
             env = EnvVars::OTEL_EXPORTER_OTLP_ENDPOINT,
             help_heading = HELP_HEADING,

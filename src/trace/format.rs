@@ -9,7 +9,7 @@ use tracing_subscriber::fmt::time::SystemTime;
 
 /// [`EventFormat`] indicates the event formatter that should be used.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 pub enum EventFormat {
@@ -49,14 +49,20 @@ impl EventFormat {
     }
 }
 
+impl EventFormat {
+    /// A slice of string of the enum variants
+    const LITERALS: &[&str] = &["compact", "full", "pretty"];
+
+    /// Returns a `&str` value of `self`
+    #[must_use]
+    pub const fn as_str(&self) -> &str {
+        Self::LITERALS[*self as usize]
+    }
+}
+
 impl fmt::Display for EventFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let value = match self {
-            Self::Compact => "compact",
-            Self::Full => "full",
-            Self::Pretty => "pretty",
-        };
-        write!(f, "{value}")
+        self.as_str().fmt(f)
     }
 }
 

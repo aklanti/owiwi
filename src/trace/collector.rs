@@ -7,7 +7,6 @@ use std::time::Duration;
 use bon::Builder;
 use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
 use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
-
 use secrecy::{ExposeSecret, SecretString};
 use url::Url;
 
@@ -15,7 +14,7 @@ use crate::Error;
 
 /// This type enumerates the telemetry exporters
 #[non_exhaustive]
-#[derive(Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(
     feature = "serde",
     derive(serde::Deserialize),
@@ -35,11 +34,17 @@ pub enum TraceCollector {
 
 impl fmt::Display for TraceCollector {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Console => "console".fmt(f),
-            Self::Honeycomb => "honeycomb".fmt(f),
-            Self::Jaeger => "jaeger".fmt(f),
-        }
+        self.as_str().fmt(f)
+    }
+}
+
+impl TraceCollector {
+    /// A slice of string of the enum variants
+    pub const LITERALS: &[&str] = &["console", "honeycomb", "jaeger"];
+    /// Returns a `&str` value of `self`
+    #[must_use]
+    pub const fn as_str(&self) -> &str {
+        Self::LITERALS[*self as usize]
     }
 }
 
@@ -57,19 +62,21 @@ impl FromStr for TraceCollector {
     }
 }
 
-/// `TraceCollector` configuration data
+/// Traces collector configuration data
 #[non_exhaustive]
 #[derive(Debug, Default, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Deserialize),
+    serde(rename_all(deserialize = "lowercase"))
+)]
 pub enum TraceCollectorConfig {
     /// This is the default configuration representing `std::io::stdout`
     #[default]
     Console,
     /// This is Jaeger's configuration data
-    #[cfg_attr(feature = "serde", serde(rename(deserialize = "jaeger")))]
     Jaeger(JaegerConfig),
     /// This is the configuration data for honeycomb.io
-    #[cfg_attr(feature = "serde", serde(rename(deserialize = "honeycomb")))]
     Honeycomb(HoneycombConfig),
 }
 
@@ -180,13 +187,11 @@ pub struct JaegerConfig {
 impl TryFrom<JaegerConfig> for SpanExporter {
     type Error = Error;
 
-    fn try_from(config: JaegerConfig) -> crate::Result<Self> {
-        let metadata = MetadataMap::default();
-        let mut builder = SpanExporter::builder()
+    fn try_from(config: JaegerConfig) -> Result<Self, Self::Error> {
+        let mut builder = Self::builder()
             .with_tonic()
             .with_endpoint(config.endpoint.as_ref())
-            .with_timeout(config.timeout)
-            .with_metadata(metadata);
+            .with_timeout(config.timeout);
 
         if config.endpoint.scheme() == "https" {
             builder = builder.with_tls_config(
