@@ -22,6 +22,7 @@ impl fmt::Display for MetricCollector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Console => "console".fmt(f),
+            #[cfg(feature = "prometheus")]
             Self::Prometheus => "prometheus".fmt(f),
         }
     }
@@ -33,6 +34,7 @@ impl FromStr for MetricCollector {
     fn from_str(value: &str) -> Result<Self, Error> {
         let this = match value {
             "console" => Self::Console,
+            #[cfg(feature = "prometheus")]
             "prometheus" => Self::Prometheus,
             _ => return Err(Error::UnsupportedMetricsCollector(value.to_owned())),
         };
