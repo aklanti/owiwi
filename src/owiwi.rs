@@ -17,8 +17,8 @@ use tracing_subscriber::util::SubscriberInitExt as _;
 #[cfg(feature = "clap")]
 use super::HELP_HEADING;
 use super::error::Error;
-#[cfg(any(feature = "metrics", feature = "otel-metrics"))]
-use super::metrics::{MetricCollectorConfig, MetricOptions};
+#[cfg(feature = "metrics")]
+use super::metrics::MetricOptions;
 use super::trace::format::EventFormat;
 use super::trace::{TraceCollectorConfig, TracerProviderOptions, provider};
 
@@ -63,10 +63,14 @@ pub struct Owiwi {
     #[cfg_attr(feature = "clap", command(flatten))]
     pub tracer_provider_options: TracerProviderOptions,
 
+    #[allow(
+        unused,
+        reason = "this will be use to initialize metrics but create warnings when running linter"
+    )]
     ///  Metrics configuration options
-    #[cfg(any(feature = "metrics", feature = "otel-metrics"))]
+    #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
-    metrics_options: MetricOptions,
+    metrics: MetricOptions,
 }
 
 impl Default for Owiwi {
@@ -84,13 +88,13 @@ impl Owiwi {
             tracer_provider_options: TracerProviderOptions::default(),
             #[cfg(feature = "clap")]
             verbose: Verbosity::default(),
-            #[cfg(any(feature = "metrics", feature = "otel-metrics"))]
-            metrics_options: MetricOptions::default(),
+            #[cfg(feature = "metrics")]
+            metrics: MetricOptions::default(),
         }
     }
 
     /// Initializes the tracer
-    pub fn try_init_subscriber(
+    pub fn try_init(
         &self,
         service_name: &'static str,
         collector_config: TraceCollectorConfig,
@@ -113,12 +117,6 @@ impl Owiwi {
         }
 
         Ok(OwiwiGuard { tracer_provider })
-    }
-
-    #[cfg(any(feature = "metrics", feature = "otel-metrics"))]
-    /// Initialize metrics
-    pub fn try_init_metrics(&self, config: MetricCollectorConfig) -> Result<(), Error> {
-        self.metrics_options.try_init(config)
     }
 
     /// Creates a the filter layer

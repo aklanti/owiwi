@@ -5,11 +5,13 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use bon::Builder;
-#[cfg(feature = "metrics")]
-use metrics_exporter_prometheus::PrometheusBuilder;
-use metrics_util::MetricKindMask;
-#[cfg(feature = "otel-metrics")]
+use opentelemetry::global;
+use opentelemetry::metrics::Meter;
+#[cfg(feature = "prometheus")]
 use opentelemetry_otlp::{MetricExporter, WithExportConfig, WithTonicConfig};
+use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::metrics::SdkMeterProvider;
+
 use url::Url;
 
 #[cfg(feature = "clap")]
@@ -53,7 +55,6 @@ impl fmt::Display for MetricCollector {
 
 impl FromStr for MetricCollector {
     type Err = Error;
-
     fn from_str(value: &str) -> Result<Self, Error> {
         let this = match value {
             "console" => Self::Console,
@@ -66,82 +67,7 @@ impl FromStr for MetricCollector {
     }
 }
 
-/// Metrics collector configuration
-#[non_exhaustive]
-#[derive(Debug, Default, Clone)]
-#[cfg_attr(
-    feature = "serde",
-    derive(serde::Deserialize),
-    serde(rename_all(deserialize = "lowercase"))
-)]
-pub enum MetricCollectorConfig {
-    /// This is the default configuration representing `std::io::stdout`
-    #[default]
-    Console,
-    #[cfg(feature = "prometheus")]
-    /// This is Prometheus's configuration data
-    Prometheus(PrometheusConfig),
-}
-
-/// This is the configuration data for Jaeger
-#[derive(Debug, Clone, Builder)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
-pub struct PrometheusConfig {
-    /// Connection host,
-    pub host: String,
-    /// Connection port
-    pub port: u16,
-    /// Set export timeout duration
-    #[cfg_attr(
-        feature = "serde",
-        serde(deserialize_with = "humantime_serde::deserialize")
-    )]
-    pub timeout: Option<Duration>,
-}
-
-impl PrometheusConfig {
-    /// Returns the Prometheus instance URL
-    pub fn endpoint(&self) -> Result<Url, Error> {
-        format!("{}:{}", self.host, self.port)
-            .parse()
-            .map_err(Error::ParseUrlError)
-    }
-
-    #[cfg(feature = "metrics")]
-    /// Initializes Prometheus metrics exporter
-    pub fn init_metrics(&self, mask: MetricKindMask) -> Result<(), Error> {
-        PrometheusBuilder::new()
-            .idle_timeout(mask, self.timeout)
-            .install()?;
-        Ok(())
-    }
-}
-
-#[cfg(feature = "otel-metrics")]
-impl TryFrom<PrometheusConfig> for MetricExporter {
-    type Error = Error;
-
-    fn try_from(config: PrometheusConfig) -> Result<Self, Self::Error> {
-        let endpoint = config.endpoint()?;
-        let mut builder = Self::builder()
-            .with_tonic()
-            .with_endpoint(endpoint.as_ref());
-        if let Some(timeout) = config.timeout {
-            builder = builder.with_timeout(timeout);
-        }
-
-        if endpoint.scheme() == "https" {
-            builder = builder.with_tls_config(
-                opentelemetry_otlp::tonic_types::transport::ClientTlsConfig::default()
-                    .with_enabled_roots(),
-            );
-        }
-
-        let exporter = builder.build()?;
-        Ok(exporter)
-    }
-}
-
+/// Configuration data for metrics initialization using the opentelementry `metrics` crate
 /// Metric collector configuration options
 #[must_use]
 #[derive(Clone, Debug, Default, Builder)]
@@ -159,97 +85,115 @@ pub struct MetricOptions {
     )]
     pub collector: MetricCollector,
 
-    /// Set the kind of metrics
-    #[cfg(feature = "metrics")]
+    /// Metrics update time interval
+    /// Set the metric collector
     #[cfg_attr(
         feature = "clap",
         arg(
-            name="metrics-kind",
+            name="metrics-interval",
             long,
-            value_delimiter = ',',
-            num_args = 0..3,
+            value_parser = humantime::parse_duration,
             help_heading = HELP_HEADING,
-        )
+        ),
     )]
-    pub kinds: Vec<MetricKind>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(deserialize_with = "humantime_serde::deserialize")
+    )]
+    pub interval: Option<Duration>,
 }
 
 impl MetricOptions {
-    #[cfg(feature = "metrics")]
-    /// Returns the IDLE timeout metric kind mask
-    #[must_use]
-    fn metric_kind_mask(&self) -> MetricKindMask {
-        self.kinds
-            .iter()
-            .map(MetricKindMask::from)
-            .reduce(|acc, kind| acc | kind)
-            .unwrap_or(MetricKindMask::ALL)
-    }
-
-    #[cfg(any(feature = "metrics", feature = "otel-metrics"))]
     /// Initializes metrics collector
-    pub(crate) fn try_init(&self, config: MetricCollectorConfig) -> Result<(), Error> {
-        cfg_if::cfg_if! {
-            if #[cfg(all(feature = "metrics", feature = "prometheus"))]
-            {
-                let mask = self.metric_kind_mask();
-                let MetricCollectorConfig::Prometheus(config) = config else {
-                    unreachable!()
-                };
-                config.init_metrics(mask)?;
-            } else if
-            #[cfg(all(feature = "otel-metrics", feature = "prometheus"))]
-            {
-                todo!()
+    pub fn try_init(
+        &self,
+        service_name: &'static str,
+        resource: Resource,
+        exporter_config: MetricsConfig,
+    ) -> Result<Meter, Error> {
+        let meter_provider = match exporter_config {
+            MetricsConfig::Console => {
+                let exporter = opentelemetry_stdout::MetricExporter::default();
+                SdkMeterProvider::builder()
+                    .with_resource(resource)
+                    .with_periodic_exporter(exporter)
+                    .build()
             }
-        }
-        Ok(())
+            #[cfg(feature = "prometheus")]
+            MetricsConfig::Prometheus(config) => {
+                use opentelemetry_sdk::metrics::PeriodicReader;
+                let exporter = MetricExporter::try_from(config)?;
+                let mut builder = PeriodicReader::builder(exporter);
+                if let Some(interval) = self.interval {
+                    builder = builder.with_interval(interval);
+                }
+                let reader = builder.build();
+                SdkMeterProvider::builder()
+                    .with_resource(resource)
+                    .with_reader(reader)
+                    .build()
+            }
+        };
+
+        global::set_meter_provider(meter_provider);
+        let meter = global::meter(service_name);
+        Ok(meter)
     }
 }
 
-#[cfg(feature = "metrics")]
-/// Enumerate the metric count.
-///
-/// This is in parity with [`metrics_util::MetricKind`]
-#[must_use]
-#[derive(Copy, Clone, Debug, Default)]
+/// Metrics collector configuration
+#[non_exhaustive]
+#[derive(Debug, Default, Clone)]
 #[cfg_attr(
     feature = "serde",
     derive(serde::Deserialize),
     serde(rename_all(deserialize = "lowercase"))
 )]
-#[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
-pub enum MetricKind {
-    /// All metric kinds
+pub enum MetricsConfig {
+    /// This is the default configuration representing `std::io::stdout`
     #[default]
-    All,
-    /// The counter kind
-    Counter,
-    /// The gauge kind
-    Guage,
-    /// The histogram kind
-    Histogram,
-    /// No metric kinds
-    None,
+    Console,
+    #[cfg(feature = "prometheus")]
+    /// This is Prometheus's configuration data
+    Prometheus(PrometheusConfig),
 }
 
-#[cfg(feature = "metrics")]
-impl From<MetricKind> for MetricKindMask {
-    fn from(kind: MetricKind) -> Self {
-        Self::from(&kind)
-    }
+/// This is the configuration data for Jaeger
+#[derive(Debug, Clone, Builder)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+pub struct PrometheusConfig {
+    /// Connection host,
+    pub endpoint: Url,
+    /// Set export timeout duration
+    #[cfg_attr(
+        feature = "serde",
+        serde(deserialize_with = "humantime_serde::deserialize")
+    )]
+    /// Metrics update timeout
+    pub timeout: Option<Duration>,
 }
 
-#[cfg(feature = "metrics")]
-impl From<&MetricKind> for MetricKindMask {
-    fn from(kind: &MetricKind) -> Self {
-        match kind {
-            MetricKind::All => Self::ALL,
-            MetricKind::Counter => Self::COUNTER,
-            MetricKind::Guage => Self::GAUGE,
-            MetricKind::Histogram => Self::HISTOGRAM,
-            MetricKind::None => Self::NONE,
+#[cfg(feature = "prometheus")]
+impl TryFrom<PrometheusConfig> for opentelemetry_otlp::MetricExporter {
+    type Error = Error;
+
+    fn try_from(config: PrometheusConfig) -> Result<Self, Self::Error> {
+        let mut builder = Self::builder()
+            .with_tonic()
+            .with_endpoint(config.endpoint.as_ref());
+        if let Some(timeout) = config.timeout {
+            builder = builder.with_timeout(timeout);
         }
+
+        if config.endpoint.scheme() == "https" {
+            builder = builder.with_tls_config(
+                opentelemetry_otlp::tonic_types::transport::ClientTlsConfig::default()
+                    .with_enabled_roots(),
+            );
+        }
+
+        let exporter = builder.build()?;
+        Ok(exporter)
     }
 }
 

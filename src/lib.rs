@@ -48,17 +48,22 @@
 //!     owiwi: Owiwi,
 //! }
 //!
-//! fn main() {
+//! fn main() -> Result<(), Box<dyn std::error::Error>>  {
 //!     let cli = Cli::parse();
 //!     // Create a configuration to send traces to honeycomb.io
 //!     let honeycomb_config = HoneycombConfig.builder()
-//!         .endpoint("https://api.honeycomb.io/traces/api".parse().expect("to be valid URL"))
+//!         .endpoint(
+//!             "https://api.honeycomb.io/traces/api"
+//!             .parse()
+//!             .expect("to be valid URL")
+//!         )
 //!         .api_key("super_secret_key".into())
 //!         .timeout(std::time::Duration::from_secs(5))
 //!         .build();
 //!     let collector_config = CollectorConfig::Honeycomb(honeycomb_config);
-//!     let _guard = cli.owiwi.init("example", collector_config);
+//!     let _guard = cli.owiwi.try_init("example", collector_config)?;
 //!     tracing::info!("the subscriber was initialized");
+//!     Ok(())
 //! }
 //!```
 //!
@@ -72,13 +77,14 @@
 //! use owiwi_tracing_opentelemetry::Owiwi;
 //! use owiwi_tracing_opentelemetry::trace::TraceCollectorConfig;
 //!
-//! fn main() {
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // The default collector configuration sends traces to std::io::stdout
 //!     let collector_config = TraceCollectorConfig::default();
 //!     let service_name = "example";
 //!     // Initializes the subscriber
-//!     let _guard = Owiwi::default().init(service_name,  collector_config);
+//!     let _guard = Owiwi::default().try_init(service_name,  collector_config)?;
 //!     tracing::info!("the Subscriber was initialized!");
+//!     Ok(())
 //! }
 //! ```
 //!
@@ -94,7 +100,7 @@
 
 pub mod env_vars;
 pub mod error;
-#[cfg(any(feature = "metrics", feature = "otel-metrics"))]
+#[cfg(feature = "metrics")]
 pub mod metrics;
 pub mod owiwi;
 pub mod trace;

@@ -48,8 +48,8 @@ alias t := test
     just --fmt --unstable --check 
 
 # Check for unused dependencies
-@shear:
-    cargo shear
+@shear *args:
+    cargo shear {{ args }}
 
 # Run tests
 @test *args:

@@ -2,4 +2,4 @@
 pub mod collector;
 
 #[doc(inline)]
-pub use collector::{MetricCollectorConfig, MetricOptions};
+pub use collector::{MetricOptions, MetricsConfig};

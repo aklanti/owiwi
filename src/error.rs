@@ -12,10 +12,6 @@ pub enum Error {
     /// Error building exporter
     #[error(transparent)]
     BuildTraceExporter(#[from] opentelemetry_otlp::ExporterBuildError),
-    #[cfg(feature = "metrics")]
-    /// Prometheus exporter build error
-    #[error(transparent)]
-    BuildPrometheusExporter(#[from] metrics_exporter_prometheus::BuildError),
     /// The subscriber initialization failed.
     #[error(transparent)]
     InitSubscriberError(#[from] tracing_subscriber::util::TryInitError),
