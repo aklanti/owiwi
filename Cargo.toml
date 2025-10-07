@@ -8,7 +8,7 @@ license = "MIT"
 categories = ["development-tools::debugging", "development-tools::profiling"]
 keywords = ["opentelemetry", "tracing", "metrics"]
 repository = "https://github.com/aklanti/owiwi-tracing-opentelemetry"
-rust-version = "1.90.0"
+rust-version = "1.94.0"
 
 [package.metadata.docs.rs]
 features = ["full"]
@@ -23,13 +23,13 @@ serde = ["dep:serde", "dep:humantime-serde"]
 
 [dependencies]
 # Compile-time-checked builder generator
-bon = "3.7"
+bon = "3"
 # A command line argument parser
-clap = { version = "4.5", optional = true, features = ["derive", "env"] }
+clap = { version = "4", optional = true, features = ["derive", "env"] }
 # Easily add a `--verbose` flag to CLI
 clap-verbosity-flag = { version = "3", optional = true, default-features = false, features = ["tracing"] }
 # A parser and formatter for std::time::{Duration, SystemTime}
-humantime = "2.3"
+humantime = "2"
 # Serde support for humantime
 humantime-serde = { version = "1", optional = true }
 # OpenTelemetry API
@@ -117,6 +117,3 @@ unused_lifetimes = "warn"
 broken_intra_doc_links = "warn"
 private_doc_tests = "warn"
 unescaped_backticks = "warn"
-
-[badges]
-maintenance = { status = "actively-developed" }
