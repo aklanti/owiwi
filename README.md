@@ -16,7 +16,7 @@
 
 `owiwi-tracing-opentelemetry` is a crate that provides an opinionated abstraction for initializing tracing subscriber with OpenTelemetry.
 
-It allows sending telemetry to any of the collector define in [`trace::collector::Collector`].
+It allows sending telemetry to any of the collector define in the [`trace::collector`][trace-collector] module.
 
 ## Usage
 
@@ -33,7 +33,7 @@ The main type of this crate is originally design to work binary application that
 ```toml
 [dependencies]
 clap = { version = "4.5.48", features = ["derive"] }
-owiwi-tracing-opentelemetry = { version = "0.1.0", features = ["clap"] }
+owiwi-tracing-opentelemetry = { version = "0.2", features = ["clap"] }
 tracing = "0.1"
 ```
 
@@ -60,7 +60,7 @@ fn main() {
          .timeout(std::time::Duration::from_secs(5))
          .build();
      let collector_config = TraceCollectorConfig::Honeycomb(honeycomb_config);
-     let _guard = cli.owiwi.init("example", collector_config);
+     let _guard = cli.owiwi.try_init("example", collector_config);
      tracing::info!("the subscriber was initialized");
 }
 
@@ -80,7 +80,7 @@ fn main() {
      let collector_config = TraceCollectorConfig::default();
      let service_name = "example";
      // Initializes the subscriber
-     let _guard = Owiwi::default().init(service_name,  collector_config);
+     let _guard = Owiwi::default().try_init(service_name,  collector_config);
      tracing::info!("the Subscriber was initialized!");
 }
 ```
@@ -113,4 +113,5 @@ This project was inspired by this [blog][instrumenting-axum] post.
 [humantime-serde]: https://docs.rs/humantime-serde/1/humantime_serde/
 [clap-args]: https://docs.rs/clap/4/clap/trait.Args.html
 [owiwi]: https://docs.rs/owiwi-tracing-opentelemetry/latest/owiwi/struct.Owiwi.html
+[trace-collector]: https://docs.rs/owiwi-tracing-opentelemetry/latest/trace/collector/index.html
 [instrumenting-axum]: https://determinate.systems/blog/instrumenting-axum/ 
