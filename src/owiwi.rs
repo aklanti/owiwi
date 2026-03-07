@@ -1,4 +1,4 @@
-//! This module define the instrumentation type.
+//! This module defines the instrumentation type.
 
 use std::env::VarError;
 use std::error::Error as _;

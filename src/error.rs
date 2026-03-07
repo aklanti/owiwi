@@ -3,7 +3,7 @@ use tonic::metadata::errors::InvalidMetadataValue;
 
 /// A specialized [`std::result::Result`] type for telemetry setup operation.
 ///
-/// This type is  used to avoid writing out [`owiwi::Error`](crate::Error);
+/// This type is used to avoid writing out [`owiwi::Error`](crate::Error);
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// The error type for subcriber initialization operations.
@@ -44,6 +44,6 @@ pub enum Error {
     #[error("unsupported traces collector: {0}")]
     UnsupportedTracesCollector(String),
     /// Invalid filter
-    #[error("unexpected error parsiing env filter: {0}")]
+    #[error("unexpected error parsing env filter: {0}")]
     UnexpectedFilter(String),
 }
