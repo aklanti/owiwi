@@ -13,7 +13,7 @@ use opentelemetry_sdk::trace::SdkTracerProvider;
 #[derive(Debug)]
 pub struct OwiwiGuard {
     /// SDK tracer provider
-    tracer_provider: SdkTracerProvider,
+    pub(crate) tracer_provider: SdkTracerProvider,
 }
 
 impl Drop for OwiwiGuard {
