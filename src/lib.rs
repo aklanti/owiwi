@@ -9,13 +9,13 @@ pub(crate) mod env_vars;
 pub mod error;
 #[cfg(feature = "metrics")]
 pub mod metrics;
-pub mod owiwi;
+mod owiwi;
 pub mod trace;
 
 #[doc(inline)]
 pub use error::{Error, Result};
 #[doc(inline)]
-pub use owiwi::Owiwi;
+pub use owiwi::{Owiwi, OwiwiGuard};
 
 #[cfg(feature = "clap")]
 /// Help heading for instrumentation options
