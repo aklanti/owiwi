@@ -1,7 +1,6 @@
 //! This module defines the abstractions for OpenTelemetry traces setup.
 
 pub mod collector;
-pub mod format;
 pub mod provider;
 
 #[doc(inline)]

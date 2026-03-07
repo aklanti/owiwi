@@ -7,6 +7,7 @@
 
 pub(crate) mod env_vars;
 pub mod error;
+mod format;
 mod guard;
 #[cfg(feature = "metrics")]
 pub mod metrics;
@@ -15,6 +16,8 @@ pub mod trace;
 
 #[doc(inline)]
 pub use error::{Error, Result};
+#[doc(inline)]
+pub use format::EventFormat;
 #[doc(inline)]
 pub use guard::OwiwiGuard;
 #[doc(inline)]

@@ -20,8 +20,8 @@ use super::env_vars::EnvVars;
 use super::error::Error;
 #[cfg(feature = "metrics")]
 use super::metrics::MetricOptions;
-use super::trace::format::EventFormat;
 use super::trace::{TraceCollectorConfig, TracerProviderOptions, provider};
+use crate::EventFormat;
 
 /// Instrumentation type.
 #[must_use]
@@ -75,7 +75,7 @@ pub struct Owiwi {
         unused,
         reason = "this will be use to initialize metrics but create warnings when running linter"
     )]
-    ///  Metrics configuration options
+    /// Metrics configuration options
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
     metrics: MetricOptions,
