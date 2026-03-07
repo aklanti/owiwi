@@ -157,7 +157,7 @@ pub enum MetricsConfig {
     Prometheus(PrometheusConfig),
 }
 
-/// This is the configuration data for Jaeger
+/// This is the configuration data for Prometheus
 #[derive(Debug, Clone, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub struct PrometheusConfig {
