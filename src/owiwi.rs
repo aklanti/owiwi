@@ -137,15 +137,15 @@ impl Owiwi {
                     }
                 }
                 if self.tracing_directives.is_empty() {
-                    let level = cfg_if::cfg_if! {
+                    cfg_if::cfg_if! {
                            if #[cfg(feature = "clap")] {
-                               self.verbose
+                               let level = self.verbose
                                .tracing_level()
-                               .ok_or_else(|| Error::TraceLevelMissing)?
-                           } else if #[cfg(not(feature = "clap"))] {
-                               tracing::Level::INFO
+                               .ok_or_else(|| Error::TraceLevelMissing)?;
+                           } else {
+                               let level = tracing::Level::INFO;
                            }
-                    };
+                    }
                     EnvFilter::try_new(level.as_str())?
                 } else {
                     EnvFilter::try_new("")?
