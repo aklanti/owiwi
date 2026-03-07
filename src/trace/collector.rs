@@ -2,14 +2,9 @@
 
 use std::fmt;
 use std::str::FromStr;
-use std::time::Duration;
 
-use bon::Builder;
-use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
-use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
-use secrecy::{ExposeSecret, SecretString};
-use url::Url;
-
+use super::HoneycombConfig;
+use super::JaegerConfig;
 use crate::Error;
 
 /// This type enumerates the telemetry exporters
@@ -133,80 +128,6 @@ impl TraceCollectorConfig {
     }
 }
 
-/// This is the configuration data for honeycomb.io
-#[derive(Debug, Clone, Builder)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
-pub struct HoneycombConfig {
-    /// Connection endpoint
-    pub endpoint: Url,
-    /// API Key
-    pub api_key: SecretString,
-    /// Set export timeout duration
-    #[cfg_attr(
-        feature = "serde",
-        serde(deserialize_with = "humantime_serde::deserialize")
-    )]
-    pub timeout: Duration,
-}
-
-impl TryFrom<HoneycombConfig> for SpanExporter {
-    type Error = Error;
-
-    fn try_from(config: HoneycombConfig) -> crate::Result<Self> {
-        let mut metadata = MetadataMap::with_capacity(1);
-        metadata.insert(
-            "x-honeycomb-team",
-            config.api_key.expose_secret().try_into()?,
-        );
-        let exporter = SpanExporter::builder()
-            .with_tonic()
-            .with_endpoint(config.endpoint.as_ref())
-            .with_timeout(config.timeout)
-            .with_metadata(metadata)
-            .with_tls_config(
-                opentelemetry_otlp::tonic_types::transport::ClientTlsConfig::default()
-                    .with_enabled_roots(),
-            )
-            .build()?;
-        Ok(exporter)
-    }
-}
-
-/// This is the configuration data for Jaeger
-#[derive(Debug, Clone, Builder)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
-pub struct JaegerConfig {
-    /// Connection endpoint
-    pub endpoint: Url,
-    /// Set export timeout duration
-    #[cfg_attr(
-        feature = "serde",
-        serde(deserialize_with = "humantime_serde::deserialize")
-    )]
-    pub timeout: Duration,
-}
-
-impl TryFrom<JaegerConfig> for SpanExporter {
-    type Error = Error;
-
-    fn try_from(config: JaegerConfig) -> Result<Self, Self::Error> {
-        let mut builder = Self::builder()
-            .with_tonic()
-            .with_endpoint(config.endpoint.as_ref())
-            .with_timeout(config.timeout);
-
-        if config.endpoint.scheme() == "https" {
-            builder = builder.with_tls_config(
-                opentelemetry_otlp::tonic_types::transport::ClientTlsConfig::default()
-                    .with_enabled_roots(),
-            );
-        }
-
-        let exporter = builder.build()?;
-        Ok(exporter)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
@@ -217,7 +138,7 @@ mod tests {
     use proptest::strategy::Strategy;
     use rstest::rstest;
 
-    use super::{HoneycombConfig, JaegerConfig, TraceCollector, TraceCollectorConfig};
+    use super::*;
 
     #[gtest]
     #[rstest]
