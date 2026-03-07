@@ -133,7 +133,7 @@ impl Owiwi {
                                 source: err.clone(),
                             });
                         }
-                        None => unreachable!(),
+                        None => return Err(Error::InvalidFilter),
                     }
                 }
                 if self.tracing_directives.is_empty() {

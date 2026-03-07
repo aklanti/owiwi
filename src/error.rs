@@ -43,4 +43,7 @@ pub enum Error {
     /// Unsupported traces collector
     #[error("unsupported traces collector: {0}")]
     UnsupportedTracesCollector(String),
+    /// Invalid filter
+    #[error("invalid span filter")]
+    UnexpectedFilter,
 }
