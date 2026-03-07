@@ -39,12 +39,14 @@ impl fmt::Display for TraceCollector {
 }
 
 impl TraceCollector {
-    /// A slice of string of the enum variants
-    pub const LITERALS: &[&str] = &["console", "honeycomb", "jaeger"];
     /// Returns a `&str` value of `self`
     #[must_use]
     pub const fn as_str(&self) -> &str {
-        Self::LITERALS[*self as usize]
+        match self {
+            Self::Console => "console",
+            Self::Honeycomb => "honeycomb",
+            Self::Jaeger => "jaeger",
+        }
     }
 }
 
