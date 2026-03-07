@@ -101,6 +101,7 @@ This project was inspired by this [blog][url-instrumenting-axum-blog] post.
 [badge-docs]: https://img.shields.io/docsrs/owiwi-tracing-opentelemetry/latest
 [url-docs]: https://docs.rs/owiwi-tracing-opentelemetry/latest/owiwi-tracing-opentelemetry
 [badge-license]: https://img.shields.io/badge/License-MPL_2.0-blue.svg
+[url-license]: LICENSE
 [url-serde-serialize]: https://docs.rs/serde/1/serde/trait.Serialize.html
 [url-serde-deserialize]: https://docs.rs/serde/1/serde/trait.Deserialize.html
 [url-humantime]: https://docs.rs/humantime/2/humantime/
