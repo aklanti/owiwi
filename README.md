@@ -95,11 +95,11 @@ This project was inspired by this [blog][url-instrumenting-axum-blog] post.
 
 
 [badge-actions]: https://github.com/aklanti/owiwi-tracing-opentelemetry/workflows/CI/badge.svg
-[url-actions]: https://github.com/aklanti/owiwi-tracing-opentelementry/actions/workflows/main.yaml
-[badge-crate]: https://img.shields.io/crates/v/owiwi-tracing-opentelementry
-[url-crate]: https://crates.io/crates/owiwi-tracing-opentelementry
-[badge-docs]: https://img.shields.io/docsrs/owiwi-tracing-opentelementry/latest
-[url-docs]: https://docs.rs/owiwi-tracing-opentelementry/latest/owiwi-tracing-opentelementry
+[url-actions]: https://github.com/aklanti/owiwi-tracing-opentelemetry/actions/workflows/main.yaml
+[badge-crate]: https://img.shields.io/crates/v/owiwi-tracing-opentelemetry
+[url-crate]: https://crates.io/crates/owiwi-tracing-opentelemetry
+[badge-docs]: https://img.shields.io/docsrs/owiwi-tracing-opentelemetry/latest
+[url-docs]: https://docs.rs/owiwi-tracing-opentelemetry/latest/owiwi-tracing-opentelemetry
 [badge-license]: https://img.shields.io/badge/License-MPL_2.0-blue.svg
 [url-serde-serialize]: https://docs.rs/serde/1/serde/trait.Serialize.html
 [url-serde-deserialize]: https://docs.rs/serde/1/serde/trait.Deserialize.html
