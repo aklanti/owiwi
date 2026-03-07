@@ -193,7 +193,7 @@ pub struct OwiwiGuard {
 impl Drop for OwiwiGuard {
     fn drop(&mut self) {
         if let Err(err) = self.tracer_provider.shutdown() {
-            tracing::error!("failed to shutdown tracer provider {err}");
+            eprintln!("failed to shutdown tracer provider {err}");
         }
     }
 }
