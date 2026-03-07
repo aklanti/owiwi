@@ -67,7 +67,7 @@ impl FromStr for MetricCollector {
     }
 }
 
-/// Configuration data for metrics initialization using the opentelementry `metrics` crate
+/// Configuration data for metrics initialization using the opentelemetry `metrics` crate
 /// Metric collector configuration options
 #[must_use]
 #[derive(Clone, Debug, Default, Builder)]
@@ -86,7 +86,6 @@ pub struct MetricOptions {
     pub collector: MetricCollector,
 
     /// Metrics update time interval
-    /// Set the metric collector
     #[cfg_attr(
         feature = "clap",
         arg(

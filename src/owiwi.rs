@@ -119,7 +119,7 @@ impl Owiwi {
         Ok(OwiwiGuard { tracer_provider })
     }
 
-    /// Creates a the filter layer
+    /// Creates a filter layer
     fn filter_layer(&self) -> Result<EnvFilter, Error> {
         let mut layer = match EnvFilter::try_from_default_env() {
             Ok(layer) => layer,
