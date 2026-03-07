@@ -16,6 +16,7 @@ use tracing_subscriber::util::SubscriberInitExt as _;
 
 #[cfg(feature = "clap")]
 use super::HELP_HEADING;
+use super::env_vars::EnvVars;
 use super::error::Error;
 #[cfg(feature = "metrics")]
 use super::metrics::MetricOptions;
@@ -27,6 +28,13 @@ use super::trace::{TraceCollectorConfig, TracerProviderOptions, provider};
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Owiwi {
+    /// Service name
+    #[cfg_attr(
+        feature = "clap",
+        arg(long = "service-name", env=EnvVars::OTEL_SERVICE_NAME)
+    )]
+    pub service_name: String,
+
     /// The event formatter to use
     #[cfg_attr(
         feature = "clap",
@@ -73,16 +81,11 @@ pub struct Owiwi {
     metrics: MetricOptions,
 }
 
-impl Default for Owiwi {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Owiwi {
     /// Creates new subscriber
-    pub fn new() -> Self {
+    pub fn new(service_name: String) -> Self {
         Self {
+            service_name,
             event_format: EventFormat::default(),
             tracing_directives: Vec::new(),
             tracer_provider_options: TracerProviderOptions::default(),
@@ -94,17 +97,13 @@ impl Owiwi {
     }
 
     /// Initializes the tracer
-    pub fn try_init(
-        &self,
-        service_name: &'static str,
-        collector_config: TraceCollectorConfig,
-    ) -> Result<OwiwiGuard, Error> {
+    pub fn try_init(&self, collector_config: TraceCollectorConfig) -> Result<OwiwiGuard, Error> {
         let filter_layer = self.filter_layer()?;
-        let resource = provider::init_resource(service_name);
+        let resource = provider::init_resource(self.service_name.clone());
         let tracer_provider = self
             .tracer_provider_options
             .init_provider(collector_config, resource)?;
-        let tracer = tracer_provider.tracer(service_name);
+        let tracer = tracer_provider.tracer(self.service_name.clone());
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         let registry = tracing_subscriber::registry()
             .with(otel_layer)

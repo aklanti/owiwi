@@ -5,7 +5,7 @@
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-pub mod env_vars;
+pub(crate) mod env_vars;
 pub mod error;
 #[cfg(feature = "metrics")]
 pub mod metrics;

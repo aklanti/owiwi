@@ -1,10 +1,6 @@
 //! Telemetry environment variables settings
 
 /// This type is used to namespace the environment variable settings
-#[expect(
-    missing_debug_implementations,
-    reason = "Unit struct, only the impl block is useful"
-)]
 pub struct EnvVars;
 
 impl EnvVars {
