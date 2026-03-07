@@ -3,7 +3,8 @@
 //! It allows sending traces to any of the collector define in the [`trace::collector`] module.
 //!
 #![cfg_attr(test, deny(warnings))]
-#[![cfg_attr(docsrs, feature(doc_cfg))]]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 pub mod env_vars;
 pub mod error;
 #[cfg(feature = "metrics")]
