@@ -6,7 +6,6 @@ use std::error::Error as _;
 #[cfg(feature = "clap")]
 use clap_verbosity_flag::Verbosity;
 use opentelemetry::trace::TracerProvider as _;
-use opentelemetry_sdk::trace::SdkTracerProvider;
 use tracing::Subscriber;
 use tracing_error::ErrorLayer;
 use tracing_subscriber::filter::{Directive, EnvFilter};
@@ -16,6 +15,7 @@ use tracing_subscriber::util::SubscriberInitExt as _;
 
 #[cfg(feature = "clap")]
 use super::HELP_HEADING;
+use super::OwiwiGuard;
 use super::env_vars::EnvVars;
 use super::error::Error;
 #[cfg(feature = "metrics")]
@@ -183,19 +183,4 @@ mod impl_fmt_layer {
     }
 
     pub(super) use define_layer;
-}
-
-/// Owiwi guard
-#[derive(Debug)]
-pub struct OwiwiGuard {
-    /// SDK tracer provider
-    tracer_provider: SdkTracerProvider,
-}
-
-impl Drop for OwiwiGuard {
-    fn drop(&mut self) {
-        if let Err(err) = self.tracer_provider.shutdown() {
-            eprintln!("failed to shutdown tracer provider {err}");
-        }
-    }
 }
