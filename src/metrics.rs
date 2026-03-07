@@ -2,4 +2,8 @@
 pub mod collector;
 
 #[doc(inline)]
-pub use collector::{MetricOptions, MetricsConfig};
+pub use collector::{MetricCollector, MetricOptions, MetricsConfig};
+
+#[cfg(feature = "prometheus")]
+#[doc(inline)]
+pub use collector::PrometheusConfig;

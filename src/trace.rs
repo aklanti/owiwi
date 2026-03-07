@@ -5,8 +5,8 @@ pub mod format;
 pub mod provider;
 
 #[doc(inline)]
-pub use self::collector::{TraceCollector, TraceCollectorConfig};
+pub use collector::{HoneycombConfig, JaegerConfig, TraceCollector, TraceCollectorConfig};
 #[doc(inline)]
-pub use self::format::EventFormat;
+pub use format::EventFormat;
 #[doc(inline)]
-pub use self::provider::TracerProviderOptions;
+pub use provider::TracerProviderOptions;
