@@ -38,12 +38,14 @@ pub enum MetricCollector {
 }
 
 impl MetricCollector {
-    /// A slice of string of the enum variants
-    pub const LITERALS: &[&str] = &["console", "prometheus"];
     /// Returns a `&str` value of `self`
     #[must_use]
     pub const fn as_str(&self) -> &str {
-        Self::LITERALS[*self as usize]
+        match self {
+            Self::Console => "console",
+            #[cfg(feature = "prometheus")]
+            Self::Prometheus => "prometheus",
+        }
     }
 }
 
