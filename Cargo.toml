@@ -28,6 +28,8 @@ bon = "3"
 clap = { version = "4", optional = true, features = ["derive", "env"] }
 # Easily add a `--verbose` flag to CLI
 clap-verbosity-flag = { version = "3", optional = true, default-features = false, features = ["tracing"] }
+# A macro to ergonomically define an item depending on a number of [cfg]
+cfg-if = "1.0"
 # A parser and formatter for std::time::{Duration, SystemTime}
 humantime = "2"
 # Serde support for humantime

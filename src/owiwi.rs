@@ -137,20 +137,16 @@ impl Owiwi {
                     }
                 }
                 if self.tracing_directives.is_empty() {
-                    #[cfg(feature = "clap")]
-                    let level = self
-                        .verbose
-                        .tracing_level()
-                        .ok_or_else(|| Error::TraceLevelMissing)?;
-
-                    #[cfg(not(feature = "clap"))]
-                    let level = tracing::Level::INFO;
-
-                    EnvFilter::try_new(format!(
-                        "{}={}",
-                        env!("CARGO_PKG_NAME").replace('-', "_"),
-                        level.as_str()
-                    ))?
+                    let level = cfg_if::cfg_if! {
+                           if #[cfg(feature = "clap")] {
+                               self.verbose
+                               .tracing_level()
+                               .ok_or_else(|| Error::TraceLevelMissing)?
+                           } else if #[cfg(not(feature = "clap"))] {
+                               tracing::Level::INFO
+                           }
+                    };
+                    EnvFilter::try_new(level.as_str())?
                 } else {
                     EnvFilter::try_new("")?
                 }
