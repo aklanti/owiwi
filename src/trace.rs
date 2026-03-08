@@ -1,12 +1,12 @@
 //! This module defines the abstractions for OpenTelemetry traces setup.
 
-pub mod collector;
+pub mod exporter;
 mod honeycomb;
 mod jaeger;
 pub mod provider;
 
 #[doc(inline)]
-pub use collector::{TraceExporter, TraceExporterConfig};
+pub use exporter::{TraceExporter, TraceExporterConfig};
 #[doc(inline)]
 pub use honeycomb::HoneycombConfig;
 #[doc(inline)]
