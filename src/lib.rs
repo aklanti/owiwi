@@ -10,7 +10,7 @@ pub mod error;
 mod format;
 mod guard;
 #[cfg(feature = "metrics")]
-pub mod metrics;
+mod metrics;
 mod owiwi;
 pub mod trace;
 
@@ -20,8 +20,13 @@ pub use error::{Error, Result};
 pub use format::EventFormat;
 #[doc(inline)]
 pub use guard::OwiwiGuard;
+#[cfg(feature = "metrics")]
+#[doc(inline)]
+pub use metrics::{MetricCollector, MetricOptions, MetricsConfig};
 #[doc(inline)]
 pub use owiwi::Owiwi;
+#[doc(inline)]
+pub use trace::{HoneycombConfig, JaegerConfig, TraceCollector, TraceCollectorConfig};
 
 #[cfg(feature = "clap")]
 /// Help heading for instrumentation options
