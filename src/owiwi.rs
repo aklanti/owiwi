@@ -78,7 +78,7 @@ pub struct Owiwi {
     /// Metrics configuration options
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
-    pub metrics: MetricOptions,
+    pub metrics_options: MetricOptions,
 }
 
 impl Owiwi {
@@ -92,17 +92,21 @@ impl Owiwi {
             #[cfg(feature = "clap")]
             verbose: Verbosity::default(),
             #[cfg(feature = "metrics")]
-            metrics: MetricOptions::default(),
+            metrics_options: MetricOptions::default(),
         }
     }
 
     /// Initializes the tracer
-    pub fn try_init(&self, collector_config: TraceCollectorConfig) -> Result<OwiwiGuard, Error> {
+    pub fn try_init(
+        &self,
+        collector_config: TraceCollectorConfig,
+        #[cfg(feature = "metrics")] metrics_config: super::metrics::MetricsConfig,
+    ) -> Result<OwiwiGuard, Error> {
         let filter_layer = self.filter_layer()?;
         let resource = provider::init_resource(self.service_name.clone());
         let tracer_provider = self
             .tracer_provider_options
-            .init_provider(collector_config, resource)?;
+            .init_provider(collector_config, resource.clone())?;
         let tracer = tracer_provider.tracer(self.service_name.clone());
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         let registry = tracing_subscriber::registry()
@@ -115,7 +119,14 @@ impl Owiwi {
             EventFormat::Pretty => registry.with(self.fmt_layer_pretty()).try_init()?,
         }
 
-        Ok(OwiwiGuard { tracer_provider })
+        #[cfg(feature = "metrics")]
+        let metrics_provider = self
+            .metrics_options
+            .init_provider(resource, metrics_config)?;
+        Ok(OwiwiGuard {
+            tracer_provider,
+            metrics_provider,
+        })
     }
 
     /// Creates a filter layer

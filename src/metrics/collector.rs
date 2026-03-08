@@ -6,7 +6,6 @@ use std::time::Duration;
 
 use bon::Builder;
 use opentelemetry::global;
-use opentelemetry::metrics::Meter;
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 
@@ -100,13 +99,12 @@ pub struct MetricOptions {
 }
 
 impl MetricOptions {
-    /// Initializes metrics collector
-    pub fn try_init(
+    /// Initializes meter provider
+    pub fn init_provider(
         &self,
-        service_name: &'static str,
         resource: Resource,
         exporter_config: MetricsConfig,
-    ) -> Result<Meter, Error> {
+    ) -> Result<SdkMeterProvider, Error> {
         let meter_provider = match exporter_config {
             MetricsConfig::Console => {
                 let exporter = opentelemetry_stdout::MetricExporter::default();
@@ -131,9 +129,8 @@ impl MetricOptions {
             }
         };
 
-        global::set_meter_provider(meter_provider);
-        let meter = global::meter(service_name);
-        Ok(meter)
+        global::set_meter_provider(meter_provider.clone());
+        Ok(meter_provider)
     }
 }
 
