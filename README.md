@@ -45,13 +45,13 @@ struct Cli {
 fn main() {
      let cli = Cli::parse();
      // Create a configuration to send traces to honeycomb.io
-     let honeycomb_config = HoneycombConfig.builder()
+     let honeycomb_config = HoneycombConfig::builder()
          .endpoint("https://api.honeycomb.io/traces/api".parse().expect("to be valid URL"))
          .api_key("super_secret_key".into())
          .timeout(std::time::Duration::from_secs(5))
          .build();
      let collector_config = TraceCollectorConfig::Honeycomb(honeycomb_config);
-     let _guard = cli.owiwi.try_init("example", collector_config);
+     let _guard = cli.owiwi.try_init(collector_config);
      tracing::info!("the subscriber was initialized");
 }
 
@@ -69,9 +69,8 @@ use owiwi_tracing_opentelemetry::format::EventFormat;
 fn main() {
      // The default collector configuration sends traces to std::io::stdout
      let collector_config = TraceCollectorConfig::default();
-     let service_name = "example";
      // Initializes the subscriber
-     let _guard = Owiwi::default().try_init(service_name,  collector_config);
+     let _guard = Owiwi::new("example".into()).try_init(collector_config);
      tracing::info!("the Subscriber was initialized!");
 }
 ```
@@ -79,7 +78,7 @@ fn main() {
 ## Optional features
 
 There are some optional features that enable additional dependencies:
-- **serde:** adds [`Deserialize`][url-deserialize] implementations for some types. It also allow deserializing [`humantime`][url-humantime] using [`humantime-serde`][url-humantime-serde]
+- **serde:** adds [`Deserialize`][url-serde-deserialize] implementations for some types. It also allow deserializing [`humantime`][url-humantime] using [`humantime-serde`][url-humantime-serde]
 - **clap**: adds [`Args`][url-clap-args] implementation to [`Owiwi`][url-owiwi-struct] and various other types.
 
 ## Supported Rust versions
