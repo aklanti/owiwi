@@ -78,7 +78,7 @@ pub struct Owiwi {
     /// Metrics configuration options
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
-    metrics: MetricOptions,
+    pub metrics: MetricOptions,
 }
 
 impl Owiwi {
