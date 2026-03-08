@@ -2,9 +2,11 @@
 
 use std::fmt;
 use std::str::FromStr;
+use std::time::Duration;
 
-use super::HoneycombConfig;
-use super::JaegerConfig;
+use opentelemetry_otlp::SpanExporter;
+use url::Url;
+
 use crate::Error;
 
 /// This type enumerates the telemetry exporters
@@ -67,70 +69,20 @@ impl FromStr for TraceExporter {
     derive(serde::Deserialize),
     serde(rename_all(deserialize = "lowercase"))
 )]
-pub enum TraceExporterConfig {
-    /// This is the default configuration representing `std::io::stdout`
-    #[default]
-    Console,
-    /// This is Jaeger's configuration data
-    Jaeger(JaegerConfig),
-    /// This is the configuration data for honeycomb.io
-    Honeycomb(HoneycombConfig),
-}
 
-impl TraceExporterConfig {
-    /// Convert the `TraceExporterConfig` to an `Option<HoneycombConfig>`
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::time::Duration;
-    /// # use owiwi_tracing_opentelemetry::trace::TraceExporterConfig;
-    /// # use owiwi_tracing_opentelemetry::trace::HoneycombConfig;
-    /// let honey_config = HoneycombConfig{
-    ///     endpoint: "https://honeycom.io".parse()?,
-    ///     api_key: "".into(),
-    ///     timeout: Duration::from_millis(0)
-    /// };
-    /// let exporter_config = TraceExporterConfig::Honeycomb(honey_config.clone());
-    /// assert!(exporter_config.honeycomb().is_some_and(|config| config.endpoint == honey_config.endpoint));
-    /// # Ok::<_, Box<dyn std::error::Error>>(())
-    /// ```
-    #[must_use]
-    pub fn honeycomb(self) -> Option<HoneycombConfig> {
-        match self {
-            Self::Honeycomb(config) => Some(config),
-            _ => None,
-        }
-    }
+/// [`Console`] exports trace to `std::io::stdout`
+pub struct Console;
 
-    /// Convert the `TraceExporterConfig` to an `Option<JaegerConfig>`
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use std::time::Duration;
-    /// # use owiwi_tracing_opentelemetry::trace::TraceExporterConfig;
-    /// # use owiwi_tracing_opentelemetry::trace::JaegerConfig;
-    /// let jaeger_config = JaegerConfig{
-    ///     endpoint: "http://localhost:4317".parse()?,
-    ///     timeout: Duration::from_millis(0)
-    /// };
-    /// let exporter_config = TraceExporterConfig::Jaeger(jaeger_config.clone());
-    /// assert!(exporter_config.jaeger().is_some_and(|config| config.endpoint == jaeger_config.endpoint));
-    /// # Ok::<_, Box<dyn std::error::Error>>(())
-    /// ```
-    #[must_use]
-    pub fn jaeger(self) -> Option<JaegerConfig> {
-        match self {
-            Self::Jaeger(config) => Some(config),
-            _ => None,
-        }
-    }
+/// Exporter configuration trait
+pub trait ExporterConfig: TryInto<SpanExporter, Error = Error> {
+    /// Set exporter API URL
+    fn set_endpoint(&mut self, endpoint: Url);
+    /// Sets traces export timeout duration
+    fn set_timeout(&mut self, timeout: Duration);
 }
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
 
     use googletest::matchers::{anything, eq, err, ok};
     use googletest::{assert_that, gtest};
@@ -164,47 +116,5 @@ mod tests {
             let result: Result<TraceExporter,_> = value.parse();
             assert_that!(result,err(anything()));
         }
-    }
-
-    #[test]
-    fn get_honeycomb_config() {
-        let honey_config = HoneycombConfig {
-            endpoint: "https://api.honeycom.io/api/traces"
-                .parse()
-                .expect("it's a well formatter URL"),
-            api_key: "".into(),
-            timeout: Duration::from_millis(1),
-        };
-        let exporter_config = TraceExporterConfig::Honeycomb(honey_config.clone());
-        assert!(
-            exporter_config
-                .honeycomb()
-                .is_some_and(|config| config.endpoint == honey_config.endpoint)
-        );
-    }
-
-    #[test]
-    fn get_jaeger_config() {
-        let jaeger_config = JaegerConfig::builder()
-            .endpoint(
-                "http://127.0.0.1:4317"
-                    .parse()
-                    .expect("it's a well formatter URL"),
-            )
-            .timeout(Duration::from_millis(1))
-            .build();
-        let exporter_config = TraceExporterConfig::Jaeger(jaeger_config.clone());
-        assert!(
-            exporter_config
-                .jaeger()
-                .is_some_and(|config| config.endpoint == jaeger_config.endpoint)
-        );
-    }
-
-    #[test]
-    fn console_does_not_have_config() {
-        let exporter_config = TraceExporterConfig::Console;
-        assert!(exporter_config.clone().honeycomb().is_none());
-        assert!(exporter_config.jaeger().is_none());
     }
 }

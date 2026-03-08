@@ -46,7 +46,6 @@ pub enum Error {
     /// Invalid filter
     #[error("unexpected error parsing env filter: {0}")]
     UnexpectedFilter(String),
-    #[cfg(feature = "metrics")]
     /// Failed to shutdown a provider
     #[error("failed to shutdown provider: {0}")]
     Shutdown(opentelemetry_sdk::error::OTelSdkError),

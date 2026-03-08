@@ -22,11 +22,11 @@ pub use format::EventFormat;
 pub use guard::OwiwiGuard;
 #[cfg(feature = "metrics")]
 #[doc(inline)]
-pub use metrics::{MetricExporter, MeterProviderOptions, MetricsConfig};
+pub use metrics::{MeterProviderOptions, MetricExporter, MetricsConfig};
 #[doc(inline)]
 pub use owiwi::Owiwi;
 #[doc(inline)]
-pub use trace::{HoneycombConfig, JaegerConfig, TraceExporter, TraceExporterConfig};
+pub use trace::{HoneycombConfig, JaegerConfig, TraceExporter};
 
 #[cfg(feature = "clap")]
 /// Help heading for instrumentation options

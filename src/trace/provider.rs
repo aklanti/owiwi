@@ -9,7 +9,7 @@ use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
-use super::collector::{TraceExporter, TraceExporterConfig};
+use super::exporter::{ExporterConfig, TraceExporter};
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 #[cfg(feature = "clap")]
@@ -29,10 +29,11 @@ pub struct TracerProviderOptions {
              name = "trace-exporter",
              long,
              env = EnvVars::OTEL_TRACES_EXPORTER,
+             default_value_t = Default::default(),
              help_heading = HELP_HEADING,
          )
     )]
-    pub collector: Option<TraceExporter>,
+    pub collector: TraceExporter,
 
     /// Set export timeout duration
     #[cfg_attr(
@@ -67,33 +68,33 @@ impl TracerProviderOptions {
     /// Initializes the tracer
     pub fn init_provider(
         &self,
-        collector_config: TraceExporterConfig,
+        mut config: impl ExporterConfig,
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
-        let tracer_provider = match collector_config {
-            TraceExporterConfig::Console => provider_builder
+        let tracer_provider = match self.collector {
+            TraceExporter::Console => provider_builder
                 .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
                 .build(),
-            TraceExporterConfig::Honeycomb(mut config) => {
+            TraceExporter::Honeycomb => {
                 if let Some(endpoint) = self.exporter_endpoint.clone() {
-                    config.endpoint = endpoint;
+                    config.set_endpoint(endpoint);
                 }
 
                 if let Some(timeout) = self.exporter_timeout {
-                    config.timeout = timeout;
+                    config.set_timeout(timeout);
                 }
 
                 let exporter: SpanExporter = config.try_into()?;
                 provider_builder.with_batch_exporter(exporter).build()
             }
-            TraceExporterConfig::Jaeger(mut config) => {
+            TraceExporter::Jaeger => {
                 if let Some(endpoint) = self.exporter_endpoint.clone() {
-                    config.endpoint = endpoint;
+                    config.set_endpoint(endpoint);
                 }
 
                 if let Some(timeout) = self.exporter_timeout {
-                    config.timeout = timeout;
+                    config.set_timeout(timeout);
                 }
 
                 let exporter: SpanExporter = config.try_into()?;

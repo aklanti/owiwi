@@ -20,7 +20,7 @@ use super::env_vars::EnvVars;
 use super::error::Error;
 #[cfg(feature = "metrics")]
 use super::metrics::MeterProviderOptions;
-use super::trace::{TraceExporterConfig, TracerProviderOptions, provider};
+use super::trace::{ExporterConfig, TracerProviderOptions, provider};
 use crate::EventFormat;
 
 /// Instrumentation type.
@@ -99,14 +99,14 @@ impl Owiwi {
     /// Initializes the tracer
     pub fn try_init(
         &self,
-        collector_config: TraceExporterConfig,
+        config: impl ExporterConfig,
         #[cfg(feature = "metrics")] metrics_config: super::metrics::MetricsConfig,
     ) -> Result<OwiwiGuard, Error> {
         let filter_layer = self.filter_layer()?;
         let resource = provider::init_resource(self.service_name.clone());
         let tracer_provider = self
             .tracer_provider_options
-            .init_provider(collector_config, resource.clone())?;
+            .init_provider(config, resource.clone())?;
         let tracer = tracer_provider.tracer(self.service_name.clone());
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         let registry = tracing_subscriber::registry()
@@ -119,11 +119,10 @@ impl Owiwi {
             EventFormat::Pretty => registry.with(self.fmt_layer_pretty()).try_init()?,
         }
 
-        #[cfg(feature = "metrics")]
-        let meter_provider = self.meter_options.init_provider(resource, metrics_config)?;
         Ok(OwiwiGuard {
             tracer_provider,
-            meter_provider,
+            #[cfg(feature = "metrics")]
+            meter_provider: self.meter_options.init_provider(resource, metrics_config)?,
         })
     }
 
