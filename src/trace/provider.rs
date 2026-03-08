@@ -26,7 +26,7 @@ pub struct TracerProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-             name = "trace-collector",
+             name = "trace-exporter",
              long,
              env = EnvVars::OTEL_TRACES_EXPORTER,
              help_heading = HELP_HEADING,

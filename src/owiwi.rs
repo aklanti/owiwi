@@ -78,7 +78,7 @@ pub struct Owiwi {
     /// Metrics configuration options
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
-    pub metrics_options: MeterProviderOptions,
+    pub meter_options: MeterProviderOptions,
 }
 
 impl Owiwi {
@@ -92,7 +92,7 @@ impl Owiwi {
             #[cfg(feature = "clap")]
             verbose: Verbosity::default(),
             #[cfg(feature = "metrics")]
-            metrics_options: MeterProviderOptions::default(),
+            meter_options: MeterProviderOptions::default(),
         }
     }
 
@@ -120,9 +120,7 @@ impl Owiwi {
         }
 
         #[cfg(feature = "metrics")]
-        let meter_provider = self
-            .metrics_options
-            .init_provider(resource, metrics_config)?;
+        let meter_provider = self.meter_options.init_provider(resource, metrics_config)?;
         Ok(OwiwiGuard {
             tracer_provider,
             meter_provider,

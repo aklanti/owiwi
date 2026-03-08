@@ -1,10 +1,10 @@
 //! This module defines the abstraction for exporting metrics
-mod collector;
+mod exporter;
 #[cfg(feature = "prometheus")]
 mod prometheus;
 
 #[doc(inline)]
-pub use collector::{MetricExporter, MeterProviderOptions, MetricsConfig};
+pub use exporter::{MeterProviderOptions, MetricExporter, MetricsConfig};
 
 #[cfg(feature = "prometheus")]
 #[doc(inline)]

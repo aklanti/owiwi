@@ -74,7 +74,7 @@ pub struct MeterProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name="metrics-collector",
+            name="metrics-exporter",
             long,
             help_heading = HELP_HEADING,
         ),
