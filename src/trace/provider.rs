@@ -72,36 +72,16 @@ impl TracerProviderOptions {
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
-        let tracer_provider = match self.collector {
-            TraceExporter::Console => provider_builder
-                .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
-                .build(),
-            TraceExporter::Honeycomb => {
-                if let Some(endpoint) = self.exporter_endpoint.clone() {
-                    config.set_endpoint(endpoint);
-                }
+        if let Some(endpoint) = self.exporter_endpoint.clone() {
+            config.set_endpoint(endpoint);
+        }
 
-                if let Some(timeout) = self.exporter_timeout {
-                    config.set_timeout(timeout);
-                }
+        if let Some(timeout) = self.exporter_timeout {
+            config.set_timeout(timeout);
+        }
 
-                let exporter: SpanExporter = config.try_into()?;
-                provider_builder.with_batch_exporter(exporter).build()
-            }
-            TraceExporter::Jaeger => {
-                if let Some(endpoint) = self.exporter_endpoint.clone() {
-                    config.set_endpoint(endpoint);
-                }
-
-                if let Some(timeout) = self.exporter_timeout {
-                    config.set_timeout(timeout);
-                }
-
-                let exporter: SpanExporter = config.try_into()?;
-                provider_builder.with_batch_exporter(exporter).build()
-            }
-        };
-
+        let exporter: SpanExporter = config.try_into()?;
+        let tracer_provider = provider_builder.with_batch_exporter(exporter).build();
         Ok(tracer_provider)
     }
 }

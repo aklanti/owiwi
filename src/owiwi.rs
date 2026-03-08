@@ -6,6 +6,7 @@ use std::error::Error as _;
 #[cfg(feature = "clap")]
 use clap_verbosity_flag::Verbosity;
 use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_sdk::trace::SdkTracerProvider;
 use tracing::Subscriber;
 use tracing_error::ErrorLayer;
 use tracing_subscriber::filter::{Directive, EnvFilter};
@@ -96,7 +97,12 @@ impl Owiwi {
         }
     }
 
-    /// Initializes the tracer
+    /// Initializes the tracing and metrics providers with the given exporter configuration
+    ///
+    /// Sets up a [`tracing_subscriber`] registry with an OpenTelemetry layer,
+    /// error layer, env filter, and the configured event formatter.
+    ///
+    /// Returns an [`OwiwiGuard`] that must be held for the lifetime of the program.
     pub fn try_init(
         &self,
         config: impl ExporterConfig,
@@ -119,10 +125,37 @@ impl Owiwi {
             EventFormat::Pretty => registry.with(self.fmt_layer_pretty()).try_init()?,
         }
 
+        #[cfg(feature = "metrics")]
+        let meter_provider = self.meter_options.init_provider(resource, metrics_config)?;
+
         Ok(OwiwiGuard {
             tracer_provider,
             #[cfg(feature = "metrics")]
-            meter_provider: self.meter_options.init_provider(resource, metrics_config)?,
+            meter_provider,
+        })
+    }
+
+    /// Initialize tracing with a console exporter for local development.
+    ///
+    /// Uses a simple exporter that writes spans to stdout.
+    pub fn try_init_console(&self) -> Result<OwiwiGuard, Error> {
+        let resource = provider::init_resource(self.service_name.clone());
+        let tracer_provider = SdkTracerProvider::builder()
+            .with_resource(resource.clone())
+            .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
+            .build();
+        #[cfg(feature = "metrics")]
+        let meter_provider = {
+            let exporter = opentelemetry_stdout::MetricExporter::default();
+            opentelemetry_sdk::metrics::SdkMeterProvider::builder()
+                .with_resource(resource)
+                .with_periodic_exporter(exporter)
+                .build()
+        };
+        Ok(OwiwiGuard {
+            tracer_provider,
+            #[cfg(feature = "metrics")]
+            meter_provider,
         })
     }
 
