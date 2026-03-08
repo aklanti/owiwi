@@ -70,7 +70,6 @@ impl FromStr for MetricCollector {
 }
 
 /// Configuration data for metrics initialization using the opentelemetry `metrics` crate
-/// Metric collector configuration options
 #[must_use]
 #[derive(Clone, Debug, Default, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
@@ -163,14 +162,13 @@ pub enum MetricsConfig {
 #[derive(Debug, Clone, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub struct PrometheusConfig {
-    /// Connection host,
+    /// Connection host
     pub endpoint: Url,
     /// Set export timeout duration
     #[cfg_attr(
         feature = "serde",
         serde(deserialize_with = "humantime_serde::deserialize")
     )]
-    /// Metrics update timeout
     pub timeout: Option<Duration>,
 }
 
