@@ -69,7 +69,7 @@ impl FromStr for MetricExporter {
 #[derive(Clone, Debug, Default, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
-pub struct MetricOptions {
+pub struct MeterProviderOptions {
     /// Set the metric collector
     #[cfg_attr(
         feature = "clap",
@@ -98,7 +98,7 @@ pub struct MetricOptions {
     pub interval: Option<Duration>,
 }
 
-impl MetricOptions {
+impl MeterProviderOptions {
     /// Initializes meter provider
     pub fn init_provider(
         &self,

@@ -22,7 +22,7 @@ pub use format::EventFormat;
 pub use guard::OwiwiGuard;
 #[cfg(feature = "metrics")]
 #[doc(inline)]
-pub use metrics::{MetricExporter, MetricOptions, MetricsConfig};
+pub use metrics::{MetricExporter, MeterProviderOptions, MetricsConfig};
 #[doc(inline)]
 pub use owiwi::Owiwi;
 #[doc(inline)]

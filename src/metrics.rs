@@ -4,7 +4,7 @@ mod collector;
 mod prometheus;
 
 #[doc(inline)]
-pub use collector::{MetricExporter, MetricOptions, MetricsConfig};
+pub use collector::{MetricExporter, MeterProviderOptions, MetricsConfig};
 
 #[cfg(feature = "prometheus")]
 #[doc(inline)]

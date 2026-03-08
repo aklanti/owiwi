@@ -19,7 +19,7 @@ use super::OwiwiGuard;
 use super::env_vars::EnvVars;
 use super::error::Error;
 #[cfg(feature = "metrics")]
-use super::metrics::MetricOptions;
+use super::metrics::MeterProviderOptions;
 use super::trace::{TraceExporterConfig, TracerProviderOptions, provider};
 use crate::EventFormat;
 
@@ -78,7 +78,7 @@ pub struct Owiwi {
     /// Metrics configuration options
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
-    pub metrics_options: MetricOptions,
+    pub metrics_options: MeterProviderOptions,
 }
 
 impl Owiwi {
@@ -92,7 +92,7 @@ impl Owiwi {
             #[cfg(feature = "clap")]
             verbose: Verbosity::default(),
             #[cfg(feature = "metrics")]
-            metrics_options: MetricOptions::default(),
+            metrics_options: MeterProviderOptions::default(),
         }
     }
 
