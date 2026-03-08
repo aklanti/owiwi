@@ -20,7 +20,7 @@ use super::env_vars::EnvVars;
 use super::error::Error;
 #[cfg(feature = "metrics")]
 use super::metrics::MetricOptions;
-use super::trace::{TraceCollectorConfig, TracerProviderOptions, provider};
+use super::trace::{TraceExporterConfig, TracerProviderOptions, provider};
 use crate::EventFormat;
 
 /// Instrumentation type.
@@ -99,7 +99,7 @@ impl Owiwi {
     /// Initializes the tracer
     pub fn try_init(
         &self,
-        collector_config: TraceCollectorConfig,
+        collector_config: TraceExporterConfig,
         #[cfg(feature = "metrics")] metrics_config: super::metrics::MetricsConfig,
     ) -> Result<OwiwiGuard, Error> {
         let filter_layer = self.filter_layer()?;

@@ -33,7 +33,7 @@ pub enum Error {
     ParseUrlError(#[from] url::ParseError),
     /// Collector configuration error
     #[error("collector configuration error")]
-    TraceCollectorConfigError,
+    TraceExporterConfigError,
     /// The log or level or trace directive is not set.
     #[error("expected tracing level filter")]
     TraceLevelMissing,

@@ -9,7 +9,7 @@ use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
-use super::collector::{TraceCollector, TraceCollectorConfig};
+use super::collector::{TraceExporter, TraceExporterConfig};
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 #[cfg(feature = "clap")]
@@ -32,7 +32,7 @@ pub struct TracerProviderOptions {
              help_heading = HELP_HEADING,
          )
     )]
-    pub collector: Option<TraceCollector>,
+    pub collector: Option<TraceExporter>,
 
     /// Set export timeout duration
     #[cfg_attr(
@@ -67,15 +67,15 @@ impl TracerProviderOptions {
     /// Initializes the tracer
     pub fn init_provider(
         &self,
-        collector_config: TraceCollectorConfig,
+        collector_config: TraceExporterConfig,
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
         let tracer_provider = match collector_config {
-            TraceCollectorConfig::Console => provider_builder
+            TraceExporterConfig::Console => provider_builder
                 .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
                 .build(),
-            TraceCollectorConfig::Honeycomb(mut config) => {
+            TraceExporterConfig::Honeycomb(mut config) => {
                 if let Some(endpoint) = self.exporter_endpoint.clone() {
                     config.endpoint = endpoint;
                 }
@@ -87,7 +87,7 @@ impl TracerProviderOptions {
                 let exporter: SpanExporter = config.try_into()?;
                 provider_builder.with_batch_exporter(exporter).build()
             }
-            TraceCollectorConfig::Jaeger(mut config) => {
+            TraceExporterConfig::Jaeger(mut config) => {
                 if let Some(endpoint) = self.exporter_endpoint.clone() {
                     config.endpoint = endpoint;
                 }

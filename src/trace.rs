@@ -6,7 +6,7 @@ mod jaeger;
 pub mod provider;
 
 #[doc(inline)]
-pub use collector::{TraceCollector, TraceCollectorConfig};
+pub use collector::{TraceExporter, TraceExporterConfig};
 #[doc(inline)]
 pub use honeycomb::HoneycombConfig;
 #[doc(inline)]

@@ -22,7 +22,7 @@ use crate::error::Error;
     serde(rename_all(deserialize = "lowercase"))
 )]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
-pub enum MetricCollector {
+pub enum MetricExporter {
     /// Export metrics to `std::io::stdout`
     /// This variant is only suitable for development and debugging
     #[default]
@@ -32,7 +32,7 @@ pub enum MetricCollector {
     Prometheus,
 }
 
-impl MetricCollector {
+impl MetricExporter {
     /// Returns a `&str` value of `self`
     #[must_use]
     pub const fn as_str(&self) -> &str {
@@ -44,13 +44,13 @@ impl MetricCollector {
     }
 }
 
-impl fmt::Display for MetricCollector {
+impl fmt::Display for MetricExporter {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.as_str().fmt(f)
     }
 }
 
-impl FromStr for MetricCollector {
+impl FromStr for MetricExporter {
     type Err = Error;
     fn from_str(value: &str) -> Result<Self, Error> {
         let this = match value {
@@ -79,7 +79,7 @@ pub struct MetricOptions {
             help_heading = HELP_HEADING,
         ),
     )]
-    pub collector: MetricCollector,
+    pub collector: MetricExporter,
 
     /// Metrics update time interval
     #[cfg_attr(
@@ -156,29 +156,29 @@ mod tests {
     use googletest::matchers::{anything, eq, ok};
     use googletest::{assert_that, gtest};
 
-    use super::MetricCollector;
+    use super::MetricExporter;
 
     #[gtest]
     fn display_console_collector_value() {
-        assert_that!(MetricCollector::Console.as_str(), eq("console"));
+        assert_that!(MetricExporter::Console.as_str(), eq("console"));
     }
 
     #[cfg(feature = "prometheus")]
     #[gtest]
     fn display_prometheus_collector_value() {
-        assert_that!(MetricCollector::Prometheus.as_str(), eq("prometheus"));
+        assert_that!(MetricExporter::Prometheus.as_str(), eq("prometheus"));
     }
 
     #[cfg(feature = "prometheus")]
     #[gtest]
     fn parse_valid_prometheus_collector_from_string() {
-        let result: Result<MetricCollector, _> = "prometheus".parse();
+        let result: Result<MetricExporter, _> = "prometheus".parse();
         assert_that!(result, ok(anything()));
     }
 
     #[gtest]
     fn parse_valid_console_collector_from_string() {
-        let result: Result<MetricCollector, _> = "console".parse();
+        let result: Result<MetricExporter, _> = "console".parse();
         assert_that!(result, ok(anything()));
     }
 }
