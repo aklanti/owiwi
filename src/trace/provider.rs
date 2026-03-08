@@ -106,6 +106,6 @@ impl TracerProviderOptions {
 }
 
 /// Inititalizes the resource
-pub fn init_resource(service_name: impl Into<Value>) -> Resource {
+pub(crate) fn init_resource(service_name: impl Into<Value>) -> Resource {
     Resource::builder().with_service_name(service_name).build()
 }
