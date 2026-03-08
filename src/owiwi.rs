@@ -120,12 +120,12 @@ impl Owiwi {
         }
 
         #[cfg(feature = "metrics")]
-        let metrics_provider = self
+        let meter_provider = self
             .metrics_options
             .init_provider(resource, metrics_config)?;
         Ok(OwiwiGuard {
             tracer_provider,
-            metrics_provider,
+            meter_provider,
         })
     }
 
