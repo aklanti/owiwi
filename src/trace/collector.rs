@@ -85,7 +85,7 @@ impl TraceCollectorConfig {
     /// ```
     /// # use std::time::Duration;
     /// # use owiwi_tracing_opentelemetry::trace::TraceCollectorConfig;
-    /// # use owiwi_tracing_opentelemetry::trace::collector::HoneycombConfig;
+    /// # use owiwi_tracing_opentelemetry::trace::HoneycombConfig;
     /// let honey_config = HoneycombConfig{
     ///     endpoint: "https://honeycom.io".parse()?,
     ///     api_key: "".into(),
@@ -110,7 +110,7 @@ impl TraceCollectorConfig {
     /// ```
     /// # use std::time::Duration;
     /// # use owiwi_tracing_opentelemetry::trace::TraceCollectorConfig;
-    /// # use owiwi_tracing_opentelemetry::trace::collector::JaegerConfig;
+    /// # use owiwi_tracing_opentelemetry::trace::JaegerConfig;
     /// let jaeger_config = JaegerConfig{
     ///     endpoint: "http://localhost:4317".parse()?,
     ///     timeout: Duration::from_millis(0)

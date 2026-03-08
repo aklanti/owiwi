@@ -7,12 +7,8 @@ use std::time::Duration;
 use bon::Builder;
 use opentelemetry::global;
 use opentelemetry::metrics::Meter;
-#[cfg(feature = "prometheus")]
-use opentelemetry_otlp::{MetricExporter, WithExportConfig, WithTonicConfig};
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::metrics::SdkMeterProvider;
-
-use url::Url;
 
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
@@ -122,7 +118,7 @@ impl MetricOptions {
             #[cfg(feature = "prometheus")]
             MetricsConfig::Prometheus(config) => {
                 use opentelemetry_sdk::metrics::PeriodicReader;
-                let exporter = MetricExporter::try_from(config)?;
+                let exporter = opentelemetry_otlp::MetricExporter::try_from(config)?;
                 let mut builder = PeriodicReader::builder(exporter);
                 if let Some(interval) = self.interval {
                     builder = builder.with_interval(interval);
@@ -155,45 +151,7 @@ pub enum MetricsConfig {
     Console,
     #[cfg(feature = "prometheus")]
     /// This is Prometheus's configuration data
-    Prometheus(PrometheusConfig),
-}
-
-/// This is the configuration data for Prometheus
-#[derive(Debug, Clone, Builder)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
-pub struct PrometheusConfig {
-    /// Connection host
-    pub endpoint: Url,
-    /// Set export timeout duration
-    #[cfg_attr(
-        feature = "serde",
-        serde(deserialize_with = "humantime_serde::deserialize")
-    )]
-    pub timeout: Option<Duration>,
-}
-
-#[cfg(feature = "prometheus")]
-impl TryFrom<PrometheusConfig> for opentelemetry_otlp::MetricExporter {
-    type Error = Error;
-
-    fn try_from(config: PrometheusConfig) -> Result<Self, Self::Error> {
-        let mut builder = Self::builder()
-            .with_tonic()
-            .with_endpoint(config.endpoint.as_ref());
-        if let Some(timeout) = config.timeout {
-            builder = builder.with_timeout(timeout);
-        }
-
-        if config.endpoint.scheme() == "https" {
-            builder = builder.with_tls_config(
-                opentelemetry_otlp::tonic_types::transport::ClientTlsConfig::default()
-                    .with_enabled_roots(),
-            );
-        }
-
-        let exporter = builder.build()?;
-        Ok(exporter)
-    }
+    Prometheus(super::PrometheusConfig),
 }
 
 #[cfg(test)]
