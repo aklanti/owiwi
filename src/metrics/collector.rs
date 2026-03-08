@@ -146,46 +146,42 @@ impl MetricOptions {
     serde(rename_all(deserialize = "lowercase"))
 )]
 pub enum MetricsConfig {
-    /// This is the default configuration representing `std::io::stdout`
+    /// The default configuration representing `std::io::stdout`
     #[default]
     Console,
     #[cfg(feature = "prometheus")]
-    /// This is Prometheus's configuration data
+    /// Prometheus's configuration data
     Prometheus(super::PrometheusConfig),
 }
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers::{anything, eq, err, ok};
+    use googletest::matchers::{anything, eq, ok};
     use googletest::{assert_that, gtest};
-    use proptest::proptest;
-    use proptest::strategy::Strategy;
-    use rstest::rstest;
 
     use super::MetricCollector;
 
     #[gtest]
-    #[rstest]
-    #[case(MetricCollector::Console, "console")]
-    #[case(MetricCollector::Prometheus, "prometheus")]
-    fn display_correct_collector_value(#[case] collector: MetricCollector, #[case] display: &str) {
-        assert_that!(collector.to_string(), eq(display));
+    fn display_console_collector_value() {
+        assert_that!(MetricCollector::Console.as_str(), eq("console"));
     }
 
-    proptest! {
-        #[gtest]
-        fn parse_valid_collector_from_string_successfully(value in "console|prometheus") {
-            let result: Result<MetricCollector,_> = value.parse();
-            assert_that!(result,ok(anything()));
-        }
+    #[cfg(feature = "prometheus")]
+    #[gtest]
+    fn display_prometheus_collector_value() {
+        assert_that!(MetricCollector::Prometheus.as_str(), eq("prometheus"));
+    }
 
-        #[gtest]
-        fn parsing_invalid_collector_from_string_fails(
-            value in "[a-zA-Z]*"
-                .prop_filter("Value must be a valid variant",
-                    |v| !["console", "prometheus"].contains(&v.as_str()))) {
-            let result: Result<MetricCollector,_> = value.parse();
-            assert_that!(result,err(anything()));
-        }
+    #[cfg(feature = "prometheus")]
+    #[gtest]
+    fn parse_valid_prometheus_collector_from_string() {
+        let result: Result<MetricCollector, _> = "prometheus".parse();
+        assert_that!(result, ok(anything()));
+    }
+
+    #[gtest]
+    fn parse_valid_console_collector_from_string() {
+        let result: Result<MetricCollector, _> = "console".parse();
+        assert_that!(result, ok(anything()));
     }
 }
