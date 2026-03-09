@@ -14,9 +14,12 @@ rust-version = "1.94.0"
 features = ["full"]
 
 [features]
+default = ["clap", "serde"]
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
 console = ["opentelemetry-stdout/metrics"]
 full = ["clap", "serde", "prometheus"]
+honeycomb = []
+jaeger  = []
 metrics = ["opentelemetry_sdk/metrics"]
 prometheus = ["opentelemetry-otlp/metrics"]
 serde = ["dep:serde", "dep:humantime-serde"]
