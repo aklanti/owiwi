@@ -106,7 +106,7 @@ impl Owiwi {
     pub fn try_init(
         &self,
         config: impl ExporterConfig,
-        #[cfg(feature = "metrics")] metrics_config: super::metrics::MetricsConfig,
+        #[cfg(feature = "metrics")] metrics_config: impl super::metrics::MetricExporterConfig,
     ) -> Result<OwiwiGuard, Error> {
         let resource = provider::init_resource(self.service_name.clone());
         let tracer_provider = self

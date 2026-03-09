@@ -7,7 +7,9 @@ use std::time::Duration;
 use bon::Builder;
 use opentelemetry::global;
 use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::metrics::PeriodicReader;
 use opentelemetry_sdk::metrics::SdkMeterProvider;
+use url::Url;
 
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
@@ -103,52 +105,30 @@ impl MeterProviderOptions {
     pub fn init_provider(
         &self,
         resource: Resource,
-        exporter_config: MetricsConfig,
+        config: impl MetricExporterConfig,
     ) -> Result<SdkMeterProvider, Error> {
-        let meter_provider = match exporter_config {
-            MetricsConfig::Console => {
-                let exporter = opentelemetry_stdout::MetricExporter::default();
-                SdkMeterProvider::builder()
-                    .with_resource(resource)
-                    .with_periodic_exporter(exporter)
-                    .build()
-            }
-            #[cfg(feature = "prometheus")]
-            MetricsConfig::Prometheus(config) => {
-                use opentelemetry_sdk::metrics::PeriodicReader;
-                let exporter = opentelemetry_otlp::MetricExporter::try_from(config)?;
-                let mut builder = PeriodicReader::builder(exporter);
-                if let Some(interval) = self.interval {
-                    builder = builder.with_interval(interval);
-                }
-                let reader = builder.build();
-                SdkMeterProvider::builder()
-                    .with_resource(resource)
-                    .with_reader(reader)
-                    .build()
-            }
-        };
+        let exporter = config.try_into()?;
+        let mut builder = PeriodicReader::builder(exporter);
+        if let Some(interval) = self.interval {
+            builder = builder.with_interval(interval);
+        }
+        let reader = builder.build();
+        let meter_provider = SdkMeterProvider::builder()
+            .with_resource(resource)
+            .with_reader(reader)
+            .build();
 
         global::set_meter_provider(meter_provider.clone());
         Ok(meter_provider)
     }
 }
 
-/// Metrics collector configuration
-#[non_exhaustive]
-#[derive(Debug, Default, Clone)]
-#[cfg_attr(
-    feature = "serde",
-    derive(serde::Deserialize),
-    serde(rename_all(deserialize = "lowercase"))
-)]
-pub enum MetricsConfig {
-    /// The default configuration representing `std::io::stdout`
-    #[default]
-    Console,
-    #[cfg(feature = "prometheus")]
-    /// Prometheus's configuration data
-    Prometheus(super::PrometheusConfig),
+/// Metric exporter configuration trait
+pub trait MetricExporterConfig: TryInto<opentelemetry_otlp::MetricExporter, Error = Error> {
+    /// Set metric exporter API URL
+    fn set_endpoint(&mut self, endpoint: Url);
+    /// Set the metric exporter timeout
+    fn set_timeout(&mut self, timeout: Duration);
 }
 
 #[cfg(test)]

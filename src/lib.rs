@@ -10,7 +10,7 @@ pub mod error;
 mod format;
 mod guard;
 #[cfg(feature = "metrics")]
-mod metrics;
+pub mod metrics;
 mod owiwi;
 pub mod trace;
 
@@ -22,7 +22,7 @@ pub use format::EventFormat;
 pub use guard::OwiwiGuard;
 #[cfg(feature = "metrics")]
 #[doc(inline)]
-pub use metrics::{MeterProviderOptions, MetricExporter, MetricsConfig};
+pub use metrics::{MeterProviderOptions, MetricExporter};
 #[doc(inline)]
 pub use owiwi::Owiwi;
 #[doc(inline)]

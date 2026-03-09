@@ -6,6 +6,7 @@ use bon::Builder;
 use opentelemetry_otlp::{WithExportConfig, WithTonicConfig};
 use url::Url;
 
+use super::exporter::MetricExporterConfig;
 use crate::error::Error;
 
 /// This is the configuration data for Prometheus
@@ -42,5 +43,15 @@ impl TryFrom<PrometheusConfig> for opentelemetry_otlp::MetricExporter {
 
         let exporter = builder.build()?;
         Ok(exporter)
+    }
+}
+
+impl MetricExporterConfig for PrometheusConfig {
+    fn set_endpoint(&mut self, endpoint: Url) {
+        self.endpoint = endpoint;
+    }
+
+    fn set_timeout(&mut self, timeout: Duration) {
+        self.timeout.replace(timeout);
     }
 }
