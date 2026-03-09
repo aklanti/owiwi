@@ -3,7 +3,7 @@
 [![Documentation][badge-docs]][url-docs]
 [![MPL-2.0 license][badge-license]][url-license]
 
-## owiwi-tracing-opentelemetry
+## owiwi
 
 An opinionated library for initializing tracing subscriber with OpenTelemetry.
 
@@ -11,9 +11,9 @@ It allows sending telemetry to any of the collector define in the [`trace::colle
 
 ## Usage
 
-The `owiwi-tracing-opentelemetry` crate is [on crates.io][url-crate] and can be
-used by adding `owiwi-tracing-opentelemetry` to your dependencies in your project's `Cargo.toml`.
-Or more simply, just run `cargo add owiwi-tracing-opentelemetry`.
+The `owiwi` crate is [on crates.io][url-crate] and can be
+used by adding `owiwi` to your dependencies in your project's `Cargo.toml`.
+Or more simply, just run `cargo add owiwi`.
 
 Additionally, You must add the tracing crate to your dependencies.
 
@@ -24,7 +24,7 @@ The main type of this crate is originally design to work binary application that
 ```toml
 [dependencies]
 clap = { version = "4.5.60", features = ["derive"] }
-owiwi-tracing-opentelemetry = { version = "0.2.1", features = ["clap"] }
+owiwi = { version = "0.1.0" features = ["clap"] }
 tracing = "0.1"
 ```
 
@@ -32,7 +32,7 @@ The following is a complete program that initializes a subscriber and emit some 
 
 ```rust
 use clap::Parser;
-use owiwi_tracing_opentelemetry::{Owiwi, HoneycombConfig, SpanExporterConfig};
+use owiwi::{Owiwi, HoneycombConfig, SpanExporterConfig};
 
 #[derive(Debug, Clone, Parser)]
 struct Cli {
@@ -59,7 +59,7 @@ fn main() {
 The following is a complete program that initializes a subscriber and emit some traces.
 
 ```rust
-use owiwi_tracing_opentelemetry::{Owiwi, EventFormat};
+use owiwi::{Owiwi, EventFormat};
 
 fn main() {
      // Initializes the subscriber

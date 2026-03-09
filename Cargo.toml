@@ -1,6 +1,6 @@
 [package]
-name = "owiwi-tracing-opentelemetry"
-version = "0.2.1"
+name = "owiwi"
+version = "0.1.0"
 edition = "2024"
 authors = ["Sede Soukossi"]
 description = "A library to initialize tracing with opentelemetry"
