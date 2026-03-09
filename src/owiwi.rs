@@ -21,8 +21,9 @@ use super::env_vars::EnvVars;
 use super::error::Error;
 #[cfg(feature = "metrics")]
 use super::metrics::MeterProviderOptions;
-use super::trace::{SpanExporterConfig, TracerProviderOptions, provider};
+use super::trace::{TracerProviderOptions, provider};
 use crate::EventFormat;
+use crate::OtlpConfig;
 
 /// Instrumentation type.
 #[must_use]
@@ -101,7 +102,7 @@ impl Owiwi {
     /// Returns an [`OwiwiGuard`] that must be held for the lifetime of the program.
     pub fn try_init(
         &self,
-        config: impl SpanExporterConfig,
+        config: impl Into<OtlpConfig>,
         #[cfg(feature = "metrics")] metrics_exporter: impl TryInto<
             opentelemetry_otlp::MetricExporter,
             Error = Error,

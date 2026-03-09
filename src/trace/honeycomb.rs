@@ -3,12 +3,11 @@
 use std::time::Duration;
 
 use bon::Builder;
-use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
-use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
+use opentelemetry_otlp::SpanExporter;
 use secrecy::{ExposeSecret, SecretString};
 use url::Url;
 
-use super::exporter::SpanExporterConfig;
+use super::otlp::OtlpConfig;
 use crate::Error;
 
 /// Configuration data for honeycomb.io
@@ -31,31 +30,19 @@ impl TryFrom<HoneycombConfig> for SpanExporter {
     type Error = Error;
 
     fn try_from(config: HoneycombConfig) -> crate::Result<Self> {
-        let mut metadata = MetadataMap::with_capacity(1);
-        metadata.insert(
-            "x-honeycomb-team",
-            config.api_key.expose_secret().try_into()?,
-        );
-        let exporter = SpanExporter::builder()
-            .with_tonic()
-            .with_endpoint(config.endpoint.as_ref())
-            .with_timeout(config.timeout)
-            .with_metadata(metadata)
-            .with_tls_config(
-                opentelemetry_otlp::tonic_types::transport::ClientTlsConfig::default()
-                    .with_enabled_roots(),
-            )
-            .build()?;
-        Ok(exporter)
+        OtlpConfig::from(config).try_into()
     }
 }
 
-impl SpanExporterConfig for HoneycombConfig {
-    fn with_endpoint(&mut self, endpoint: Url) {
-        self.endpoint = endpoint;
-    }
-
-    fn with_timeout(&mut self, timeout: Duration) {
-        self.timeout = timeout;
+impl From<HoneycombConfig> for OtlpConfig {
+    fn from(config: HoneycombConfig) -> Self {
+        Self::builder()
+            .endpoint(config.endpoint)
+            .timeout(config.timeout)
+            .headers(vec![(
+                "x-honeycomb-team".to_owned(),
+                config.api_key.expose_secret().to_owned(),
+            )])
+            .build()
     }
 }

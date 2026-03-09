@@ -5,10 +5,11 @@ pub mod exporter;
 mod honeycomb;
 #[cfg(feature = "jaeger")]
 mod jaeger;
+pub mod otlp;
 pub mod provider;
 
 #[doc(inline)]
-pub use exporter::{SpanExporterConfig, TraceBackend};
+pub use exporter::TraceBackend;
 #[cfg(feature = "honeycomb")]
 #[doc(inline)]
 pub use honeycomb::HoneycombConfig;

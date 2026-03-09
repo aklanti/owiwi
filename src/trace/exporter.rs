@@ -2,10 +2,6 @@
 
 use std::fmt;
 use std::str::FromStr;
-use std::time::Duration;
-
-use opentelemetry_otlp::SpanExporter;
-use url::Url;
 
 use crate::Error;
 
@@ -58,20 +54,6 @@ impl FromStr for TraceBackend {
         };
         Ok(this)
     }
-}
-
-/// Exporter configuration trait
-#[diagnostic::on_unimplemented(
-    message = "`{Self}` is not a supported span export config",
-    label = "this type cannot be used as an exporter configuration",
-    note = "supported configs: HoneycombConfig, JaegerConfig",
-    note = "See feature flags"
-)]
-pub trait SpanExporterConfig: TryInto<SpanExporter, Error = Error> {
-    /// Set exporter API URL
-    fn with_endpoint(&mut self, endpoint: Url);
-    /// Sets traces export timeout duration
-    fn with_timeout(&mut self, timeout: Duration);
 }
 
 #[cfg(test)]

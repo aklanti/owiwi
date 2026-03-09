@@ -9,9 +9,10 @@ use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
-use super::exporter::{SpanExporterConfig, TraceBackend};
+use super::exporter::TraceBackend;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
+use crate::OtlpConfig;
 #[cfg(feature = "clap")]
 use crate::env_vars::EnvVars;
 use crate::error::Error;
@@ -68,16 +69,17 @@ impl TracerProviderOptions {
     /// Initializes the tracer
     pub fn init_provider(
         &self,
-        mut config: impl SpanExporterConfig,
+        config: impl Into<OtlpConfig>,
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
+        let mut config = config.into();
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
         if let Some(endpoint) = self.exporter_endpoint.clone() {
-            config.with_endpoint(endpoint);
+            config.endpoint = endpoint;
         }
 
         if let Some(timeout) = self.exporter_timeout {
-            config.with_timeout(timeout);
+            config.timeout = timeout;
         }
 
         let exporter: SpanExporter = config.try_into()?;

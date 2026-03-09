@@ -32,7 +32,7 @@ The following is a complete program that initializes a subscriber and emit some 
 
 ```rust
 use clap::Parser;
-use owiwi::{Owiwi, HoneycombConfig, SpanExporterConfig};
+use owiwi::{Owiwi, HoneycombConfig, ConfigureExporter};
 
 #[derive(Debug, Clone, Parser)]
 struct Cli {

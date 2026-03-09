@@ -3,10 +3,10 @@
 use std::time::Duration;
 
 use bon::Builder;
-use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
+use opentelemetry_otlp::SpanExporter;
 use url::Url;
 
-use super::exporter::SpanExporterConfig;
+use super::otlp::OtlpConfig;
 use crate::Error;
 
 /// This is the configuration data for Jaeger
@@ -27,29 +27,15 @@ impl TryFrom<JaegerConfig> for SpanExporter {
     type Error = Error;
 
     fn try_from(config: JaegerConfig) -> Result<Self, Self::Error> {
-        let mut builder = Self::builder()
-            .with_tonic()
-            .with_endpoint(config.endpoint.as_ref())
-            .with_timeout(config.timeout);
-
-        if config.endpoint.scheme() == "https" {
-            builder = builder.with_tls_config(
-                opentelemetry_otlp::tonic_types::transport::ClientTlsConfig::default()
-                    .with_enabled_roots(),
-            );
-        }
-
-        let exporter = builder.build()?;
-        Ok(exporter)
+        OtlpConfig::from(config).try_into()
     }
 }
 
-impl SpanExporterConfig for JaegerConfig {
-    fn with_endpoint(&mut self, endpoint: Url) {
-        self.endpoint = endpoint;
-    }
-
-    fn with_timeout(&mut self, timeout: Duration) {
-        self.timeout = timeout;
+impl From<JaegerConfig> for OtlpConfig {
+    fn from(config: JaegerConfig) -> Self {
+        Self::builder()
+            .endpoint(config.endpoint)
+            .timeout(config.timeout)
+            .build()
     }
 }

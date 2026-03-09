@@ -35,7 +35,8 @@ pub use trace::HoneycombConfig;
 pub use trace::JaegerConfig;
 #[doc(inline)]
 pub use trace::TraceBackend;
-
+#[doc(inline)]
+pub use trace::otlp::OtlpConfig;
 #[cfg(feature = "clap")]
 /// Help heading for instrumentation options
 pub const HELP_HEADING: &str = "Instrumentation options";

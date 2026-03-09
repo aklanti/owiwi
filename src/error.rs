@@ -1,5 +1,4 @@
 //! Error module
-use tonic::metadata::errors::InvalidMetadataValue;
 
 /// A specialized [`std::result::Result`] type for telemetry setup operation.
 ///
@@ -15,9 +14,6 @@ pub enum Error {
     /// The subscriber initialization failed.
     #[error(transparent)]
     InitSubscriber(#[from] tracing_subscriber::util::TryInitError),
-    /// Invalid tonic metadata value
-    #[error(transparent)]
-    InvalidMetadataValue(#[from] InvalidMetadataValue),
     /// Error parsing trace directives
     #[error("parsing RUST_LOG directives: {source}")]
     ParseDirective {
@@ -46,4 +42,7 @@ pub enum Error {
     /// Failed to shutdown a provider
     #[error("failed to shutdown provider: {0}")]
     Shutdown(opentelemetry_sdk::error::OTelSdkError),
+    /// Invalid Span exporter configuration data
+    #[error("invalid span exporter configuration")]
+    ExporterConfig,
 }
