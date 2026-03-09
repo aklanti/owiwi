@@ -215,26 +215,30 @@ impl Owiwi {
         Ok(layer)
     }
 
-    impl_fmt_layer::define_layer!("Creates a compact event formatted tracing layer" => fmt_layer_compact => compact);
-    impl_fmt_layer::define_layer!("Creates a full tracing formatting layer" => fmt_layer_full => full);
-    impl_fmt_layer::define_layer!("Creates a pretty printed event formatting layer" => fmt_layer_pretty => pretty);
-}
-
-///  Formatting layer module
-mod impl_fmt_layer {
-    /// Defines a new formatting layer method.
-    macro_rules! define_layer {
-        ($doc:expr => $func:ident => $format: ident) => {
-            #[doc=$doc]
-            pub fn $func<S>(&self) -> impl Layer<S>
-            where
-                S: Subscriber + for<'span> LookupSpan<'span>,
-            {
-                let format = self.event_format.$format();
-                tracing_subscriber::fmt::layer().event_format(format)
-            }
-        };
+    /// Creates a compact event formatted tracing layer
+    fn fmt_layer_compact<S>(&self) -> impl Layer<S>
+    where
+        S: Subscriber + for<'span> LookupSpan<'span>,
+    {
+        let format = self.event_format.compact();
+        tracing_subscriber::fmt::layer().event_format(format)
     }
 
-    pub(super) use define_layer;
+    /// Creates a full tracing formatting layer
+    fn fmt_layer_full<S>(&self) -> impl Layer<S>
+    where
+        S: Subscriber + for<'span> LookupSpan<'span>,
+    {
+        let format = self.event_format.full();
+        tracing_subscriber::fmt::layer().event_format(format)
+    }
+
+    /// Creates a pretty printed event formatting layer
+    fn fmt_layer_pretty<S>(&self) -> impl Layer<S>
+    where
+        S: Subscriber + for<'span> LookupSpan<'span>,
+    {
+        let format = self.event_format.pretty();
+        tracing_subscriber::fmt::layer().event_format(format)
+    }
 }
