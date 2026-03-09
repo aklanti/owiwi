@@ -108,25 +108,15 @@ impl Owiwi {
         config: impl ExporterConfig,
         #[cfg(feature = "metrics")] metrics_config: super::metrics::MetricsConfig,
     ) -> Result<OwiwiGuard, Error> {
-        let filter_layer = self.filter_layer()?;
         let resource = provider::init_resource(self.service_name.clone());
         let tracer_provider = self
             .tracer_provider_options
             .init_provider(config, resource.clone())?;
-        let tracer = tracer_provider.tracer(self.service_name.clone());
-        let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-        let registry = tracing_subscriber::registry()
-            .with(otel_layer)
-            .with(ErrorLayer::default())
-            .with(filter_layer);
-        match self.event_format {
-            EventFormat::Compact => registry.with(self.fmt_layer_compact()).try_init()?,
-            EventFormat::Full => registry.with(self.fmt_layer_full()).try_init()?,
-            EventFormat::Pretty => registry.with(self.fmt_layer_pretty()).try_init()?,
-        }
 
         #[cfg(feature = "metrics")]
         let meter_provider = self.meter_options.init_provider(resource, metrics_config)?;
+
+        self.init_subscriber(&tracer_provider)?;
 
         Ok(OwiwiGuard {
             tracer_provider,
@@ -137,13 +127,14 @@ impl Owiwi {
 
     /// Initialize tracing with a console exporter for local development.
     ///
-    /// Uses a simple exporter that writes spans to stdout.
+    /// Uses a simple exporter to write spans to stdout.
     pub fn try_init_console(&self) -> Result<OwiwiGuard, Error> {
         let resource = provider::init_resource(self.service_name.clone());
         let tracer_provider = SdkTracerProvider::builder()
             .with_resource(resource.clone())
             .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
             .build();
+
         #[cfg(feature = "metrics")]
         let meter_provider = {
             let exporter = opentelemetry_stdout::MetricExporter::default();
@@ -152,11 +143,31 @@ impl Owiwi {
                 .with_periodic_exporter(exporter)
                 .build()
         };
+
+        self.init_subscriber(&tracer_provider)?;
+
         Ok(OwiwiGuard {
             tracer_provider,
             #[cfg(feature = "metrics")]
             meter_provider,
         })
+    }
+
+    fn init_subscriber(&self, tracer_provider: &SdkTracerProvider) -> Result<(), Error> {
+        let tracer = tracer_provider.tracer(self.service_name.clone());
+        let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+        let filter_layer = self.filter_layer()?;
+        let registry = tracing_subscriber::registry()
+            .with(otel_layer)
+            .with(ErrorLayer::default())
+            .with(filter_layer);
+        match self.event_format {
+            EventFormat::Compact => registry.with(self.fmt_layer_compact()).try_init()?,
+            EventFormat::Full => registry.with(self.fmt_layer_full()).try_init()?,
+            EventFormat::Pretty => registry.with(self.fmt_layer_pretty()).try_init()?,
+        }
+
+        Ok(())
     }
 
     /// Creates a filter layer
