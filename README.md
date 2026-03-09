@@ -86,12 +86,12 @@ Unless otherwise noted, this project is licensed under the [Mozilla Public Licen
 This project was inspired by this [blog][url-instrumenting-axum-blog] post.
 
 
-[badge-actions]: https://github.com/aklanti/owiwi-tracing-opentelemetry/workflows/CI/badge.svg
-[url-actions]: https://github.com/aklanti/owiwi-tracing-opentelemetry/actions/workflows/main.yaml
-[badge-crate]: https://img.shields.io/crates/v/owiwi-tracing-opentelemetry
-[url-crate]: https://crates.io/crates/owiwi-tracing-opentelemetry
-[badge-docs]: https://img.shields.io/docsrs/owiwi-tracing-opentelemetry/latest
-[url-docs]: https://docs.rs/owiwi-tracing-opentelemetry/latest/owiwi-tracing-opentelemetry
+[badge-actions]: https://github.com/aklanti/owiwi/workflows/CI/badge.svg
+[url-actions]: https://github.com/aklanti/owiwi/actions/workflows/main.yaml
+[badge-crate]: https://img.shields.io/crates/v/owiwi
+[url-crate]: https://crates.io/crates/owiwi
+[badge-docs]: https://img.shields.io/docsrs/owiwi/latest
+[url-docs]: https://docs.rs/owiwi/latest/owiwi
 [badge-license]: https://img.shields.io/badge/License-MPL_2.0-blue.svg
 [url-license]: LICENSE
 [url-serde-serialize]: https://docs.rs/serde/1/serde/trait.Serialize.html
@@ -99,6 +99,6 @@ This project was inspired by this [blog][url-instrumenting-axum-blog] post.
 [url-humantime]: https://docs.rs/humantime/2/humantime/
 [url-humantime-serde]: https://docs.rs/humantime-serde/1/humantime_serde/
 [url-clap-args]: https://docs.rs/clap/4/clap/trait.Args.html
-[url-owiwi-struct]: https://docs.rs/owiwi-tracing-opentelemetry/latest/owiwi/struct.Owiwi.html
-[url-trace-collector]: https://docs.rs/owiwi-tracing-opentelemetry/latest/trace/collector/index.html
+[url-owiwi-struct]: https://docs.rs/owiwi/latest/owiwi/struct.Owiwi.html
+[url-trace-collector]: https://docs.rs/owiwi/latest/trace/collector/index.html
 [url-instrumenting-axum-blog]: https://determinate.systems/blog/instrumenting-axum/ 
