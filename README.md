@@ -32,9 +32,7 @@ The following is a complete program that initializes a subscriber and emit some 
 
 ```rust
 use clap::Parser;
-use owiwi_tracing_opentelemetry::Owiwi;
-use owiwi_tracing_opentelemetry::trace::TraceExporterConfig;
-use owiwi_tracing_opentelemetry::trace::collector::HoneycombConfig;
+use owiwi_tracing_opentelemetry::{Owiwi, HoneycombConfig, SpanExporterConfig};
 
 #[derive(Debug, Clone, Parser)]
 struct Cli {
@@ -45,13 +43,12 @@ struct Cli {
 fn main() {
      let cli = Cli::parse();
      // Create a configuration to send traces to honeycomb.io
-     let honeycomb_config = HoneycombConfig::builder()
+     let exporter_config = HoneycombConfig::builder()
          .endpoint("https://api.honeycomb.io/traces/api".parse().expect("to be valid URL"))
          .api_key("super_secret_key".into())
          .timeout(std::time::Duration::from_secs(5))
          .build();
-     let collector_config = TraceExporterConfig::Honeycomb(honeycomb_config);
-     let _guard = cli.owiwi.try_init(collector_config);
+     let _guard = cli.owiwi.try_init(exporter_config);
      tracing::info!("the subscriber was initialized");
 }
 
@@ -62,15 +59,11 @@ fn main() {
 The following is a complete program that initializes a subscriber and emit some traces.
 
 ```rust
-use owiwi_tracing_opentelemetry::Owiwi;
-use owiwi_tracing_opentelemetry::trace::TraceExporterConfig;
-use owiwi_tracing_opentelemetry::format::EventFormat;
+use owiwi_tracing_opentelemetry::{Owiwi, EventFormat};
 
 fn main() {
-     // The default collector configuration sends traces to std::io::stdout
-     let collector_config = TraceExporterConfig::default();
      // Initializes the subscriber
-     let _guard = Owiwi::new("example".into()).try_init(collector_config);
+     let _guard = Owiwi::new("example".into()).try_init_console();
      tracing::info!("the Subscriber was initialized!");
 }
 ```
