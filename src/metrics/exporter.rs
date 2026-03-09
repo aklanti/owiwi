@@ -6,16 +6,16 @@ use std::time::Duration;
 
 use bon::Builder;
 use opentelemetry::global;
+use opentelemetry_otlp::MetricExporter;
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::metrics::PeriodicReader;
 use opentelemetry_sdk::metrics::SdkMeterProvider;
-use url::Url;
 
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 use crate::error::Error;
 
-/// This type enumerates the metric collectors
+/// Supported metric export backends
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(
@@ -24,17 +24,16 @@ use crate::error::Error;
     serde(rename_all(deserialize = "lowercase"))
 )]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
-pub enum MetricExporter {
-    /// Export metrics to `std::io::stdout`
-    /// This variant is only suitable for development and debugging
+pub enum MetricBackend {
+    /// Writes metrics to `std::io::stdout`
     #[default]
     Console,
-    /// Promethus metric exporter
+    /// Exports metrics to [Promethus](https://prometheus.io)
     #[cfg(feature = "prometheus")]
     Prometheus,
 }
 
-impl MetricExporter {
+impl MetricBackend {
     /// Returns a `&str` value of `self`
     #[must_use]
     pub const fn as_str(&self) -> &str {
@@ -46,13 +45,13 @@ impl MetricExporter {
     }
 }
 
-impl fmt::Display for MetricExporter {
+impl fmt::Display for MetricBackend {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.as_str().fmt(f)
     }
 }
 
-impl FromStr for MetricExporter {
+impl FromStr for MetricBackend {
     type Err = Error;
     fn from_str(value: &str) -> Result<Self, Error> {
         let this = match value {
@@ -76,12 +75,12 @@ pub struct MeterProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name="metrics-exporter",
+            name="metric-exporter",
             long,
             help_heading = HELP_HEADING,
         ),
     )]
-    pub collector: MetricExporter,
+    pub metric_exporter: MetricBackend,
 
     /// Metrics update time interval
     #[cfg_attr(
@@ -105,7 +104,7 @@ impl MeterProviderOptions {
     pub fn init_provider(
         &self,
         resource: Resource,
-        config: impl MetricExporterConfig,
+        config: impl TryInto<MetricExporter, Error = Error>,
     ) -> Result<SdkMeterProvider, Error> {
         let exporter = config.try_into()?;
         let mut builder = PeriodicReader::builder(exporter);
@@ -123,42 +122,34 @@ impl MeterProviderOptions {
     }
 }
 
-/// Metric exporter configuration trait
-pub trait MetricExporterConfig: TryInto<opentelemetry_otlp::MetricExporter, Error = Error> {
-    /// Set metric exporter API URL
-    fn set_endpoint(&mut self, endpoint: Url);
-    /// Set the metric exporter timeout
-    fn set_timeout(&mut self, timeout: Duration);
-}
-
 #[cfg(test)]
 mod tests {
     use googletest::matchers::{anything, eq, ok};
     use googletest::{assert_that, gtest};
 
-    use super::MetricExporter;
+    use super::MetricBackend;
 
     #[gtest]
     fn display_console_collector_value() {
-        assert_that!(MetricExporter::Console.as_str(), eq("console"));
+        assert_that!(MetricBackend::Console.as_str(), eq("console"));
     }
 
     #[cfg(feature = "prometheus")]
     #[gtest]
     fn display_prometheus_collector_value() {
-        assert_that!(MetricExporter::Prometheus.as_str(), eq("prometheus"));
+        assert_that!(MetricBackend::Prometheus.as_str(), eq("prometheus"));
     }
 
     #[cfg(feature = "prometheus")]
     #[gtest]
     fn parse_valid_prometheus_collector_from_string() {
-        let result: Result<MetricExporter, _> = "prometheus".parse();
+        let result: Result<MetricBackend, _> = "prometheus".parse();
         assert_that!(result, ok(anything()));
     }
 
     #[gtest]
     fn parse_valid_console_collector_from_string() {
-        let result: Result<MetricExporter, _> = "console".parse();
+        let result: Result<MetricBackend, _> = "console".parse();
         assert_that!(result, ok(anything()));
     }
 }

@@ -9,7 +9,7 @@ use url::Url;
 
 use crate::Error;
 
-/// This type enumerates the telemetry exporters
+/// Supported trace export backends
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(
@@ -18,24 +18,23 @@ use crate::Error;
     serde(rename_all(deserialize = "lowercase"))
 )]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
-pub enum TraceExporter {
-    /// Export traces to `std::io::stdout`
-    /// This variant is only suitable for development and debugging
+pub enum TraceBackend {
+    /// Writes spans to [`std::io::stdout`]
     #[default]
     Console,
-    /// Send telemetry to honeycomb.io
+    /// Exports spans to [Honeycomb](https://honeycomb.io)
     Honeycomb,
-    /// Send telemetry to Jaeger,
+    /// Exports spans [Jaeger](https://jaegertracing.io)
     Jaeger,
 }
 
-impl fmt::Display for TraceExporter {
+impl fmt::Display for TraceBackend {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.as_str().fmt(f)
     }
 }
 
-impl TraceExporter {
+impl TraceBackend {
     /// Returns a `&str` value of `self`
     #[must_use]
     pub const fn as_str(&self) -> &str {
@@ -47,7 +46,7 @@ impl TraceExporter {
     }
 }
 
-impl FromStr for TraceExporter {
+impl FromStr for TraceBackend {
     type Err = Error;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
@@ -60,18 +59,6 @@ impl FromStr for TraceExporter {
         Ok(this)
     }
 }
-
-/// Traces collector configuration data
-#[non_exhaustive]
-#[derive(Debug, Default, Clone)]
-#[cfg_attr(
-    feature = "serde",
-    derive(serde::Deserialize),
-    serde(rename_all(deserialize = "lowercase"))
-)]
-
-/// [`Console`] exports trace to `std::io::stdout`
-pub struct Console;
 
 /// Exporter configuration trait
 pub trait SpanExporterConfig: TryInto<SpanExporter, Error = Error> {
@@ -94,17 +81,17 @@ mod tests {
 
     #[gtest]
     #[rstest]
-    #[case(TraceExporter::Console, "console")]
-    #[case(TraceExporter::Honeycomb, "honeycomb")]
-    #[case(TraceExporter::Jaeger, "jaeger")]
-    fn display_correct_collector_value(#[case] collector: TraceExporter, #[case] display: &str) {
+    #[case(TraceBackend::Console, "console")]
+    #[case(TraceBackend::Honeycomb, "honeycomb")]
+    #[case(TraceBackend::Jaeger, "jaeger")]
+    fn display_correct_collector_value(#[case] collector: TraceBackend, #[case] display: &str) {
         assert_that!(collector.to_string(), eq(display));
     }
 
     proptest! {
         #[gtest]
         fn parse_valid_collector_from_string_successfully(value in "console|honeycomb|jaeger") {
-            let result: Result<TraceExporter,_> = value.parse();
+            let result: Result<TraceBackend,_> = value.parse();
             assert_that!(result,ok(anything()));
         }
 
@@ -113,7 +100,7 @@ mod tests {
             value in "[a-zA-Z]*"
                 .prop_filter("Value must be a valid variant",
                     |v| !["console", "honeycomb", "jaeger"].contains(&v.as_str()))) {
-            let result: Result<TraceExporter,_> = value.parse();
+            let result: Result<TraceBackend,_> = value.parse();
             assert_that!(result,err(anything()));
         }
     }

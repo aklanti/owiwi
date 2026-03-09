@@ -9,7 +9,7 @@ use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
-use super::exporter::{ExporterConfig, TraceExporter};
+use super::exporter::{SpanExporterConfig, TraceBackend};
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 #[cfg(feature = "clap")]
@@ -33,7 +33,7 @@ pub struct TracerProviderOptions {
              help_heading = HELP_HEADING,
          )
     )]
-    pub collector: TraceExporter,
+    pub trace_exporter: TraceBackend,
 
     /// Set export timeout duration
     #[cfg_attr(
@@ -68,16 +68,16 @@ impl TracerProviderOptions {
     /// Initializes the tracer
     pub fn init_provider(
         &self,
-        mut config: impl ExporterConfig,
+        mut config: impl SpanExporterConfig,
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
         if let Some(endpoint) = self.exporter_endpoint.clone() {
-            config.set_endpoint(endpoint);
+            config.with_endpoint(endpoint);
         }
 
         if let Some(timeout) = self.exporter_timeout {
-            config.set_timeout(timeout);
+            config.with_timeout(timeout);
         }
 
         let exporter: SpanExporter = config.try_into()?;

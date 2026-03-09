@@ -6,7 +6,7 @@ mod jaeger;
 pub mod provider;
 
 #[doc(inline)]
-pub use exporter::{ExporterConfig, TraceExporter};
+pub use exporter::{SpanExporterConfig, TraceBackend};
 #[doc(inline)]
 pub use honeycomb::HoneycombConfig;
 #[doc(inline)]

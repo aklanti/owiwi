@@ -4,7 +4,7 @@ mod exporter;
 mod prometheus;
 
 #[doc(inline)]
-pub use exporter::{MeterProviderOptions, MetricExporter, MetricExporterConfig};
+pub use exporter::{MeterProviderOptions, MetricBackend};
 #[cfg(feature = "prometheus")]
 #[doc(inline)]
 pub use prometheus::PrometheusConfig;
