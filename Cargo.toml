@@ -13,15 +13,18 @@ rust-version = "1.94.0"
 [package.metadata.docs.rs]
 features = ["full"]
 
+[package.metadata.cargo-shear] # or [workspace.metadata.cargo-shear]
+ignored = ["humantime-serde"]
+
 [features]
 default = ["clap", "serde"]
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
-console = ["opentelemetry-stdout/metrics"]
+console = ["dep:opentelemetry-stdout", "opentelemetry-stdout/metrics"]
 full = ["clap", "serde", "prometheus"]
 honeycomb = []
 jaeger  = []
-metrics = ["opentelemetry_sdk/metrics"]
-prometheus = ["opentelemetry-otlp/metrics"]
+metrics = ["opentelemetry_sdk/metrics", "opentelemetry-otlp/metrics"]
+prometheus = ["metrics"]
 serde = ["dep:serde", "dep:humantime-serde"]
 
 [dependencies]
@@ -42,7 +45,7 @@ opentelemetry = "0.31"
 # Exporter for OpenTelemetry collector
 opentelemetry-otlp = { version = "0.31", default-features = false, features = ["grpc-tonic", "trace", "tls-roots", "tls"] }
 # OpenTelemetry Sdout exporter
-opentelemetry-stdout = "0.31"
+opentelemetry-stdout = { version = "0.31", optional = true }
 # OpenTelemetry observability framework SDK
 opentelemetry_sdk = { version = "0.31", features = ["rt-tokio"] }
 # A simple secret keeping library

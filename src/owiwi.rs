@@ -75,7 +75,7 @@ pub struct Owiwi {
     /// Meter provider configuration options
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
-    pub meter_options: MeterProviderOptions,
+    pub meter_options: super::metrics::MeterProviderOptions,
 }
 
 impl Owiwi {
@@ -126,6 +126,7 @@ impl Owiwi {
         })
     }
 
+    #[cfg(feature = "console")]
     /// Initialize tracing with a console exporter for local development.
     ///
     /// Uses a simple exporter to write spans to stdout.
