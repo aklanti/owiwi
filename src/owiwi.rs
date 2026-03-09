@@ -72,11 +72,7 @@ pub struct Owiwi {
     #[cfg_attr(feature = "clap", command(flatten))]
     pub tracer_provider_options: TracerProviderOptions,
 
-    #[allow(
-        unused,
-        reason = "this will be use to initialize metrics but create warnings when running linter"
-    )]
-    /// Metrics configuration options
+    /// Meter provider configuration options
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
     pub meter_options: MeterProviderOptions,
