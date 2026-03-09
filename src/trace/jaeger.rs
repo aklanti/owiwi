@@ -6,7 +6,7 @@ use bon::Builder;
 use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
 use url::Url;
 
-use super::exporter::ExporterConfig;
+use super::exporter::SpanExporterConfig;
 use crate::Error;
 
 /// This is the configuration data for Jaeger
@@ -44,12 +44,12 @@ impl TryFrom<JaegerConfig> for SpanExporter {
     }
 }
 
-impl ExporterConfig for JaegerConfig {
-    fn set_endpoint(&mut self, endpoint: Url) {
+impl SpanExporterConfig for JaegerConfig {
+    fn with_endpoint(&mut self, endpoint: Url) {
         self.endpoint = endpoint;
     }
 
-    fn set_timeout(&mut self, timeout: Duration) {
+    fn with_timeout(&mut self, timeout: Duration) {
         self.timeout = timeout;
     }
 }

@@ -74,11 +74,11 @@ impl FromStr for TraceExporter {
 pub struct Console;
 
 /// Exporter configuration trait
-pub trait ExporterConfig: TryInto<SpanExporter, Error = Error> {
+pub trait SpanExporterConfig: TryInto<SpanExporter, Error = Error> {
     /// Set exporter API URL
-    fn set_endpoint(&mut self, endpoint: Url);
+    fn with_endpoint(&mut self, endpoint: Url);
     /// Sets traces export timeout duration
-    fn set_timeout(&mut self, timeout: Duration);
+    fn with_timeout(&mut self, timeout: Duration);
 }
 
 #[cfg(test)]

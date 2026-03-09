@@ -8,7 +8,7 @@ use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
 use secrecy::{ExposeSecret, SecretString};
 use url::Url;
 
-use super::exporter::ExporterConfig;
+use super::exporter::SpanExporterConfig;
 use crate::Error;
 
 /// Configuration data for honeycomb.io
@@ -50,12 +50,12 @@ impl TryFrom<HoneycombConfig> for SpanExporter {
     }
 }
 
-impl ExporterConfig for HoneycombConfig {
-    fn set_endpoint(&mut self, endpoint: Url) {
+impl SpanExporterConfig for HoneycombConfig {
+    fn with_endpoint(&mut self, endpoint: Url) {
         self.endpoint = endpoint;
     }
 
-    fn set_timeout(&mut self, timeout: Duration) {
+    fn with_timeout(&mut self, timeout: Duration) {
         self.timeout = timeout;
     }
 }
