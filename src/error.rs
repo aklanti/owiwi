@@ -14,35 +14,32 @@ pub enum Error {
     BuildTraceExporter(#[from] opentelemetry_otlp::ExporterBuildError),
     /// The subscriber initialization failed.
     #[error(transparent)]
-    InitSubscriberError(#[from] tracing_subscriber::util::TryInitError),
+    InitSubscriber(#[from] tracing_subscriber::util::TryInitError),
     /// Invalid tonic metadata value
     #[error(transparent)]
     InvalidMetadataValue(#[from] InvalidMetadataValue),
     /// Error parsing trace directives
     #[error("parsing RUST_LOG directives: {source}")]
-    ParseDirectiveError {
+    ParseDirective {
         /// Error source
         #[from]
         source: std::env::VarError,
     },
     /// Error parsing filter
     #[error(transparent)]
-    ParseFilterError(#[from] tracing_subscriber::filter::ParseError),
+    ParseFilter(#[from] tracing_subscriber::filter::ParseError),
     /// Error parsing string to URL
     #[error(transparent)]
-    ParseUrlError(#[from] url::ParseError),
-    /// Collector configuration error
-    #[error("collector configuration error")]
-    TraceExporterConfigError,
+    ParseUrl(#[from] url::ParseError),
     /// The log or level or trace directive is not set.
     #[error("expected tracing level filter")]
     TraceLevelMissing,
-    /// Unsupported metrics collector
-    #[error("unsupported metrics collector: {0}")]
-    UnsupportedMetricsCollector(String),
-    /// Unsupported traces collector
-    #[error("unsupported traces collector: {0}")]
-    UnsupportedTracesCollector(String),
+    /// Unsupported metrics backend
+    #[error("unsupported metrics backend: {0}")]
+    TraceBackend(String),
+    /// Unsupported traces backend
+    #[error("unsupported traces backend: {0}")]
+    MetricBackend(String),
     /// Invalid filter
     #[error("unexpected error parsing env filter: {0}")]
     UnexpectedFilter(String),

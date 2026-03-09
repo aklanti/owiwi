@@ -58,7 +58,7 @@ impl FromStr for MetricBackend {
             "console" => Self::Console,
             #[cfg(feature = "prometheus")]
             "prometheus" => Self::Prometheus,
-            _ => return Err(Error::UnsupportedMetricsCollector(value.to_owned())),
+            _ => return Err(Error::MetricBackend(value.to_owned())),
         };
 
         Ok(this)

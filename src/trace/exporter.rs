@@ -54,7 +54,7 @@ impl FromStr for TraceBackend {
             "console" => Self::Console,
             "honeycomb" => Self::Honeycomb,
             "jaeger" => Self::Jaeger,
-            _ => return Err(Error::UnsupportedTracesCollector(value.to_owned())),
+            _ => return Err(Error::TraceBackend(value.to_owned())),
         };
         Ok(this)
     }

@@ -181,7 +181,7 @@ impl Owiwi {
                         Some(VarError::NotPresent) => (),
                         Some(err) => {
                             tracing::error!("{err:?}");
-                            return Err(Error::ParseDirectiveError {
+                            return Err(Error::ParseDirective {
                                 source: err.clone(),
                             });
                         }
