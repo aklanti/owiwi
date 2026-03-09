@@ -5,14 +5,14 @@
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-pub(crate) mod env_vars;
-pub mod error;
+mod env_vars;
+mod error;
 mod format;
 mod guard;
 #[cfg(feature = "metrics")]
-pub mod metrics;
+mod metrics;
 mod owiwi;
-pub mod trace;
+mod trace;
 
 #[doc(inline)]
 pub use error::{Error, Result};
@@ -20,6 +20,8 @@ pub use error::{Error, Result};
 pub use format::EventFormat;
 #[doc(inline)]
 pub use guard::OwiwiGuard;
+#[cfg(feature = "prometheus")]
+pub use metrics::PrometheusConfig;
 #[cfg(feature = "metrics")]
 #[doc(inline)]
 pub use metrics::{MeterProviderOptions, MetricBackend};
