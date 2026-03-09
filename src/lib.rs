@@ -1,4 +1,4 @@
-//! `owiwi-tracing-opentelemetry` provides an opinionated abstraction for initializing tracing subscriber with OpenTelemetry.
+//! `owiwi` provides an opinionated abstraction for initializing tracing subscriber with OpenTelemetry.
 //!
 //! It allows sending traces to any of the exporters define in the [`trace::exporter`] module.
 //!

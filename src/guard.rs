@@ -1,17 +1,16 @@
 //! RAII guard for the tracing and telemetry providers.
-//!
-//! This module contains [`OwiwiGuard`], the type returned by [`Owiwi::try_init`].
-//! The guard ensures that all buffered spans are flushed and the underlying [`SdkTracerProvider`]
-//! is shutdown when the guard is dropped
-//!
-//! The guard **must** be held for the lifetime of the program. Dropping it early will
-//! immediately shut down telemetry export.
 
 use opentelemetry_sdk::trace::SdkTracerProvider;
 
 use crate::error::Error;
 
-/// Owiwi guard for tracing and metrics providers
+/// A type returned by [`crate::Owiwi::try_init`] or [`crate::Owiwi::try_init_console`].
+///
+/// It ensures that all buffered spans are flushed and the underlying [`SdkTracerProvider`]
+/// is shutdown when the guard is dropped
+///
+/// It must must be held for the lifetime of the program. Dropping it early will
+/// immediately shut down telemetry export.
 #[derive(Debug)]
 pub struct OwiwiGuard {
     pub(crate) tracer_provider: SdkTracerProvider,
