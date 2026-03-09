@@ -4,12 +4,12 @@ use opentelemetry_sdk::trace::SdkTracerProvider;
 
 use crate::error::Error;
 
-/// A type returned by [`crate::Owiwi::try_init`] or [`crate::Owiwi::try_init_console`].
+/// A type returned by [`Owiwi::try_init`](crate::Owiwi::try_init) or [`Owiwi::try_init_console`](crate::Owiwi::try_init_console).
 ///
 /// It ensures that all buffered spans are flushed and the underlying [`SdkTracerProvider`]
 /// is shutdown when the guard is dropped
 ///
-/// It must must be held for the lifetime of the program. Dropping it early will
+/// It must be held for the lifetime of the program. Dropping it early will
 /// immediately shut down telemetry export.
 #[derive(Debug)]
 pub struct OwiwiGuard {
