@@ -1,6 +1,6 @@
 //! Opentelemetry environment variables settings
 
-/// The default value is http://localhost:4317. With the `clap` feature,
+/// The default value is <http://localhost:4317>. With the `clap` feature,
 /// you can overwrite it with `--otlp-endpoint`
 pub const OTEL_EXPORTER_OTLP_ENDPOINT: &str = "OTEL_EXPORTER_OTLP_ENDPOINT";
 /// Additional headers for OTLP exporter requests. You can overwrite it with the
