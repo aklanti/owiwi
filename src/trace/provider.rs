@@ -27,14 +27,13 @@ pub struct TracerProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-             name = "trace-exporter",
+             name = "trace-backend",
              long,
-             env = env_vars::OTEL_TRACES_EXPORTER,
              default_value_t = Default::default(),
              help_heading = HELP_HEADING,
          )
     )]
-    pub trace_exporter: TraceBackend,
+    pub trace_backend: TraceBackend,
 
     /// Set export timeout duration
     #[cfg_attr(
@@ -44,25 +43,37 @@ pub struct TracerProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name = "trace-exporter-timeout",
+            name = "otlp-timeout",
             long,
             value_parser = humantime::parse_duration,
+            env = env_vars::OTEL_EXPORTER_OTLP_TIMEOUT,
             help_heading = HELP_HEADING,
         )
     )]
-    pub exporter_timeout: Option<Duration>,
+    pub timeout: Option<Duration>,
 
     /// Set exporter endpoint
     #[cfg_attr(
         feature = "clap",
         arg(
-            name = "trace-exporter-endpoint",
+            name = "otlp-endpoint",
             long,
             env = env_vars::OTEL_EXPORTER_OTLP_ENDPOINT,
             help_heading = HELP_HEADING,
         ),
     )]
-    pub exporter_endpoint: Option<Url>,
+    pub endpoint: Option<Url>,
+
+    #[cfg_attr(
+        feature = "clap",
+        arg(
+            name = "otlp-headers",
+            long,
+            env = env_vars::OTEL_EXPORTER_OTLP_HEADERS,
+            help_heading = HELP_HEADING,
+        )
+    )]
+    pub headers: Option<String>,
 }
 
 impl TracerProviderOptions {
@@ -74,11 +85,11 @@ impl TracerProviderOptions {
     ) -> Result<SdkTracerProvider, Error> {
         let mut config = config.into();
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
-        if let Some(endpoint) = self.exporter_endpoint.clone() {
+        if let Some(endpoint) = self.endpoint.clone() {
             config.endpoint = endpoint;
         }
 
-        if let Some(timeout) = self.exporter_timeout {
+        if let Some(timeout) = self.timeout {
             config.timeout = timeout;
         }
 

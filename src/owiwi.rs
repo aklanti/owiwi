@@ -33,15 +33,17 @@ pub struct Owiwi {
     /// Service name
     #[cfg_attr(
         feature = "clap",
-        arg(long = "service-name", env=env_vars::OTEL_SERVICE_NAME)
+        arg(
+            name="otel-service-name",
+            env=env_vars::OTEL_SERVICE_NAME,
+         )
     )]
     pub service_name: String,
-
     /// The event formatter to use
     #[cfg_attr(
         feature = "clap",
         arg(
-            name = "trace-format",
+            name = "event-format",
             long,
             value_enum,
             default_value_t = Default::default(),
@@ -50,12 +52,7 @@ pub struct Owiwi {
     )]
     pub event_format: EventFormat,
 
-    #[expect(missing_docs, reason = "is flatten command")]
-    #[cfg(feature = "clap")]
-    #[command(flatten)]
-    pub verbose: Verbosity,
-
-    /// Tracing filter directives
+    /// Traces filter directives
     ///
     /// Use this value to override the default value, and the `RUST_LOG` environment variable.
     #[cfg_attr(
@@ -77,6 +74,33 @@ pub struct Owiwi {
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
     pub meter_options: super::metrics::MeterProviderOptions,
+
+    /// Resource attributes
+    #[cfg_attr(
+        feature = "clap",
+        arg(
+            name = "otel-resource-attributes",
+            long,
+            env = env_vars::OTEL_RESOURCE_ATTRIBUTES,
+            help_heading = HELP_HEADING,
+        ))]
+    resource_attrs: String,
+
+    /// Disables all telemetry
+    #[cfg_attr(
+        feature = "clap",
+        arg(
+            name = "otel-sdk-disable",
+            long,
+            env=env_vars::OTEL_SDK_DISABLED
+        )
+    )]
+    pub disable_sdk: bool,
+
+    #[expect(missing_docs, reason = "is flatten command")]
+    #[cfg(feature = "clap")]
+    #[command(flatten)]
+    pub verbose: Verbosity,
 }
 
 impl Owiwi {
@@ -85,12 +109,14 @@ impl Owiwi {
         Self {
             service_name,
             event_format: EventFormat::default(),
-            tracing_directives: Vec::new(),
+            tracing_directives: vec![],
             tracer_provider_options: TracerProviderOptions::default(),
+            disable_sdk: false,
             #[cfg(feature = "clap")]
             verbose: Verbosity::default(),
             #[cfg(feature = "metrics")]
             meter_options: MeterProviderOptions::default(),
+            resource_attrs: String::default(),
         }
     }
 

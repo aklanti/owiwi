@@ -13,6 +13,7 @@ use opentelemetry_sdk::metrics::SdkMeterProvider;
 
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
+use crate::env_vars;
 use crate::error::Error;
 
 /// Supported metric export backends
@@ -75,12 +76,13 @@ pub struct MeterProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name="metric-exporter",
+            name="metrics-exporter",
             long,
+            env = env_vars::OTEL_METRICS_EXPORTER,
             help_heading = HELP_HEADING,
         ),
     )]
-    pub metric_exporter: MetricBackend,
+    pub metric_backend: MetricBackend,
 
     /// Metrics update time interval
     #[cfg_attr(
