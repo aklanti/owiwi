@@ -7,7 +7,7 @@
 
 An opinionated library for initializing tracing subscriber with OpenTelemetry.
 
-It allows sending telemetry to any of the collector define in the [`trace::collector`][url-trace-collector] module.
+It allows sending telemetry to any of the collector define in the [`trace::exporter`][url-trace-exporter] module.
 
 ## Usage
 
@@ -17,22 +17,22 @@ Or more simply, just run `cargo add owiwi`.
 
 Additionally, You must add the tracing crate to your dependencies.
 
-### Example
 
 The main type of this crate is originally design to work binary application that defines a command line interface, we need to enable the `clap` flag.
 
 ```toml
 [dependencies]
 clap = { version = "4.5.60", features = ["derive"] }
-owiwi = { version = "0.1.0" features = ["clap"] }
+owiwi = { version = "0.1.0" features = ["clap",  "honeycomb"] }
 tracing = "0.1"
 ```
 
-The following is a complete program that initializes a subscriber and emit some traces.
+
+### Example
 
 ```rust
 use clap::Parser;
-use owiwi::{Owiwi, HoneycombConfig, ConfigureExporter};
+use owiwi::{Owiwi, HoneycombConfig};
 
 #[derive(Debug, Clone, Parser)]
 struct Cli {
@@ -55,8 +55,6 @@ fn main() {
 ```
 
 ### Example without `clap`
-
-The following is a complete program that initializes a subscriber and emit some traces.
 
 ```rust
 use owiwi::{Owiwi, EventFormat};
@@ -100,5 +98,5 @@ This project was inspired by this [blog][url-instrumenting-axum-blog] post.
 [url-humantime-serde]: https://docs.rs/humantime-serde/1/humantime_serde/
 [url-clap-args]: https://docs.rs/clap/4/clap/trait.Args.html
 [url-owiwi-struct]: https://docs.rs/owiwi/latest/owiwi/struct.Owiwi.html
-[url-trace-collector]: https://docs.rs/owiwi/latest/trace/collector/index.html
+[url-trace-exporter]: https://docs.rs/owiwi/latest/trace/exporter/index.html
 [url-instrumenting-axum-blog]: https://determinate.systems/blog/instrumenting-axum/ 
