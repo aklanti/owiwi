@@ -23,13 +23,14 @@ use crate::error::Error;
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct TracerProviderOptions {
-    /// Set the traces collector
+    /// Set the traces exporter
     #[cfg_attr(
         feature = "clap",
         arg(
-             name = "trace-backend",
+             name = "trace-exporter",
              long,
              default_value_t = Default::default(),
+             env = env_vars::OTEL_TRACES_EXPORTER,
              help_heading = HELP_HEADING,
          )
     )]
@@ -77,7 +78,7 @@ pub struct TracerProviderOptions {
 }
 
 impl TracerProviderOptions {
-    /// Initializes the tracer
+    /// Initializes the tracer provider
     pub fn init_provider(
         &self,
         config: impl Into<OtlpConfig>,

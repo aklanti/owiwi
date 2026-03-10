@@ -90,7 +90,7 @@ pub struct Owiwi {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name = "otel-sdk-disable",
+            name = "otel-sdk-disabled",
             long,
             env=env_vars::OTEL_SDK_DISABLED
         )

@@ -9,14 +9,16 @@ pub const OTEL_EXPORTER_OTLP_HEADERS: &str = "OTEL_EXPORTER_OTLP_ENDPOINT";
 /// OTLP exporter timeout in milliseconds. You can overwrite it with
 /// `--otlp-timeout`
 pub const OTEL_EXPORTER_OTLP_TIMEOUT: &str = "OTEL_EXPORTER_OTLP_TIMEOUT";
+/// Traces exporter backend selection.
+pub const OTEL_TRACES_EXPORTER: &str = "OTEL_TRACES_EXPORTER";
 /// Metrics exporter backend selection, when the `clap` feature is enabled,
 /// the value can be overwritten it with `--metric-exporter`
 pub const OTEL_METRICS_EXPORTER: &str = "OTEL_METRICS_EXPORTER";
 /// Additional resource attributes as comma separated key=value pairs
-/// You can overwrite or set the value with --otel-resource-attributes
+/// You can overwrite or set the value with `--otel-resource-attributes`
 pub const OTEL_RESOURCE_ATTRIBUTES: &str = "OTEL_RESOURCE_ATTRIBUTES";
 /// Disables all telemetry when set to `true`. Defaults to `false`
-/// You can overwrite this value with `--otel-sdk-disable` with feature `clap`
+/// You can overwrite this value with `--otel-sdk-disabled` with feature `clap`
 pub const OTEL_SDK_DISABLED: &str = "OTEL_SDK_DISABLE";
 /// Service name for telemetry identification
 /// You can overwrite or set this value with `--otel-service-name`
