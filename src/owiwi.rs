@@ -17,7 +17,7 @@ use tracing_subscriber::util::SubscriberInitExt as _;
 #[cfg(feature = "clap")]
 use super::HELP_HEADING;
 use super::OwiwiGuard;
-use super::env_vars::EnvVars;
+use super::env_vars;
 use super::error::Error;
 #[cfg(feature = "metrics")]
 use super::metrics::MeterProviderOptions;
@@ -33,7 +33,7 @@ pub struct Owiwi {
     /// Service name
     #[cfg_attr(
         feature = "clap",
-        arg(long = "service-name", env=EnvVars::OTEL_SERVICE_NAME)
+        arg(long = "service-name", env=env_vars::OTEL_SERVICE_NAME)
     )]
     pub service_name: String,
 

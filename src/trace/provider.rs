@@ -14,7 +14,7 @@ use super::exporter::TraceBackend;
 use crate::HELP_HEADING;
 use crate::OtlpConfig;
 #[cfg(feature = "clap")]
-use crate::env_vars::EnvVars;
+use crate::env_vars;
 use crate::error::Error;
 
 /// Tracer provider configuration options
@@ -29,7 +29,7 @@ pub struct TracerProviderOptions {
         arg(
              name = "trace-exporter",
              long,
-             env = EnvVars::OTEL_TRACES_EXPORTER,
+             env = env_vars::OTEL_TRACES_EXPORTER,
              default_value_t = Default::default(),
              help_heading = HELP_HEADING,
          )
@@ -58,7 +58,7 @@ pub struct TracerProviderOptions {
         arg(
             name = "trace-exporter-endpoint",
             long,
-            env = EnvVars::OTEL_EXPORTER_OTLP_ENDPOINT,
+            env = env_vars::OTEL_EXPORTER_OTLP_ENDPOINT,
             help_heading = HELP_HEADING,
         ),
     )]
