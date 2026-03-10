@@ -13,7 +13,6 @@ use super::exporter::TraceBackend;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 use crate::OtlpConfig;
-#[cfg(feature = "clap")]
 use crate::env_vars;
 use crate::error::Error;
 
@@ -71,6 +70,7 @@ pub struct TracerProviderOptions {
         arg(
             name = "otlp-headers",
             long,
+            value_delimiter = '=',
             env = env_vars::OTEL_EXPORTER_OTLP_HEADERS,
             help_heading = HELP_HEADING,
         )
@@ -86,6 +86,12 @@ impl TracerProviderOptions {
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
         let mut config = config.into();
+        #[cfg(not(feature = "clap"))]
+        {
+            let headers = parse_otel_headers(env_vars::OTEL_EXPORTER_OTLP_HEADERS);
+            config.headers = headers;
+        }
+
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
         if let Some(endpoint) = self.endpoint.clone() {
             config.endpoint = endpoint;
@@ -104,4 +110,16 @@ impl TracerProviderOptions {
 /// Inititalizes the resource
 pub(crate) fn init_resource(service_name: impl Into<Value>) -> Resource {
     Resource::builder().with_service_name(service_name).build()
+}
+
+#[cfg(not(feature = "clap"))]
+fn parse_otel_headers(env_var: &str) -> Vec<(String, String)> {
+    std::env::var(env_var)
+        .unwrap_or_default()
+        .split(',')
+        .filter_map(|pair| {
+            let (k, v) = pair.split_once('=')?;
+            Some((k.trim().to_owned(), v.trim().to_owned()))
+        })
+        .collect()
 }
