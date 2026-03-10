@@ -29,6 +29,7 @@ pub struct TracerProviderOptions {
         arg(
              name = "trace-exporter",
              long,
+             value_enum,
              default_value_t = Default::default(),
              env = env_vars::OTEL_TRACES_EXPORTER,
              help_heading = HELP_HEADING,

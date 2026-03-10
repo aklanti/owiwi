@@ -78,6 +78,7 @@ pub struct MeterProviderOptions {
         arg(
             name="metrics-exporter",
             long,
+            value_enum,
             env = env_vars::OTEL_METRICS_EXPORTER,
             help_heading = HELP_HEADING,
         ),
