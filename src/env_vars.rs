@@ -24,3 +24,18 @@ pub const OTEL_SDK_DISABLED: &str = "OTEL_SDK_DISABLE";
 /// You can overwrite or set this value with `--otel-service-name`
 /// when `clap` is enabled
 pub const OTEL_SERVICE_NAME: &str = "OTEL_SERVICE_NAME";
+
+/// Parses a comma-separated list of `key=value` entries
+///
+/// Malformed entries missing `=` are silently skipped.
+pub fn parse_key_values(header: &str) -> Result<Vec<(String, String)>, String> {
+    header
+        .split(',')
+        .map(|entry| {
+            let (key, val) = entry
+                .split_once('=')
+                .ok_or_else(|| format!("invalid header: expected `key=value`, got `{entry}`"))?;
+            Ok((key.trim().to_owned(), val.trim().to_owned()))
+        })
+        .collect()
+}

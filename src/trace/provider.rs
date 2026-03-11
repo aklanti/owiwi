@@ -71,7 +71,7 @@ pub struct TracerProviderOptions {
         arg(
             name = "otlp-headers",
             long,
-            value_parser = otlp::parse_headers,
+            value_parser = env_vars::parse_key_values,
             env = env_vars::OTEL_EXPORTER_OTLP_HEADERS,
             help_heading = HELP_HEADING,
         )
@@ -102,7 +102,7 @@ impl TracerProviderOptions {
                 config.headers.extend(self.headers.clone());
             } else {
                 if let Ok(raw) = std::env::var(env_vars::OTEL_EXPORTER_OTLP_HEADERS)
-                    && let Ok(headers) = otlp::parse_headers(&raw) {
+                    && let Ok(headers) = env_vars::parse_key_values(&raw) {
                         config.headers.extend(headers);
                 }
             }
@@ -116,14 +116,12 @@ impl TracerProviderOptions {
 /// Inititalizes the resource
 pub(crate) fn init_resource(service_name: impl Into<Value>) -> Resource {
     let mut builder = Resource::builder().with_service_name(service_name);
-    if let Ok(attrs) = std::env::var(env_vars::OTEL_RESOURCE_ATTRIBUTES) {
-        for pair in attrs.split(',') {
-            if let Some((key, value)) = pair.split_once('=') {
-                builder = builder.with_attribute(opentelemetry::KeyValue::new(
-                    key.trim().to_owned(),
-                    value.trim().to_owned(),
-                ));
-            }
+    if let Ok(raw) = std::env::var(env_vars::OTEL_RESOURCE_ATTRIBUTES)
+        && let Ok(attrs) = env_vars::parse_key_values(&raw)
+    {
+        for (key, value) in attrs {
+            let kv = opentelemetry::KeyValue::new(key, value);
+            builder = builder.with_attribute(kv);
         }
     }
     builder.build()

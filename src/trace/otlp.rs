@@ -50,18 +50,3 @@ impl TryFrom<OtlpConfig> for SpanExporter {
         Ok(builder.build()?)
     }
 }
-
-/// Parses a comma-separated list of `key=value` header entries
-///
-/// Malformed entries missing `=` are silently skipped.
-pub(super) fn parse_headers(header: &str) -> Result<Vec<(String, String)>, String> {
-    header
-        .split(',')
-        .map(|entry| {
-            let (key, val) = entry
-                .split_once('=')
-                .ok_or_else(|| format!("invalid header: expected `key=value`, got `{entry}`"))?;
-            Ok((key.trim().to_owned(), val.trim().to_owned()))
-        })
-        .collect()
-}

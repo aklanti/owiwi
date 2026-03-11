@@ -20,14 +20,13 @@ use super::OwiwiGuard;
 use super::env_vars;
 use super::error::Error;
 #[cfg(feature = "metrics")]
-use super::metrics::MeterProviderOptions;
 use super::trace::{TracerProviderOptions, provider};
 use crate::EventFormat;
 use crate::OtlpConfig;
 
 /// Instrumentation type.
 #[must_use]
-#[derive(Clone, Debug)]
+#[derive(Clone, Default, Debug)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Owiwi {
     /// Service name
@@ -35,10 +34,12 @@ pub struct Owiwi {
         feature = "clap",
         arg(
             name="otel-service-name",
+            default_value = "unknown-service",
             env=env_vars::OTEL_SERVICE_NAME,
          )
     )]
     pub service_name: String,
+
     /// The event formatter to use
     #[cfg_attr(
         feature = "clap",
@@ -81,10 +82,11 @@ pub struct Owiwi {
         arg(
             name = "otel-resource-attributes",
             long,
+            value_parser = env_vars::parse_key_values,
             env = env_vars::OTEL_RESOURCE_ATTRIBUTES,
             help_heading = HELP_HEADING,
         ))]
-    resource_attrs: String,
+    resource_attrs: Vec<(String, String)>,
 
     /// Disables all telemetry
     #[cfg_attr(
@@ -105,19 +107,8 @@ pub struct Owiwi {
 
 impl Owiwi {
     /// Creates new subscriber
-    pub fn new(service_name: String) -> Self {
-        Self {
-            service_name,
-            event_format: EventFormat::default(),
-            tracing_directives: vec![],
-            tracer_provider_options: TracerProviderOptions::default(),
-            disable_sdk: false,
-            #[cfg(feature = "clap")]
-            verbose: Verbosity::default(),
-            #[cfg(feature = "metrics")]
-            meter_options: MeterProviderOptions::default(),
-            resource_attrs: String::default(),
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Initializes the tracing and metrics providers with the given exporter configuration
