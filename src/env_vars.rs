@@ -5,7 +5,7 @@
 pub const OTEL_EXPORTER_OTLP_ENDPOINT: &str = "OTEL_EXPORTER_OTLP_ENDPOINT";
 /// Additional headers for OTLP exporter requests. You can overwrite it with the
 /// `--otlp-headers` when the `clap` feature is enabled
-pub const OTEL_EXPORTER_OTLP_HEADERS: &str = "OTEL_EXPORTER_OTLP_ENDPOINT";
+pub const OTEL_EXPORTER_OTLP_HEADERS: &str = "OTEL_EXPORTER_OTLP_HEADERS";
 /// OTLP exporter timeout in milliseconds. You can overwrite it with
 /// `--otlp-timeout`
 pub const OTEL_EXPORTER_OTLP_TIMEOUT: &str = "OTEL_EXPORTER_OTLP_TIMEOUT";
@@ -19,7 +19,7 @@ pub const OTEL_METRICS_EXPORTER: &str = "OTEL_METRICS_EXPORTER";
 pub const OTEL_RESOURCE_ATTRIBUTES: &str = "OTEL_RESOURCE_ATTRIBUTES";
 /// Disables all telemetry when set to `true`. Defaults to `false`
 /// You can overwrite this value with `--otel-sdk-disabled` with feature `clap`
-pub const OTEL_SDK_DISABLED: &str = "OTEL_SDK_DISABLE";
+pub const OTEL_SDK_DISABLED: &str = "OTEL_SDK_DISABLED";
 /// Service name for telemetry identification
 /// You can overwrite or set this value with `--otel-service-name`
 /// when `clap` is enabled

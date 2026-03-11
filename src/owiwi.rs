@@ -282,3 +282,9 @@ impl Owiwi {
         tracing_subscriber::fmt::layer().event_format(format)
     }
 }
+
+fn is_disabled() -> bool {
+    std::env::var(env_vars::OTEL_SDK_DISABLED)
+        .map(|v| v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false)
+}
