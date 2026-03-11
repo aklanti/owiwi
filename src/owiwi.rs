@@ -6,6 +6,7 @@ use std::error::Error as _;
 #[cfg(feature = "clap")]
 use clap_verbosity_flag::Verbosity;
 use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use tracing::Subscriber;
 use tracing_error::ErrorLayer;
@@ -19,8 +20,7 @@ use super::HELP_HEADING;
 use super::OwiwiGuard;
 use super::env_vars;
 use super::error::Error;
-#[cfg(feature = "metrics")]
-use super::trace::{TracerProviderOptions, provider};
+use super::trace::TracerProviderOptions;
 use crate::EventFormat;
 use crate::OtlpConfig;
 
@@ -118,14 +118,14 @@ impl Owiwi {
     ///
     /// Returns an [`OwiwiGuard`] that must be held for the lifetime of the program.
     pub fn try_init(
-        &self,
+        &mut self,
         config: impl Into<OtlpConfig>,
         #[cfg(feature = "metrics")] metrics_exporter: impl TryInto<
             opentelemetry_otlp::MetricExporter,
             Error = Error,
         >,
     ) -> Result<OwiwiGuard, Error> {
-        let resource = provider::init_resource(self.service_name.clone());
+        let resource = self.init_resource();
         let tracer_provider = self
             .tracer_provider_options
             .init_provider(config, resource.clone())?;
@@ -148,8 +148,8 @@ impl Owiwi {
     /// Initialize tracing with a console exporter for local development.
     ///
     /// Uses a simple exporter to write spans to stdout.
-    pub fn try_init_console(&self) -> Result<OwiwiGuard, Error> {
-        let resource = provider::init_resource(self.service_name.clone());
+    pub fn try_init_console(&mut self) -> Result<OwiwiGuard, Error> {
+        let resource = self.init_resource();
         let tracer_provider = SdkTracerProvider::builder()
             .with_resource(resource.clone())
             .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
@@ -188,6 +188,28 @@ impl Owiwi {
         }
 
         Ok(())
+    }
+    /// Initializes the resource.
+    fn init_resource(&mut self) -> Resource {
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "clap")] {
+                let attrs = std::mem::take(&mut self.resource_attrs);
+            } else {
+                let attrs = std::env::var(env_vars::OTEL_RESOURCE_ATTRIBUTES)
+                    .ok()
+                    .and_then(|raw| env_vars::parse_key_values(&raw).ok())
+                    .unwrap_or_default();
+            }
+        }
+
+        Resource::builder()
+            .with_service_name(self.service_name.clone())
+            .with_attributes(
+                attrs
+                    .into_iter()
+                    .map(|(k, v)| opentelemetry::KeyValue::new(k, v)),
+            )
+            .build()
     }
 
     /// Creates a filter layer

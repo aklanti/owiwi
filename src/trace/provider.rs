@@ -3,14 +3,12 @@
 use std::time::Duration;
 
 use bon::Builder;
-use opentelemetry::Value;
 use opentelemetry_otlp::SpanExporter;
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
 use super::exporter::TraceBackend;
-use super::otlp;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 use crate::OtlpConfig;
@@ -111,18 +109,4 @@ impl TracerProviderOptions {
         let tracer_provider = provider_builder.with_batch_exporter(exporter).build();
         Ok(tracer_provider)
     }
-}
-
-/// Inititalizes the resource
-pub(crate) fn init_resource(service_name: impl Into<Value>) -> Resource {
-    let mut builder = Resource::builder().with_service_name(service_name);
-    if let Ok(raw) = std::env::var(env_vars::OTEL_RESOURCE_ATTRIBUTES)
-        && let Ok(attrs) = env_vars::parse_key_values(&raw)
-    {
-        for (key, value) in attrs {
-            let kv = opentelemetry::KeyValue::new(key, value);
-            builder = builder.with_attribute(kv);
-        }
-    }
-    builder.build()
 }
