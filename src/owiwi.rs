@@ -151,7 +151,7 @@ impl Owiwi {
     /// Initialize tracing with a console exporter for local development.
     ///
     /// Uses a simple exporter to write spans to stdout.
-    pub fn try_init_console(&mut self) -> Result<OwiwiGuard, Error> {
+    pub fn try_init_console(mut self) -> Result<OwiwiGuard, Error> {
         let resource = self.build_resource();
         let tracer_provider = SdkTracerProvider::builder()
             .with_resource(resource.clone())
