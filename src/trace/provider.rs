@@ -10,6 +10,7 @@ use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
 use super::exporter::TraceBackend;
+use super::otlp;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 use crate::OtlpConfig;
@@ -70,12 +71,12 @@ pub struct TracerProviderOptions {
         arg(
             name = "otlp-headers",
             long,
-            value_delimiter = '=',
+            value_parser = otlp::parse_headers,
             env = env_vars::OTEL_EXPORTER_OTLP_HEADERS,
             help_heading = HELP_HEADING,
         )
     )]
-    pub headers: Option<String>,
+    pub headers: Vec<(String, String)>,
 }
 
 impl TracerProviderOptions {
@@ -86,11 +87,6 @@ impl TracerProviderOptions {
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
         let mut config = config.into();
-        #[cfg(not(feature = "clap"))]
-        {
-            let headers = parse_otel_headers(env_vars::OTEL_EXPORTER_OTLP_HEADERS);
-            config.headers = headers;
-        }
 
         let provider_builder = SdkTracerProvider::builder().with_resource(resource);
         if let Some(endpoint) = self.endpoint.clone() {
@@ -101,6 +97,16 @@ impl TracerProviderOptions {
             config.timeout = timeout;
         }
 
+        cfg_if::cfg_if! {
+            if #[cfg(feature="clap")] {
+                config.headers.extend(self.headers.clone());
+            } else {
+                if let Ok(raw) = std::env::var(env_vars::OTEL_EXPORTER_OTLP_HEADERS)
+                    && let Ok(headers) = otlp::parse_headers(&raw) {
+                        config.headers.extend(headers);
+                }
+            }
+        }
         let exporter: SpanExporter = config.try_into()?;
         let tracer_provider = provider_builder.with_batch_exporter(exporter).build();
         Ok(tracer_provider)
@@ -109,17 +115,16 @@ impl TracerProviderOptions {
 
 /// Inititalizes the resource
 pub(crate) fn init_resource(service_name: impl Into<Value>) -> Resource {
-    Resource::builder().with_service_name(service_name).build()
-}
-
-#[cfg(not(feature = "clap"))]
-fn parse_otel_headers(env_var: &str) -> Vec<(String, String)> {
-    std::env::var(env_var)
-        .unwrap_or_default()
-        .split(',')
-        .filter_map(|pair| {
-            let (k, v) = pair.split_once('=')?;
-            Some((k.trim().to_owned(), v.trim().to_owned()))
-        })
-        .collect()
+    let mut builder = Resource::builder().with_service_name(service_name);
+    if let Ok(attrs) = std::env::var(env_vars::OTEL_RESOURCE_ATTRIBUTES) {
+        for pair in attrs.split(',') {
+            if let Some((key, value)) = pair.split_once('=') {
+                builder = builder.with_attribute(opentelemetry::KeyValue::new(
+                    key.trim().to_owned(),
+                    value.trim().to_owned(),
+                ));
+            }
+        }
+    }
+    builder.build()
 }

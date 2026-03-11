@@ -20,18 +20,24 @@ pub struct OtlpConfig {
     pub headers: Vec<(String, String)>,
 }
 
+impl OtlpConfig {
+    /// Builds the gRPC metadata map from all header sources.
+    fn metadata(&self) -> Result<MetadataMap, Error> {
+        let mut map = MetadataMap::with_capacity(self.headers.len());
+        for (key, val) in &self.headers {
+            let val = val.try_into().map_err(|_e| Error::ExporterConfig)?;
+            map.entry(key.as_str())
+                .map_err(|_e| Error::ExporterConfig)?
+                .or_insert(val);
+        }
+        Ok(map)
+    }
+}
+
 impl TryFrom<OtlpConfig> for SpanExporter {
     type Error = Error;
     fn try_from(config: OtlpConfig) -> Result<Self, Self::Error> {
-        let mut metadata = MetadataMap::with_capacity(config.headers.len());
-        for (key, value) in &config.headers {
-            let value = value.try_into().map_err(|_e| Error::ExporterConfig)?;
-            metadata
-                .entry(key.as_str())
-                .map_err(|_e| Error::ExporterConfig)?
-                .or_insert(value);
-        }
-
+        let metadata = config.metadata()?;
         let mut builder = SpanExporter::builder()
             .with_tonic()
             .with_endpoint(config.endpoint.as_ref())
@@ -43,4 +49,19 @@ impl TryFrom<OtlpConfig> for SpanExporter {
 
         Ok(builder.build()?)
     }
+}
+
+/// Parses a comma-separated list of `key=value` header entries
+///
+/// Malformed entries missing `=` are silently skipped.
+pub(super) fn parse_headers(header: &str) -> Result<Vec<(String, String)>, String> {
+    header
+        .split(',')
+        .map(|entry| {
+            let (key, val) = entry
+                .split_once('=')
+                .ok_or_else(|| format!("invalid header: expected `key=value`, got `{entry}`"))?;
+            Ok((key.trim().to_owned(), val.trim().to_owned()))
+        })
+        .collect()
 }
