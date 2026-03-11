@@ -128,6 +128,10 @@ impl Owiwi {
             Error = Error,
         >,
     ) -> Result<OwiwiGuard, Error> {
+        if self.disable_sdk || is_disabled() {
+            return self.try_init_console();
+        }
+
         let resource = self.build_resource();
         let tracer_provider = self
             .tracer_provider_options
