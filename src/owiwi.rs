@@ -34,7 +34,7 @@ pub struct Owiwi {
         feature = "clap",
         arg(
             name="otel-service-name",
-            default_value = "unknown-service",
+            default_value = "unknown_service",
             env=env_vars::OTEL_SERVICE_NAME,
          )
     )]
