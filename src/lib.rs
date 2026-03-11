@@ -5,7 +5,7 @@
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-mod env_vars;
+pub mod env_vars;
 mod error;
 mod format;
 mod guard;
