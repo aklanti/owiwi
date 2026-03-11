@@ -133,14 +133,14 @@ impl Owiwi {
         }
 
         let resource = self.build_resource();
-        let tracer_provider = self
-            .tracer_provider_options
-            .init_provider(config, resource.clone())?;
 
         #[cfg(feature = "metrics")]
         let meter_provider = self
             .meter_options
-            .init_provider(resource, metrics_exporter)?;
+            .init_provider(resource.clone(), metrics_exporter)?;
+        let tracer_provider = self
+            .tracer_provider_options
+            .init_provider(config, resource)?;
 
         self.init_subscriber(&tracer_provider)?;
 
@@ -157,19 +157,18 @@ impl Owiwi {
     /// Uses a simple exporter to write spans to stdout.
     pub fn try_init_console(mut self) -> Result<OwiwiGuard, Error> {
         let resource = self.build_resource();
-        let tracer_provider = SdkTracerProvider::builder()
-            .with_resource(resource.clone())
-            .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
-            .build();
-
         #[cfg(feature = "metrics")]
         let meter_provider = {
             let exporter = opentelemetry_stdout::MetricExporter::default();
             opentelemetry_sdk::metrics::SdkMeterProvider::builder()
-                .with_resource(resource)
+                .with_resource(resource.clone())
                 .with_periodic_exporter(exporter)
                 .build()
         };
+        let tracer_provider = SdkTracerProvider::builder()
+            .with_resource(resource)
+            .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
+            .build();
 
         self.init_subscriber(&tracer_provider)?;
 
