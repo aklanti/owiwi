@@ -24,6 +24,9 @@ use super::trace::TracerProviderOptions;
 use crate::EventFormat;
 use crate::OtlpConfig;
 
+/// Default service name
+const DEFAULT_SERVICE_NAME: &str = "unknown_service";
+
 /// Instrumentation type.
 #[must_use]
 #[derive(Clone, Default, Debug)]
@@ -34,7 +37,7 @@ pub struct Owiwi {
         feature = "clap",
         arg(
             name="otel-service-name",
-            default_value = "unknown_service",
+            default_value = DEFAULT_SERVICE_NAME,
             env=env_vars::OTEL_SERVICE_NAME,
          )
     )]
@@ -86,7 +89,7 @@ pub struct Owiwi {
             env = env_vars::OTEL_RESOURCE_ATTRIBUTES,
             help_heading = HELP_HEADING,
         ))]
-    resource_attrs: Vec<(String, String)>,
+    pub resource_attrs: Vec<(String, String)>,
 
     /// Disables all telemetry
     #[cfg_attr(
@@ -118,14 +121,14 @@ impl Owiwi {
     ///
     /// Returns an [`OwiwiGuard`] that must be held for the lifetime of the program.
     pub fn try_init(
-        &mut self,
+        mut self,
         config: impl Into<OtlpConfig>,
         #[cfg(feature = "metrics")] metrics_exporter: impl TryInto<
             opentelemetry_otlp::MetricExporter,
             Error = Error,
         >,
     ) -> Result<OwiwiGuard, Error> {
-        let resource = self.init_resource();
+        let resource = self.build_resource();
         let tracer_provider = self
             .tracer_provider_options
             .init_provider(config, resource.clone())?;
@@ -149,7 +152,7 @@ impl Owiwi {
     ///
     /// Uses a simple exporter to write spans to stdout.
     pub fn try_init_console(&mut self) -> Result<OwiwiGuard, Error> {
-        let resource = self.init_resource();
+        let resource = self.build_resource();
         let tracer_provider = SdkTracerProvider::builder()
             .with_resource(resource.clone())
             .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
@@ -190,7 +193,19 @@ impl Owiwi {
         Ok(())
     }
     /// Initializes the resource.
-    fn init_resource(&mut self) -> Resource {
+    fn build_resource(&mut self) -> Resource {
+        let service_name = if self.service_name.is_empty() {
+            cfg_if::cfg_if! {
+                if #[cfg(not(feature = "clap"))] {
+                   std::env::var(env_vars::OTEL_SERVICE_NAME).unwrap_or(DEFAULT_SERVICE_NAME)
+                } else {
+                    self.service_name.clone()
+                }
+            }
+        } else {
+            self.service_name.clone()
+        };
+
         cfg_if::cfg_if! {
             if #[cfg(feature = "clap")] {
                 let attrs = std::mem::take(&mut self.resource_attrs);
@@ -203,7 +218,7 @@ impl Owiwi {
         }
 
         Resource::builder()
-            .with_service_name(self.service_name.clone())
+            .with_service_name(service_name)
             .with_attributes(
                 attrs
                     .into_iter()
