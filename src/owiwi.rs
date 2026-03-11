@@ -142,13 +142,11 @@ impl Owiwi {
             .tracer_provider_options
             .init_provider(config, resource)?;
 
-        self.init_subscriber(&tracer_provider)?;
-
-        Ok(OwiwiGuard {
+        self.finish(
             tracer_provider,
             #[cfg(feature = "metrics")]
             meter_provider,
-        })
+        )
     }
 
     #[cfg(feature = "console")]
@@ -170,30 +168,41 @@ impl Owiwi {
             .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
             .build();
 
-        self.init_subscriber(&tracer_provider)?;
+        self.finish(
+            tracer_provider,
+            #[cfg(feature = "metrics")]
+            meter_provider,
+        )
+    }
+
+    /// Install the subscriber and returns the provider guard
+    fn finish(
+        self,
+        tracer_provider: SdkTracerProvider,
+        #[cfg(feature = "metrics")] meter_provider: opentelemetry_sdk::metrics::SdkMeterProvider,
+    ) -> Result<OwiwiGuard, Error> {
+        let tracer = tracer_provider.tracer(self.service_name.clone());
+        let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
+        let filter_layer = self.filter_layer()?;
+
+        let fmt_layer: Box<dyn Layer<_> + Send + Sync> = match self.event_format {
+            EventFormat::Compact => Box::new(self.fmt_layer_compact()),
+            EventFormat::Full => Box::new(self.fmt_layer_full()),
+            EventFormat::Pretty => Box::new(self.fmt_layer_pretty()),
+        };
+
+        tracing_subscriber::registry()
+            .with(otel_layer)
+            .with(ErrorLayer::default())
+            .with(filter_layer)
+            .with(fmt_layer)
+            .try_init()?;
 
         Ok(OwiwiGuard {
             tracer_provider,
             #[cfg(feature = "metrics")]
             meter_provider,
         })
-    }
-
-    fn init_subscriber(&self, tracer_provider: &SdkTracerProvider) -> Result<(), Error> {
-        let tracer = tracer_provider.tracer(self.service_name.clone());
-        let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-        let filter_layer = self.filter_layer()?;
-        let registry = tracing_subscriber::registry()
-            .with(otel_layer)
-            .with(ErrorLayer::default())
-            .with(filter_layer);
-        match self.event_format {
-            EventFormat::Compact => registry.with(self.fmt_layer_compact()).try_init()?,
-            EventFormat::Full => registry.with(self.fmt_layer_full()).try_init()?,
-            EventFormat::Pretty => registry.with(self.fmt_layer_pretty()).try_init()?,
-        }
-
-        Ok(())
     }
     /// Initializes the resource.
     fn build_resource(&mut self) -> Resource {
