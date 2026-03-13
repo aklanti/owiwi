@@ -222,15 +222,17 @@ impl Owiwi {
             self.service_name.clone()
         };
 
-        let mut attrs = std::mem::take(&mut self.resource_attrs);
-
-        #[cfg(feature = "clap")]
-        if attrs.is_empty() {
-            attrs = std::env::var(env_vars::OTEL_RESOURCE_ATTRIBUTES)
-                .ok()
-                .and_then(|raw| env_vars::parse_key_values(&raw).ok())
-                .unwrap_or_default();
-        }
+        let attrs = {
+            let taken = std::mem::take(&mut self.resource_attrs);
+            if taken.is_empty() {
+                std::env::var(env_vars::OTEL_RESOURCE_ATTRIBUTES)
+                    .ok()
+                    .and_then(|raw| env_vars::parse_key_values(&raw).ok())
+                    .unwrap_or_default()
+            } else {
+                taken
+            }
+        };
 
         Resource::builder()
             .with_service_name(service_name)
