@@ -42,7 +42,6 @@ struct Cli {
 
 fn main() {
      let cli = Cli::parse();
-     // Create a configuration to send traces to honeycomb.io
      let exporter_config = HoneycombConfig::builder()
          .endpoint("https://api.honeycomb.io/traces/api".parse().expect("to be valid URL"))
          .api_key("super_secret_key".into())
@@ -60,8 +59,8 @@ fn main() {
 use owiwi::{Owiwi, EventFormat};
 
 fn main() {
-     // Initializes the subscriber
-     let _guard = Owiwi::new("example".into()).try_init_console();
+     let mut = Owiwi::new();
+     let _guard = Owiwi::try_init_console();
      tracing::info!("the Subscriber was initialized!");
 }
 ```

@@ -353,9 +353,3 @@ impl Owiwi {
         Ok(layer)
     }
 }
-
-fn is_disabled() -> bool {
-    std::env::var(env_vars::OTEL_SDK_DISABLED)
-        .map(|v| v.eq_ignore_ascii_case("true"))
-        .unwrap_or(false)
-}
