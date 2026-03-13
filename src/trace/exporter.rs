@@ -3,7 +3,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::Error;
+use crate::error::{Error, ErrorKind};
 
 /// Supported trace export backends
 #[non_exhaustive]
@@ -50,7 +50,7 @@ impl FromStr for TraceBackend {
             "console" => Self::Console,
             "honeycomb" => Self::Honeycomb,
             "jaeger" => Self::Jaeger,
-            _ => return Err(Error::TraceBackend(value.to_owned())),
+            _ => return Err(ErrorKind::TraceBackend(value.to_owned()).into()),
         };
         Ok(this)
     }

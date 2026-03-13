@@ -1,6 +1,6 @@
 //! This module defines the metrics collector abstraction.
 
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use std::fmt;
 use std::str::FromStr;
 
@@ -47,7 +47,7 @@ impl FromStr for MetricBackend {
             "console" => Self::Console,
             #[cfg(feature = "prometheus")]
             "prometheus" => Self::Prometheus,
-            _ => return Err(Error::MetricBackend(value.to_owned())),
+            _ => return Err(ErrorKind::MetricBackend(value.to_owned()).into()),
         };
 
         Ok(this)

@@ -6,7 +6,7 @@ use opentelemetry_otlp::tonic_types::transport::ClientTlsConfig;
 use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
 use url::Url;
 
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 /// `OTlP` exporter configuration
 #[derive(Debug, Clone, Builder)]
@@ -25,9 +25,9 @@ impl OtlpConfig {
     fn metadata(&self) -> Result<MetadataMap, Error> {
         let mut map = MetadataMap::with_capacity(self.headers.len());
         for (key, val) in &self.headers {
-            let val = val.try_into().map_err(|_e| Error::ExporterConfig)?;
+            let val = val.try_into().map_err(|_e| ErrorKind::ExporterConfig)?;
             map.entry(key.as_str())
-                .map_err(|_e| Error::ExporterConfig)?
+                .map_err(|_e| ErrorKind::ExporterConfig)?
                 .or_insert(val);
         }
         Ok(map)

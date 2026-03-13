@@ -19,7 +19,7 @@ use tracing_subscriber::util::SubscriberInitExt as _;
 use super::HELP_HEADING;
 use super::OwiwiGuard;
 use super::env_vars;
-use super::error::Error;
+use super::error::{Error, ErrorKind};
 use super::trace::TracerProviderOptions;
 use crate::EventFormat;
 use crate::OtlpConfig;
@@ -209,7 +209,7 @@ impl Owiwi {
         let service_name = if self.service_name.is_empty() {
             cfg_if::cfg_if! {
                 if #[cfg(not(feature = "clap"))] {
-                   std::env::var(env_vars::OTEL_SERVICE_NAME).unwrap_or(DEFAULT_SERVICE_NAME)
+                   std::env::var(env_vars::OTEL_SERVICE_NAME).unwrap_or(DEFAULT_SERVICE_NAME.into())
                 } else {
                     self.service_name.clone()
                 }
@@ -248,13 +248,14 @@ impl Owiwi {
                         Some(VarError::NotPresent) => (),
                         Some(err) => {
                             tracing::error!("{err:?}");
-                            return Err(Error::ParseDirective {
+                            return Err(ErrorKind::ParseDirective {
                                 source: err.clone(),
-                            });
+                            }
+                            .into());
                         }
                         None => {
                             tracing::error!("{err:?}");
-                            return Err(Error::UnexpectedFilter(err.to_string()));
+                            return Err(ErrorKind::UnexpectedFilter(err.to_string()).into());
                         }
                     }
                 }
@@ -263,7 +264,7 @@ impl Owiwi {
                            if #[cfg(feature = "clap")] {
                                let level = self.verbose
                                .tracing_level()
-                               .ok_or_else(|| Error::TraceLevelMissing)?;
+                               .ok_or_else(|| ErrorKind::TraceLevelMissing)?;
                            } else {
                                let level = tracing::Level::INFO;
                            }

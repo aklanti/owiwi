@@ -5,9 +5,23 @@
 /// This type is used to avoid writing out [`owiwi::Error`](crate::Error);
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// An error that occurred during subscriber initialization.
+#[derive(Debug, thiserror::Error)]
+#[error("{kind}")]
+pub struct Error {
+    #[source]
+    kind: ErrorKind,
+}
+
+impl<E: Into<ErrorKind>> From<E> for Error {
+    fn from(err: E) -> Self {
+        Self { kind: err.into() }
+    }
+}
+
 /// The error type for subcriber initialization operations.
 #[derive(Debug, thiserror::Error)]
-pub enum Error {
+pub(crate) enum ErrorKind {
     /// Error building exporter
     #[error(transparent)]
     BuildTraceExporter(#[from] opentelemetry_otlp::ExporterBuildError),
