@@ -27,7 +27,9 @@ use crate::OtlpConfig;
 /// Default service name
 const DEFAULT_SERVICE_NAME: &str = "unknown_service";
 
-/// Instrumentation type.
+/// Configuration for initializing a tracing subscriber with OpenTelemetry
+///
+/// When the `clap` feature is enabled, flatten into a CLI parser
 #[must_use]
 #[derive(Clone, Default, Debug)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
@@ -109,7 +111,7 @@ pub struct Owiwi {
 }
 
 impl Owiwi {
-    /// Creates new subscriber
+    /// Creates an `Owiwi` with default configuration
     pub fn new() -> Self {
         Self::default()
     }
@@ -120,6 +122,29 @@ impl Owiwi {
     /// error layer, env filter, and the configured event formatter.
     ///
     /// Returns an [`OwiwiGuard`] that must be held for the lifetime of the program.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error`] if the exporter cannot be built, filter directives
+    /// are invalid, or a global subscriber is already set.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use owiwi::{Owiwi, OtlpConfig};
+    ///
+    /// let mut owiwi = Owiwi::new();
+    /// owiwi.service_name = "owiwi-test".to_owned();
+    /// let config = OltpConfig::builder()
+    ///     .endpoint("http://localhost:4317".parse().expect("valid URL"))
+    ///     .timeout(Duration::from_secs(10))
+    ///     .build();
+    /// let _guard = owiwi.try_init(config)?;
+    /// # Ok::<_, owiwi::Error>(())
+    ///
+    /// ```
     pub fn try_init(
         mut self,
         config: impl Into<OtlpConfig>,
@@ -128,7 +153,13 @@ impl Owiwi {
             Error = Error,
         >,
     ) -> Result<OwiwiGuard, Error> {
-        if self.disable_sdk || is_disabled() {
+        #[cfg(not(feature = "clap"))]
+        {
+            self.disable_sdk = std::env::var(env_vars::OTEL_SDK_DISABLED)
+                .map(|v| v.eq_ignore_ascii_case("true"))
+                .unwrap_or(false);
+        }
+        if self.disable_sdk {
             cfg_if::cfg_if! {
                 if #[cfg(feature = "console")] {
                     return self.try_init_console();
@@ -158,10 +189,20 @@ impl Owiwi {
         )
     }
 
-    #[cfg(feature = "console")]
     /// Initialize tracing with a console exporter for local development.
     ///
-    /// Uses a simple exporter to write spans to stdout.
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::time::Duration;
+    ///
+    /// use owiwi::{Owiwi, OtlpConfig};
+    ///
+    /// let mut owiwi = Owiwi::new();
+    /// let _guard = owiwi.try_init_console()?;
+    /// # Ok::<_, owiwi::Error>(())
+    ///```
+    #[cfg(feature = "console")]
     pub fn try_init_console(mut self) -> Result<OwiwiGuard, Error> {
         let resource = self.build_resource();
         #[cfg(feature = "metrics")]
@@ -208,7 +249,7 @@ impl Owiwi {
             meter_provider,
         })
     }
-    /// Initializes the resource.
+    /// Build an OpenTelemetry resource
     fn build_resource(&mut self) -> Resource {
         let service_name = if self.service_name.is_empty() {
             cfg_if::cfg_if! {
@@ -244,6 +285,7 @@ impl Owiwi {
             .build()
     }
 
+    /// Creates a formatting layer
     fn fmt_layer<S>(&self) -> impl Layer<S>
     where
         S: Subscriber + for<'span> LookupSpan<'span>,
@@ -267,6 +309,7 @@ impl Owiwi {
         layer
     }
 
+    /// Creates a filter layer from the configuration
     fn filter_layer(&self) -> Result<EnvFilter, Error> {
         let mut layer = match EnvFilter::try_from_default_env() {
             Ok(layer) => layer,
