@@ -18,6 +18,8 @@ pub struct OtlpConfig {
     /// Additional gRPC metadata headers
     #[builder(default)]
     pub headers: Vec<(String, String)>,
+    /// Custom TLS configuration
+    pub tls_config: Option<ClientTlsConfig>,
 }
 
 impl OtlpConfig {
@@ -44,7 +46,10 @@ impl TryFrom<OtlpConfig> for SpanExporter {
             .with_metadata(metadata);
 
         if config.endpoint.scheme() == "https" {
-            builder = builder.with_tls_config(ClientTlsConfig::default().with_enabled_roots());
+            let tls = config
+                .tls_config
+                .unwrap_or_else(|| ClientTlsConfig::default().with_enabled_roots());
+            builder = builder.with_tls_config(tls);
         }
 
         Ok(builder.build()?)
