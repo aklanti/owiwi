@@ -13,7 +13,6 @@ use super::MetricBackend;
 use crate::Error;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
-use crate::env_vars;
 
 /// Meter provider configuration data
 #[must_use]
@@ -28,7 +27,7 @@ pub struct MeterProviderOptions {
             name="metrics-exporter",
             long,
             value_enum,
-            env = env_vars::OTEL_METRICS_EXPORTER,
+            env = crate::env_vars::OTEL_METRICS_EXPORTER,
             help_heading = HELP_HEADING,
         ),
     )]

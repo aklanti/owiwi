@@ -41,12 +41,10 @@ pub(crate) enum ErrorKind {
     /// Error parsing string to URL
     #[error(transparent)]
     ParseUrl(#[from] url::ParseError),
-    /// The log or level or trace directive is not set.
-    #[error("expected tracing level filter")]
-    TraceLevelMissing,
     /// Unsupported metrics backend
     #[error("unsupported metrics backend: {0}")]
     TraceBackend(String),
+    #[cfg(feature = "metrics")]
     /// Unsupported traces backend
     #[error("unsupported traces backend: {0}")]
     MetricBackend(String),

@@ -31,7 +31,20 @@ impl OwiwiGuard {
         std::mem::forget(self);
         Ok(())
     }
+
+    #[allow(
+        dead_code,
+        reason = "Only called when SDK is disabled and cannot be behind a cfg"
+    )]
+    pub(crate) fn noop() -> Self {
+        Self {
+            tracer_provider: SdkTracerProvider::default(),
+            #[cfg(feature = "metrics")]
+            meter_provider: opentelemetry_sdk::metrics::SdkMeterProvider::default(),
+        }
+    }
 }
+
 impl Drop for OwiwiGuard {
     fn drop(&mut self) {
         if let Err(err) = self.tracer_provider.shutdown() {

@@ -129,7 +129,16 @@ impl Owiwi {
         >,
     ) -> Result<OwiwiGuard, Error> {
         if self.disable_sdk || is_disabled() {
-            return self.try_init_console();
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "console")] {
+                    return self.try_init_console();
+                } else {
+                    let filter_layer = self.filter_layer()?;
+                    let fmt_layer = self.fmt_layer();
+                    tracing_subscriber::registry().with(filter_layer).with(fmt_layer).try_init()?;
+                    return Ok(OwiwiGuard::noop());
+                }
+            }
         }
 
         let resource = self.build_resource();
@@ -185,12 +194,7 @@ impl Owiwi {
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         let filter_layer = self.filter_layer()?;
 
-        let fmt_layer: Box<dyn Layer<_> + Send + Sync> = match self.event_format {
-            EventFormat::Compact => Box::new(self.fmt_layer_compact()),
-            EventFormat::Full => Box::new(self.fmt_layer_full()),
-            EventFormat::Pretty => Box::new(self.fmt_layer_pretty()),
-        };
-
+        let fmt_layer = self.fmt_layer();
         tracing_subscriber::registry()
             .with(otel_layer)
             .with(ErrorLayer::default())
@@ -238,7 +242,29 @@ impl Owiwi {
             .build()
     }
 
-    /// Creates a filter layer
+    fn fmt_layer<S>(&self) -> impl Layer<S>
+    where
+        S: Subscriber + for<'span> LookupSpan<'span>,
+    {
+        let layer: Box<dyn Layer<_> + Send + Sync> = match self.event_format {
+            EventFormat::Compact => {
+                let format = self.event_format.compact();
+                Box::new(tracing_subscriber::fmt::layer().event_format(format))
+            }
+
+            EventFormat::Full => {
+                let format = self.event_format.full();
+                Box::new(tracing_subscriber::fmt::layer().event_format(format))
+            }
+            EventFormat::Pretty => {
+                let format = self.event_format.pretty();
+                Box::new(tracing_subscriber::fmt::layer().event_format(format))
+            }
+        };
+
+        layer
+    }
+
     fn filter_layer(&self) -> Result<EnvFilter, Error> {
         let mut layer = match EnvFilter::try_from_default_env() {
             Ok(layer) => layer,
@@ -264,7 +290,7 @@ impl Owiwi {
                            if #[cfg(feature = "clap")] {
                                let level = self.verbose
                                .tracing_level()
-                               .ok_or_else(|| ErrorKind::TraceLevelMissing)?;
+                               .unwrap_or(tracing::Level::INFO);
                            } else {
                                let level = tracing::Level::INFO;
                            }
@@ -280,33 +306,6 @@ impl Owiwi {
             layer = layer.add_directive(directive.clone());
         }
         Ok(layer)
-    }
-
-    /// Creates a compact event formatted tracing layer
-    fn fmt_layer_compact<S>(&self) -> impl Layer<S>
-    where
-        S: Subscriber + for<'span> LookupSpan<'span>,
-    {
-        let format = self.event_format.compact();
-        tracing_subscriber::fmt::layer().event_format(format)
-    }
-
-    /// Creates a full tracing formatting layer
-    fn fmt_layer_full<S>(&self) -> impl Layer<S>
-    where
-        S: Subscriber + for<'span> LookupSpan<'span>,
-    {
-        let format = self.event_format.full();
-        tracing_subscriber::fmt::layer().event_format(format)
-    }
-
-    /// Creates a pretty printed event formatting layer
-    fn fmt_layer_pretty<S>(&self) -> impl Layer<S>
-    where
-        S: Subscriber + for<'span> LookupSpan<'span>,
-    {
-        let format = self.event_format.pretty();
-        tracing_subscriber::fmt::layer().event_format(format)
     }
 }
 
