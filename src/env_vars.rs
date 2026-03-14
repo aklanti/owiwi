@@ -39,3 +39,41 @@ pub fn parse_key_values(header: &str) -> Result<Vec<(String, String)>, String> {
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use googletest::matchers::{anything, elements_are, eq, err};
+    use googletest::{expect_that, gtest};
+
+    use super::*;
+
+    #[gtest]
+    fn parse_key_values_trims_whitespace() {
+        let value = parse_key_values(" k1 = v1, k2 = v2").expect("value to be ok");
+        expect_that!(
+            &value,
+            elements_are![(eq("k1"), eq("v1")), (eq("k2"), eq("v2"))]
+        );
+    }
+
+    #[gtest]
+    fn parse_key_values_valid_input() {
+        let value = parse_key_values("k1=v1,k2=v2").expect("value to be ok");
+        expect_that!(
+            &value,
+            elements_are![(eq("k1"), eq("v1")), (eq("k2"), eq("v2"))]
+        );
+    }
+
+    #[gtest]
+    fn parse_missing_equals() {
+        let value = parse_key_values("k1 v1,k2=v2");
+        expect_that!(value, err(anything()));
+    }
+
+    #[gtest]
+    fn parse_key_values_empty_string() {
+        let value = parse_key_values("");
+        expect_that!(value, err(anything()));
+    }
+}
