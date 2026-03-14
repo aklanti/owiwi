@@ -31,7 +31,6 @@ pub(crate) enum ErrorKind {
     /// Error parsing trace directives
     #[error("parsing RUST_LOG directives: {source}")]
     ParseDirective {
-        /// Error source
         #[from]
         source: std::env::VarError,
     },
@@ -43,12 +42,11 @@ pub(crate) enum ErrorKind {
     ParseUrl(#[from] url::ParseError),
     /// Unsupported metrics backend
     #[error("unsupported metrics backend: {0}")]
-    TraceBackend(String),
     #[cfg(feature = "metrics")]
-    /// Unsupported traces backend
-    #[error("unsupported traces backend: {0}")]
     MetricBackend(String),
-    /// Invalid filter
+    /// Unsupported traces backend
+    #[error("unsupported metrics backend: {0}")]
+    TraceBackend(String),
     #[error("unexpected error parsing env filter: {0}")]
     UnexpectedFilter(String),
     /// Failed to shutdown a provider
