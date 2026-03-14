@@ -137,7 +137,7 @@ impl Owiwi {
     ///
     /// let mut owiwi = Owiwi::new();
     /// owiwi.service_name = "owiwi-test".to_owned();
-    /// let config = OltpConfig::builder()
+    /// let config = OtlpConfig::builder()
     ///     .endpoint("http://localhost:4317".parse().expect("valid URL"))
     ///     .timeout(Duration::from_secs(10))
     ///     .build();
