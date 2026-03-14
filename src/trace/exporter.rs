@@ -20,8 +20,8 @@ pub enum TraceBackend {
     Console,
     /// Exports spans to [Honeycomb](https://honeycomb.io)
     Honeycomb,
-    /// Exports spans [Jaeger](https://jaegertracing.io)
-    Jaeger,
+    /// Any OTLP-compatible backend
+    Otlp,
 }
 
 impl fmt::Display for TraceBackend {
@@ -37,7 +37,7 @@ impl TraceBackend {
         match self {
             Self::Console => "console",
             Self::Honeycomb => "honeycomb",
-            Self::Jaeger => "jaeger",
+            Self::Otlp => "otlp",
         }
     }
 }
@@ -49,7 +49,7 @@ impl FromStr for TraceBackend {
         let this = match value {
             "console" => Self::Console,
             "honeycomb" => Self::Honeycomb,
-            "jaeger" => Self::Jaeger,
+            "otlp" => Self::Otlp,
             _ => return Err(ErrorKind::TraceBackend(value.to_owned()).into()),
         };
         Ok(this)
@@ -71,14 +71,14 @@ mod tests {
     #[rstest]
     #[case(TraceBackend::Console, "console")]
     #[case(TraceBackend::Honeycomb, "honeycomb")]
-    #[case(TraceBackend::Jaeger, "jaeger")]
+    #[case(TraceBackend::Otlp, "otlp")]
     fn display_correct_collector_value(#[case] collector: TraceBackend, #[case] display: &str) {
         assert_that!(collector.to_string(), eq(display));
     }
 
     proptest! {
         #[gtest]
-        fn parse_valid_collector_from_string_successfully(value in "console|honeycomb|jaeger") {
+        fn parse_valid_collector_from_string_successfully(value in "console|honeycomb|otlp") {
             let result: Result<TraceBackend,_> = value.parse();
             assert_that!(result,ok(anything()));
         }
@@ -87,7 +87,7 @@ mod tests {
         fn parsing_invalid_collector_from_string_fails(
             value in "[a-zA-Z]*"
                 .prop_filter("Value must be a valid variant",
-                    |v| !["console", "honeycomb", "jaeger"].contains(&v.as_str()))) {
+                    |v| !["console", "honeycomb", "otlp"].contains(&v.as_str()))) {
             let result: Result<TraceBackend,_> = value.parse();
             assert_that!(result,err(anything()));
         }

@@ -30,9 +30,6 @@ pub use owiwi::Owiwi;
 #[cfg(feature = "honeycomb")]
 #[doc(inline)]
 pub use trace::HoneycombConfig;
-#[cfg(feature = "jaeger")]
-#[doc(inline)]
-pub use trace::JaegerConfig;
 #[doc(inline)]
 pub use trace::TraceBackend;
 #[doc(inline)]

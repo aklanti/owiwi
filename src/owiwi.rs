@@ -214,24 +214,26 @@ impl Owiwi {
     pub fn try_init_console(mut self) -> Result<OwiwiGuard, Error> {
         let resource = self.build_resource();
 
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "metrics")] {
-                let exporter = opentelemetry_stdout::MetricExporter::default();
-                let meter_provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
-                    .with_resource(resource.clone())
-                    .with_periodic_exporter(exporter)
-                    .build();
-                let meter_provider= Some(meter_provider);
-            } else {
-                let meter_provider = None;
-            }
-        }
+        #[cfg(feature = "metrics")]
+        let meter_provider = {
+            let exporter = opentelemetry_stdout::MetricExporter::default();
+            let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
+                .with_resource(resource.clone())
+                .with_periodic_exporter(exporter)
+                .build();
+            Some(provider)
+        };
+
         let tracer_provider = SdkTracerProvider::builder()
             .with_resource(resource)
             .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
             .build();
 
-        self.finish(tracer_provider, meter_provider)
+        self.finish(
+            tracer_provider,
+            #[cfg(feature = "metrics")]
+            meter_provider,
+        )
     }
 
     /// Install the subscriber and returns the provider guard
@@ -364,7 +366,7 @@ impl Owiwi {
         Ok(layer)
     }
 
-    fn is_disabled(&self) -> bool {
+    fn is_disabled(&mut self) -> bool {
         #[cfg(not(feature = "clap"))]
         {
             self.disable_sdk = std::env::var(env_vars::OTEL_SDK_DISABLED)
