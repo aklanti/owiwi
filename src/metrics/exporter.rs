@@ -1,6 +1,6 @@
 //! This module defines the metrics collector abstraction.
 
-use crate::error::{Error, ErrorKind};
+use crate::error::{Error, ErrorKind, Result};
 use std::fmt;
 use std::str::FromStr;
 
@@ -42,7 +42,7 @@ impl fmt::Display for MetricBackend {
 
 impl FromStr for MetricBackend {
     type Err = Error;
-    fn from_str(value: &str) -> Result<Self, Error> {
+    fn from_str(value: &str) -> Result<Self> {
         let this = match value {
             "console" => Self::Console,
             #[cfg(feature = "prometheus")]

@@ -6,7 +6,7 @@ use bon::Builder;
 use opentelemetry_otlp::{WithExportConfig, WithTonicConfig};
 use url::Url;
 
-use crate::error::Error;
+use crate::error::{Error, Result};
 
 /// This is the configuration data for Prometheus
 #[derive(Debug, Clone, Builder)]
@@ -25,7 +25,7 @@ pub struct PrometheusConfig {
 impl TryFrom<PrometheusConfig> for opentelemetry_otlp::MetricExporter {
     type Error = Error;
 
-    fn try_from(config: PrometheusConfig) -> Result<Self, Self::Error> {
+    fn try_from(config: PrometheusConfig) -> Result<Self> {
         let mut builder = Self::builder()
             .with_tonic()
             .with_endpoint(config.endpoint.as_ref());

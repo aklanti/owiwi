@@ -11,5 +11,4 @@ pub use exporter::TraceBackend;
 #[cfg(feature = "honeycomb")]
 #[doc(inline)]
 pub use honeycomb::HoneycombConfig;
-#[doc(inline)]
-pub use provider::TracerProviderOptions;
+pub(crate) use provider::TracerProviderOptions;

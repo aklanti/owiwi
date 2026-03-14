@@ -8,7 +8,7 @@ use secrecy::{ExposeSecret, SecretString};
 use url::Url;
 
 use super::otlp::OtlpConfig;
-use crate::Error;
+use crate::error::{Error, Result};
 
 /// Configuration data for honeycomb.io
 #[derive(Debug, Clone, Builder)]
@@ -29,7 +29,7 @@ pub struct HoneycombConfig {
 impl TryFrom<HoneycombConfig> for SpanExporter {
     type Error = Error;
 
-    fn try_from(config: HoneycombConfig) -> crate::Result<Self> {
+    fn try_from(config: HoneycombConfig) -> Result<Self> {
         OtlpConfig::from(config).try_into()
     }
 }

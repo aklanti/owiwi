@@ -19,7 +19,7 @@ use tracing_subscriber::util::SubscriberInitExt as _;
 use super::HELP_HEADING;
 use super::OwiwiGuard;
 use super::env_vars;
-use super::error::{Error, ErrorKind};
+use super::error::{ErrorKind, Result};
 use super::trace::TracerProviderOptions;
 use crate::EventFormat;
 use crate::OtlpConfig;
@@ -145,7 +145,7 @@ impl Owiwi {
     /// # Ok::<_, owiwi::Error>(())
     ///
     /// ```
-    pub fn try_init(mut self, config: impl Into<OtlpConfig>) -> Result<OwiwiGuard, Error> {
+    pub fn try_init(mut self, config: impl Into<OtlpConfig>) -> Result<OwiwiGuard> {
         if self.is_disabled() {
             return self.noop();
         }
@@ -178,8 +178,8 @@ impl Owiwi {
     pub fn try_init_with_metrics(
         mut self,
         config: impl Into<OtlpConfig>,
-        metrics_exporter: impl TryInto<opentelemetry_otlp::MetricExporter, Error = Error>,
-    ) -> Result<OwiwiGuard, Error> {
+        metrics_exporter: impl TryInto<opentelemetry_otlp::MetricExporter, Error = crate::Error>,
+    ) -> Result<OwiwiGuard> {
         if self.is_disabled() {
             return self.noop();
         }
@@ -211,7 +211,7 @@ impl Owiwi {
     /// # Ok::<_, owiwi::Error>(())
     ///```
     #[cfg(feature = "console")]
-    pub fn try_init_console(mut self) -> Result<OwiwiGuard, Error> {
+    pub fn try_init_console(mut self) -> Result<OwiwiGuard> {
         let resource = self.build_resource();
 
         #[cfg(feature = "metrics")]
@@ -243,7 +243,7 @@ impl Owiwi {
         #[cfg(feature = "metrics")] meter_provider: Option<
             opentelemetry_sdk::metrics::SdkMeterProvider,
         >,
-    ) -> Result<OwiwiGuard, Error> {
+    ) -> Result<OwiwiGuard> {
         let tracer = tracer_provider.tracer(self.service_name.clone());
         let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
         let filter_layer = self.filter_layer()?;
@@ -323,7 +323,7 @@ impl Owiwi {
     }
 
     /// Creates a filter layer from the configuration
-    fn filter_layer(&self) -> Result<EnvFilter, Error> {
+    fn filter_layer(&self) -> Result<EnvFilter> {
         let mut layer = match EnvFilter::try_from_default_env() {
             Ok(layer) => layer,
             Err(err) => {
@@ -376,7 +376,7 @@ impl Owiwi {
         self.disable_sdk
     }
 
-    fn noop(self) -> Result<OwiwiGuard, Error> {
+    fn noop(self) -> Result<OwiwiGuard> {
         cfg_if::cfg_if! {
                 if #[cfg(feature = "console")] {
                     self.try_init_console()

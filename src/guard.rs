@@ -2,7 +2,7 @@
 
 use opentelemetry_sdk::trace::SdkTracerProvider;
 
-use crate::error::{Error, ErrorKind};
+use crate::error::{ErrorKind, Result};
 
 /// A type returned by [`Owiwi::try_init`](crate::Owiwi::try_init) or [`Owiwi::try_init_console`](crate::Owiwi::try_init_console).
 ///
@@ -20,7 +20,7 @@ pub struct OwiwiGuard {
 
 impl OwiwiGuard {
     /// Explicitly shutdown all providers
-    pub fn shutdown(self) -> Result<(), Error> {
+    pub fn shutdown(self) -> Result<()> {
         self.tracer_provider
             .shutdown()
             .map_err(ErrorKind::Shutdown)?;

@@ -9,5 +9,4 @@ pub use exporter::MetricBackend;
 #[cfg(feature = "prometheus")]
 #[doc(inline)]
 pub use prometheus::PrometheusConfig;
-#[doc(inline)]
-pub use provider::MeterProviderOptions;
+pub(crate) use provider::MeterProviderOptions;

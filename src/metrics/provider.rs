@@ -10,9 +10,9 @@ use opentelemetry_sdk::metrics::PeriodicReader;
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 
 use super::MetricBackend;
-use crate::Error;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
+use crate::error::{Error, Result};
 
 /// Meter provider configuration data
 #[must_use]
@@ -56,7 +56,7 @@ impl MeterProviderOptions {
         &self,
         resource: Resource,
         config: impl TryInto<MetricExporter, Error = Error>,
-    ) -> Result<SdkMeterProvider, Error> {
+    ) -> Result<SdkMeterProvider> {
         let exporter = config.try_into()?;
         let mut builder = PeriodicReader::builder(exporter);
         if let Some(interval) = self.interval {
