@@ -40,15 +40,16 @@ struct Cli {
      owiwi: Owiwi,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
      let cli = Cli::parse();
      let exporter_config = HoneycombConfig::builder()
          .endpoint("https://api.honeycomb.io/traces/api".parse().expect("to be valid URL"))
          .api_key("super_secret_key".into())
          .timeout(std::time::Duration::from_secs(5))
          .build();
-     let _guard = cli.owiwi.try_init(exporter_config);
+     let guard = cli.owiwi.try_init(exporter_config);
      tracing::info!("the subscriber was initialized");
+     guard.shutdown()
 }
 
 ```
@@ -58,10 +59,12 @@ fn main() {
 ```rust
 use owiwi::{Owiwi, EventFormat};
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
      let mut = Owiwi::new();
-     let _guard = Owiwi::try_init_console();
+     "example-without-clap".clone_into(&mut self.owiwi.service_name);
+     let guard = Owiwi::try_init_console();
      tracing::info!("the Subscriber was initialized!");
+     guard.shutdown()
 }
 ```
 
