@@ -55,3 +55,45 @@ impl TryFrom<OtlpConfig> for SpanExporter {
         Ok(builder.build()?)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use googletest::matchers::{anything, eq, ok, some};
+    use googletest::{expect_that, gtest};
+
+    use super::*;
+
+    #[gtest]
+    fn otlp_config_builder_defaults() {
+        let config = OtlpConfig::builder()
+            .endpoint("http://test.example".parse().expect("to be valid"))
+            .timeout(Duration::ZERO)
+            .build();
+
+        expect_that!(config.endpoint.as_str(), eq("http://test.example/"));
+        expect_that!(config.timeout, eq(Duration::ZERO));
+    }
+
+    #[tokio::test]
+    #[gtest]
+    async fn can_create_a_span_exporter() {
+        let config = OtlpConfig::builder()
+            .endpoint("http://test.example".parse().expect("to be valid"))
+            .timeout(Duration::ZERO)
+            .build();
+
+        let result: Result<SpanExporter, _> = config.try_into();
+        expect_that!(result, ok(anything()));
+    }
+
+    #[gtest]
+    fn metadata_contains_headers() {
+        let config = OtlpConfig::builder()
+            .endpoint("http://test.example".parse().expect("to be valid"))
+            .timeout(Duration::ZERO)
+            .maybe_headers(Some(vec![("x-api-key".to_owned(), "test".to_owned())]))
+            .build();
+        let metadata = config.metadata().expect("valid metadata");
+        expect_that!(metadata.get("x-api-key"), some(eq("test")));
+    }
+}

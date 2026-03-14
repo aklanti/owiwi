@@ -71,6 +71,8 @@ googletest = { version = "0.14", features = ["proptest"] }
 proptest = "1.8"
 # Enable fixture based testing
 rstest = "0.26"
+# Asynchronous runtime
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 
 [lints.clippy]
 cargo = { level = "warn", priority = -1 }
