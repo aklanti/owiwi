@@ -3,6 +3,7 @@
 use std::env::VarError;
 use std::error::Error as _;
 
+use bon::Builder;
 #[cfg(feature = "clap")]
 use clap_verbosity_flag::Verbosity;
 use opentelemetry::trace::TracerProvider as _;
@@ -31,7 +32,7 @@ const DEFAULT_SERVICE_NAME: &str = "unknown_service";
 ///
 /// When the `clap` feature is enabled, flatten into a CLI parser
 #[must_use]
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Debug, Builder)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Owiwi {
     /// Service name
@@ -43,6 +44,7 @@ pub struct Owiwi {
             env=env_vars::OTEL_SERVICE_NAME,
          )
     )]
+    #[builder(default, into)]
     pub service_name: String,
 
     /// The event formatter to use
@@ -56,6 +58,7 @@ pub struct Owiwi {
             help_heading = HELP_HEADING,
         )
     )]
+    #[builder(default)]
     pub event_format: EventFormat,
 
     /// Traces filter directives
@@ -70,15 +73,18 @@ pub struct Owiwi {
             help_heading = HELP_HEADING,
         )
     )]
+    #[builder(default)]
     pub tracing_directives: Vec<Directive>,
 
     /// Tracer provider configuration options
     #[cfg_attr(feature = "clap", command(flatten))]
+    #[builder(default)]
     pub tracer_provider_options: TracerProviderOptions,
 
     /// Meter provider configuration options
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
+    #[builder(default)]
     pub meter_options: super::metrics::MeterProviderOptions,
 
     /// Resource attributes
@@ -91,6 +97,7 @@ pub struct Owiwi {
             env = env_vars::OTEL_RESOURCE_ATTRIBUTES,
             help_heading = HELP_HEADING,
         ))]
+    #[builder(default)]
     pub resource_attrs: Vec<(String, String)>,
 
     /// Disables all telemetry
@@ -102,12 +109,20 @@ pub struct Owiwi {
             env=env_vars::OTEL_SDK_DISABLED
         )
     )]
+    #[builder(default)]
     pub disable_sdk: bool,
 
     #[expect(missing_docs, reason = "is flatten command")]
     #[cfg(feature = "clap")]
     #[command(flatten)]
+    #[builder(default)]
     pub verbose: Verbosity,
+}
+
+impl Default for Owiwi {
+    fn default() -> Self {
+        Self::builder().service_name(DEFAULT_SERVICE_NAME).build()
+    }
 }
 
 impl Owiwi {
@@ -269,7 +284,7 @@ impl Owiwi {
                 if #[cfg(not(feature = "clap"))] {
                    std::env::var(env_vars::OTEL_SERVICE_NAME).unwrap_or(DEFAULT_SERVICE_NAME.into())
                 } else {
-                    self.service_name.clone()
+                    DEFAULT_SERVICE_NAME.to_owned()
                 }
             }
         } else {
@@ -387,5 +402,49 @@ impl Owiwi {
                     Ok(OwiwiGuard::noop())
                 }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use googletest::matchers::{anything, eq, ok, pat, some};
+    use googletest::{expect_that, gtest};
+    use opentelemetry::Key;
+
+    #[gtest]
+    fn new_returns_default_owiwi() {
+        let owiwi = Owiwi::new();
+        expect_that!(owiwi.service_name, eq("unknown_service"));
+    }
+
+    #[gtest]
+    fn build_resource_sets_service_name() {
+        let mut owiwi = Owiwi::new();
+        owiwi.service_name = "test_service".to_owned();
+        let resource = owiwi.build_resource();
+        expect_that!(resource, pat!(Resource { .. }));
+        expect_that!(resource.is_empty(), eq(false));
+        let key = Key::new("service.name");
+        let name = resource.get(&key).map(|v| String::from(v.as_str()));
+        expect_that!(name, some(eq("test_service")));
+    }
+
+    #[gtest]
+    fn filter_layer_with_directives() {
+        let owiwi = Owiwi::builder()
+            .tracing_directives(vec![
+                "info".parse().expect("valid directive"),
+                "my_crate=debug".parse().expect("valid directive"),
+            ])
+            .build();
+
+        expect_that!(owiwi.filter_layer(), ok(anything()));
+    }
+
+    #[gtest]
+    fn shutdown_is_idempotent() {
+        let guard = OwiwiGuard::noop();
+        expect_that!(guard.shutdown(), ok(eq(&())));
     }
 }
