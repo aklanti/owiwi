@@ -15,7 +15,7 @@ use crate::error::{Error, ErrorKind};
 pub struct OwiwiGuard {
     pub(crate) tracer_provider: SdkTracerProvider,
     #[cfg(feature = "metrics")]
-    pub(crate) meter_provider: opentelemetry_sdk::metrics::SdkMeterProvider,
+    pub(crate) meter_provider: Option<opentelemetry_sdk::metrics::SdkMeterProvider>,
 }
 
 impl OwiwiGuard {
@@ -24,10 +24,13 @@ impl OwiwiGuard {
         self.tracer_provider
             .shutdown()
             .map_err(ErrorKind::Shutdown)?;
+
         #[cfg(feature = "metrics")]
-        self.meter_provider
-            .shutdown()
-            .map_err(ErrorKind::Shutdown)?;
+        {
+            if let Some(meter_provider) = &self.meter_provider {
+                meter_provider.shutdown().map_err(ErrorKind::Shutdown)?;
+            }
+        }
         std::mem::forget(self);
         Ok(())
     }
@@ -40,7 +43,7 @@ impl OwiwiGuard {
         Self {
             tracer_provider: SdkTracerProvider::default(),
             #[cfg(feature = "metrics")]
-            meter_provider: opentelemetry_sdk::metrics::SdkMeterProvider::default(),
+            meter_provider: None,
         }
     }
 }
@@ -52,8 +55,12 @@ impl Drop for OwiwiGuard {
         }
 
         #[cfg(feature = "metrics")]
-        if let Err(err) = self.meter_provider.shutdown() {
-            eprintln!("failed to shutdown meter provider {err}");
+        {
+            if let Some(meter_provider) = &self.meter_provider
+                && let Err(err) = meter_provider.shutdown()
+            {
+                eprintln!("failed to shutdown meter provider {err}");
+            }
         }
     }
 }
