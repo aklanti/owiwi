@@ -392,16 +392,13 @@ impl Owiwi {
     }
 
     fn noop(self) -> Result<OwiwiGuard> {
-        cfg_if::cfg_if! {
-                if #[cfg(feature = "console")] {
-                    self.try_init_console()
-                } else {
-                    let filter_layer = self.filter_layer()?;
-                    let fmt_layer = self.fmt_layer();
-                    tracing_subscriber::registry().with(filter_layer).with(fmt_layer).try_init()?;
-                    Ok(OwiwiGuard::noop())
-                }
-        }
+        let filter_layer = self.filter_layer()?;
+        let fmt_layer = self.fmt_layer();
+        tracing_subscriber::registry()
+            .with(filter_layer)
+            .with(fmt_layer)
+            .try_init()?;
+        Ok(OwiwiGuard::noop())
     }
 }
 

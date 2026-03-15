@@ -45,7 +45,7 @@ pub(crate) enum ErrorKind {
     #[cfg(feature = "metrics")]
     MetricBackend(String),
     /// Unsupported traces backend
-    #[error("unsupported metrics backend: {0}")]
+    #[error("unsupported trace backend: {0}")]
     TraceBackend(String),
     #[error("unexpected error parsing env filter: {0}")]
     UnexpectedFilter(String),
