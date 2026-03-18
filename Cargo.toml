@@ -1,6 +1,6 @@
 [package]
 name = "owiwi"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 authors = ["Sede Soukossi"]
 description = "A library to initialize tracing with opentelemetry"
@@ -11,7 +11,7 @@ repository = "https://github.com/aklanti/owiwi"
 rust-version = "1.94.0"
 
 [package.metadata.docs.rs]
-features = ["full"]
+all-features = true
 
 [package.metadata.cargo-shear]
 ignored = ["humantime-serde"]
@@ -20,7 +20,6 @@ ignored = ["humantime-serde"]
 default = ["clap", "serde"]
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
 console = ["dep:opentelemetry-stdout", "opentelemetry-stdout/metrics"]
-full = ["clap", "serde", "prometheus"]
 honeycomb = ["dep:secrecy"]
 metrics = ["opentelemetry_sdk/metrics", "opentelemetry-otlp/metrics"]
 prometheus = ["metrics"]
