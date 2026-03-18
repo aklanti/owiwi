@@ -9,7 +9,6 @@ use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::metrics::PeriodicReader;
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 
-use super::MetricBackend;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 use crate::error::{Error, Result};
@@ -20,19 +19,6 @@ use crate::error::{Error, Result};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct MeterProviderOptions {
-    /// Set the metric collector
-    #[cfg_attr(
-        feature = "clap",
-        arg(
-            name="metrics-exporter",
-            long,
-            value_enum,
-            env = crate::env_vars::OTEL_METRICS_EXPORTER,
-            help_heading = HELP_HEADING,
-        ),
-    )]
-    pub metric_backend: MetricBackend,
-
     /// Metrics update time interval
     #[cfg_attr(
         feature = "clap",

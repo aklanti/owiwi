@@ -20,9 +20,6 @@ pub use error::{Error, Result};
 pub use format::EventFormat;
 #[doc(inline)]
 pub use guard::OwiwiGuard;
-#[cfg(feature = "metrics")]
-#[doc(inline)]
-pub use metrics::MetricBackend;
 #[cfg(feature = "prometheus")]
 pub use metrics::PrometheusConfig;
 #[doc(inline)]
@@ -30,8 +27,6 @@ pub use owiwi::Owiwi;
 #[cfg(feature = "honeycomb")]
 #[doc(inline)]
 pub use trace::HoneycombConfig;
-#[doc(inline)]
-pub use trace::TraceBackend;
 #[doc(inline)]
 pub use trace::otlp::OtlpConfig;
 #[cfg(feature = "clap")]

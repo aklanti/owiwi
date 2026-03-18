@@ -8,7 +8,6 @@ use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
-use super::exporter::TraceBackend;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 use crate::OtlpConfig;
@@ -21,20 +20,6 @@ use crate::error::Error;
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct TracerProviderOptions {
-    /// Set the traces exporter
-    #[cfg_attr(
-        feature = "clap",
-        arg(
-             name = "trace-exporter",
-             long,
-             value_enum,
-             default_value_t = Default::default(),
-             env = env_vars::OTEL_TRACES_EXPORTER,
-             help_heading = HELP_HEADING,
-         )
-    )]
-    pub trace_backend: TraceBackend,
-
     /// Set export timeout duration
     #[cfg_attr(
         feature = "serde",

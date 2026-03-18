@@ -38,13 +38,6 @@ pub(crate) enum ErrorKind {
     /// Error parsing string to URL
     #[error(transparent)]
     ParseUrl(#[from] url::ParseError),
-    /// Unsupported metrics backend
-    #[error("unsupported metrics backend: {0}")]
-    #[cfg(feature = "metrics")]
-    MetricBackend(String),
-    /// Unsupported traces backend
-    #[error("unsupported trace backend: {0}")]
-    TraceBackend(String),
     #[error("unexpected error parsing env filter: {0}")]
     UnexpectedFilter(String),
     /// Failed to shutdown a provider
