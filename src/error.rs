@@ -1,8 +1,6 @@
-//! Error module
+//! Error types for subscriber initialization.
 
-/// A specialized [`std::result::Result`] type for telemetry setup operation.
-///
-/// This type is used to avoid writing out [`owiwi::Error`](crate::Error);
+/// Convenience alias for `Result<T, owiwi::Error>`.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// An error that occurred during subscriber initialization.
@@ -19,7 +17,7 @@ impl<E: Into<ErrorKind>> From<E> for Error {
     }
 }
 
-/// The error type for subcriber initialization operations.
+/// Internal error variants for initialization failures.
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum ErrorKind {
     /// Error building exporter

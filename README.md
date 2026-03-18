@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     owiwi.service_name = "my-service".to_owned();
     let guard = owiwi.try_init_console()?;
 
-    // ... your application ...
+    tracing::info!("credential issues");
 
     guard.shutdown()?;
     Ok(())
@@ -46,6 +46,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .timeout(Duration::from_secs(10))
         .build();
     let guard = Owiwi::new().try_init(config)?;
+
+    tracing::info!("credential issues");
+
     guard.shutdown()?;
     Ok(())
 }

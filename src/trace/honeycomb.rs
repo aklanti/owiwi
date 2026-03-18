@@ -1,4 +1,4 @@
-//! This module provides the confuguration data for honeycomb.io
+//! Honeycomb configuration.
 
 use std::time::Duration;
 

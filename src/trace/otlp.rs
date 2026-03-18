@@ -8,12 +8,12 @@ use url::Url;
 
 use crate::error::{Error, ErrorKind};
 
-/// `OTlP` exporter configuration
+/// OTLP exporter configuration
 #[derive(Debug, Clone, Builder)]
 pub struct OtlpConfig {
     /// Connection endpoint
     pub endpoint: Url,
-    ///  Export timeout duration
+    /// Export timeout duration
     pub timeout: Duration,
     /// Additional gRPC metadata headers
     #[builder(default)]

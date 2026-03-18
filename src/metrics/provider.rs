@@ -1,4 +1,4 @@
-//! This module the meter provider configuration options
+//! Meter provider configuration.
 
 use std::time::Duration;
 

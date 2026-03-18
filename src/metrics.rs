@@ -1,4 +1,4 @@
-//! This module defines the abstraction for exporting metrics
+//! Metrics export.
 mod exporter;
 #[cfg(feature = "prometheus")]
 mod prometheus;

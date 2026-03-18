@@ -1,4 +1,4 @@
-//! This module defines the abstractions for setting OpenTelemetry collectors.
+//! Trace export backends.
 
 use std::fmt;
 use std::str::FromStr;

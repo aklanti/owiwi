@@ -1,4 +1,4 @@
-//! This module defines the metrics collector abstraction.
+//! Metrics export backends.
 
 use crate::error::{Error, ErrorKind, Result};
 use std::fmt;
@@ -17,7 +17,7 @@ pub enum MetricBackend {
     /// Writes metrics to `std::io::stdout`
     #[default]
     Console,
-    /// Exports metrics to [Promethus](https://prometheus.io)
+    /// Exports metrics to [Prometheus](https://prometheus.io)
     #[cfg(feature = "prometheus")]
     Prometheus,
 }

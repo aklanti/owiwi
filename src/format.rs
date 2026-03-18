@@ -1,4 +1,4 @@
-//! This module defines the trace formatting styles
+//! Trace output formatting styles.
 
 use std::fmt;
 use std::io::{self, IsTerminal};
@@ -7,7 +7,7 @@ use std::str::FromStr;
 use tracing_subscriber::fmt::format::{Compact, Format, Full, Pretty};
 use tracing_subscriber::fmt::time::SystemTime;
 
-/// [`EventFormat`] indicates the event formatter that should be used.
+/// Trace event output format.
 #[non_exhaustive]
 #[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
@@ -23,7 +23,7 @@ pub enum EventFormat {
 }
 
 impl EventFormat {
-    /// Use a less verbose compacted out format
+    /// Single-line output, one event per line
     #[must_use]
     pub fn compact(&self) -> Format<Compact, ()> {
         self.full()
@@ -36,13 +36,13 @@ impl EventFormat {
             .without_time()
     }
 
-    /// Use a full formatter trace output
+    /// Full verbose trace output with timestamps
     #[must_use]
     pub fn full(&self) -> Format<Full, SystemTime> {
         Format::default().with_ansi(io::stderr().is_terminal())
     }
 
-    /// Pretty format event output
+    /// Multi-line, indented output for local development
     #[must_use]
     pub fn pretty(&self) -> Format<Pretty, SystemTime> {
         self.full().pretty()

@@ -1,4 +1,4 @@
-//! This module defines the instrumentation type.
+//! Tracing and telemetry initialization.
 
 use std::env::VarError;
 use std::error::Error as _;
@@ -140,7 +140,7 @@ impl Owiwi {
     ///
     /// # Errors
     ///
-    /// Returns [`Error`] if the exporter cannot be built, filter directives
+    /// Returns [`Error`](crate::Error) if the exporter cannot be built, filter directives
     /// are invalid, or a global subscriber is already set.
     ///
     /// # Examples
@@ -187,7 +187,7 @@ impl Owiwi {
     ///
     /// # Errors
     ///
-    /// Returns [`Error`] if the exporter cannot be built, filter directives
+    /// Returns [`Error`](crate::Error) if the exporter cannot be built, filter directives
     /// are invalid, or a global subscriber is already set.
     #[cfg(feature = "metrics")]
     pub fn try_init_with_metrics(
@@ -251,7 +251,7 @@ impl Owiwi {
         )
     }
 
-    /// Installs the subscriber and returns the provider guard
+    /// Sets the global tracing subscriber and returns the provider guard
     fn finish(
         self,
         tracer_provider: SdkTracerProvider,

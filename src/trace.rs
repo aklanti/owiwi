@@ -1,4 +1,4 @@
-//! This module defines the abstractions for OpenTelemetry traces setup.
+//! OpenTelemetry trace setup.
 
 pub mod exporter;
 #[cfg(feature = "honeycomb")]

@@ -1,4 +1,4 @@
-//! Opentelemetry environment variables settings
+//! OpenTelemetry environment variables.
 
 /// The default value is <http://localhost:4317>. With the `clap` feature,
 /// you can overwrite it with `--otlp-endpoint`

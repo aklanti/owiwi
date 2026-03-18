@@ -1,6 +1,6 @@
-//! `owiwi` provides an opinionated abstraction for initializing tracing subscriber with OpenTelemetry.
+//! Opinionated [`tracing`] subscriber with OpenTelemetry export.
 //!
-//! It allows sending traces to any of the exporters define in the [`trace::exporter`] module.
+//! Sends traces to any of the exporters defined in the [`trace::exporter`] module.
 //!
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(docsrs, feature(doc_cfg))]

@@ -1,4 +1,4 @@
-//! This module provides the configuration data structure for Prometheus
+//! Prometheus configuration.
 
 use std::time::Duration;
 
@@ -8,7 +8,7 @@ use url::Url;
 
 use crate::error::{Error, Result};
 
-/// This is the configuration data for Prometheus
+/// Prometheus exporter configuration
 #[derive(Debug, Clone, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub struct PrometheusConfig {
