@@ -11,7 +11,7 @@ Opinionated [`tracing`][url-tracing] subscriber with OpenTelemetry export.
 
 ```toml
 [dependencies]
-owiwi = { version = "1.0.0", features = ["console"] }
+owiwi = { version = "1.1.0", features = ["console"] }
 tracing = "0.1"
 ```
 
@@ -61,7 +61,7 @@ Flatten `Owiwi` into your CLI struct. Requires the `clap` feature.
 ```toml
 [dependencies]
 clap = { version = "4", features = ["derive"] }
-owiwi = { version = "0.1.0", features = ["clap", "honeycomb"] }
+owiwi = { version = "1.1.0", features = ["clap", "honeycomb"] }
 tracing = "0.1"
 ```
 
@@ -108,8 +108,6 @@ Per the [OpenTelemetry spec][url-otel-env]. With `clap`, each has a CLI flag.
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `--otlp-endpoint` | Exporter endpoint |
 | `OTEL_EXPORTER_OTLP_HEADERS` | `--otlp-headers` | Extra gRPC headers |
 | `OTEL_EXPORTER_OTLP_TIMEOUT` | `--otlp-timeout` | Export timeout |
-| `OTEL_TRACES_EXPORTER` | `--trace-exporter` | `console` · `honeycomb` · `otlp` |
-| `OTEL_METRICS_EXPORTER` | `--metrics-exporter` | `console` · `prometheus` |
 | `RUST_LOG` | `--trace-directive` | `info` · `my_crate=debug` |
 
 ## Features
@@ -122,7 +120,6 @@ Per the [OpenTelemetry spec][url-otel-env]. With `clap`, each has a CLI flag.
 | `honeycomb` | [Honeycomb](https://honeycomb.io) exporter | no |
 | `metrics` | Metrics via `SdkMeterProvider` | no |
 | `prometheus` | Prometheus OTLP export (implies `metrics`) | no |
-| `full` | Everything | no |
 
 ## MSRV
 
