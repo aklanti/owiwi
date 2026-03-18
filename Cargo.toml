@@ -29,8 +29,6 @@ serde = ["dep:serde", "dep:humantime-serde"]
 [dependencies]
 # Compile-time-checked builder generator
 bon = "3"
-# A macro to ergonomically define an item depending on a number of [cfg]
-cfg-if = "1.0"
 # A command line argument parser
 clap = { version = "4", optional = true, features = ["derive", "env"] }
 # Easily add a `--verbose` flag to CLI

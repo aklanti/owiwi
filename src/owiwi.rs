@@ -251,7 +251,7 @@ impl Owiwi {
         )
     }
 
-    /// Install the subscriber and returns the provider guard
+    /// Installs the subscriber and returns the provider guard
     fn finish(
         self,
         tracer_provider: SdkTracerProvider,
@@ -280,13 +280,12 @@ impl Owiwi {
     /// Build an OpenTelemetry resource
     fn build_resource(&mut self) -> Resource {
         let service_name = if self.service_name.is_empty() {
-            cfg_if::cfg_if! {
-                if #[cfg(not(feature = "clap"))] {
-                   std::env::var(env_vars::OTEL_SERVICE_NAME).unwrap_or(DEFAULT_SERVICE_NAME.into())
-                } else {
-                    DEFAULT_SERVICE_NAME.to_owned()
-                }
-            }
+            #[cfg(not(feature = "clap"))]
+            let name = std::env::var(env_vars::OTEL_SERVICE_NAME)
+                .unwrap_or_else(|_| DEFAULT_SERVICE_NAME.to_owned());
+            #[cfg(feature = "clap")]
+            let name = DEFAULT_SERVICE_NAME.to_owned();
+            name
         } else {
             self.service_name.clone()
         };
@@ -359,15 +358,10 @@ impl Owiwi {
                     }
                 }
                 if self.tracing_directives.is_empty() {
-                    cfg_if::cfg_if! {
-                           if #[cfg(feature = "clap")] {
-                               let level = self.verbose
-                               .tracing_level()
-                               .unwrap_or(tracing::Level::INFO);
-                           } else {
-                               let level = tracing::Level::INFO;
-                           }
-                    }
+                    #[cfg(feature = "clap")]
+                    let level = self.verbose.tracing_level().unwrap_or(tracing::Level::INFO);
+                    #[cfg(not(feature = "clap"))]
+                    let level = tracing::Level::INFO;
                     EnvFilter::try_new(level.as_str())?
                 } else {
                     EnvFilter::try_new("")?

@@ -95,17 +95,14 @@ impl TracerProviderOptions {
             config.timeout = timeout;
         }
 
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "clap")] {
-                config.headers.extend(self.headers.clone());
-            } else {
-                let headers = std::env::var(env_vars::OTEL_EXPORTER_OTLP_HEADERS)
-                    .ok()
-                    .and_then(|raw| env_vars::parse_key_values(&raw).ok())
-                    .unwrap_or_default();
-                config.headers.extend(headers);
-            }
-        }
+        #[cfg(feature = "clap")]
+        let extra_headers = self.headers.clone();
+        #[cfg(not(feature = "clap"))]
+        let extra_headers = std::env::var(env_vars::OTEL_EXPORTER_OTLP_HEADERS)
+            .ok()
+            .and_then(|raw| env_vars::parse_key_values(&raw).ok())
+            .unwrap_or_default();
+        config.headers.extend(extra_headers);
 
         let exporter: SpanExporter = config.try_into()?;
         let tracer_provider = provider_builder.with_batch_exporter(exporter).build();
