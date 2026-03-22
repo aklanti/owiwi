@@ -1,6 +1,6 @@
 //! Opinionated [`tracing`] subscriber with OpenTelemetry export.
 //!
-//! Sends traces to any of the exporters defined in the [`trace::exporter`] module.
+//! Sends traces to any of the exporters defined in the [`trace`] module.
 //!
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -30,5 +30,5 @@ pub use trace::HoneycombConfig;
 #[doc(inline)]
 pub use trace::otlp::OtlpConfig;
 #[cfg(feature = "clap")]
-/// Help heading for instrumentation options
+/// Help heading for instrumentation options.
 pub const HELP_HEADING: &str = "Instrumentation options";

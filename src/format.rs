@@ -13,17 +13,17 @@ use tracing_subscriber::fmt::time::SystemTime;
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 pub enum EventFormat {
-    /// Compact traces
+    /// Compact, single-line output.
     Compact,
-    /// Emits full verbose traces
+    /// Full verbose output with timestamps.
     #[default]
     Full,
-    /// Prettier traces
+    /// Multi-line, indented output.
     Pretty,
 }
 
 impl EventFormat {
-    /// Single-line output, one event per line
+    /// Returns a compact formatter with one event per line.
     #[must_use]
     pub fn compact(&self) -> Format<Compact, ()> {
         self.full()
@@ -36,13 +36,13 @@ impl EventFormat {
             .without_time()
     }
 
-    /// Full verbose trace output with timestamps
+    /// Returns a full verbose formatter with timestamps.
     #[must_use]
     pub fn full(&self) -> Format<Full, SystemTime> {
         Format::default().with_ansi(io::stderr().is_terminal())
     }
 
-    /// Multi-line, indented output for local development
+    /// Returns a multi-line, indented formatter for local development.
     #[must_use]
     pub fn pretty(&self) -> Format<Pretty, SystemTime> {
         self.full().pretty()
@@ -50,10 +50,10 @@ impl EventFormat {
 }
 
 impl EventFormat {
-    /// A slice of string of the enum variants
+    /// String literals for each variant.
     const LITERALS: &[&str] = &["compact", "full", "pretty"];
 
-    /// Returns a `&str` value of `self`
+    /// Returns the string representation of this format.
     #[must_use]
     pub const fn as_str(&self) -> &str {
         Self::LITERALS[*self as usize]

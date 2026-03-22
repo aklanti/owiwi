@@ -1,4 +1,4 @@
-//! This module defines the telemetry provider abstractions.
+//! Tracer provider configuration.
 
 use std::time::Duration;
 
@@ -14,13 +14,13 @@ use crate::OtlpConfig;
 use crate::env_vars;
 use crate::error::Error;
 
-/// Tracer provider configuration options
+/// Tracer provider configuration.
 #[must_use]
 #[derive(Clone, Debug, Default, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct TracerProviderOptions {
-    /// Set export timeout duration
+    /// Export timeout.
     #[cfg_attr(
         feature = "serde",
         serde(deserialize_with = "humantime_serde::deserialize")
@@ -37,7 +37,7 @@ pub struct TracerProviderOptions {
     )]
     pub timeout: Option<Duration>,
 
-    /// Set exporter endpoint
+    /// Exporter endpoint.
     #[cfg_attr(
         feature = "clap",
         arg(
@@ -49,6 +49,7 @@ pub struct TracerProviderOptions {
     )]
     pub endpoint: Option<Url>,
 
+    /// Additional gRPC metadata headers.
     #[cfg_attr(
         feature = "clap",
         arg(
@@ -63,7 +64,7 @@ pub struct TracerProviderOptions {
 }
 
 impl TracerProviderOptions {
-    /// Initializes the tracer provider
+    /// Initializes the tracer provider.
     pub fn init_provider(
         &self,
         config: impl Into<OtlpConfig>,

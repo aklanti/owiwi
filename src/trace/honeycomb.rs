@@ -10,15 +10,15 @@ use url::Url;
 use super::otlp::OtlpConfig;
 use crate::error::{Error, Result};
 
-/// Configuration data for honeycomb.io
+/// Configuration for [Honeycomb](https://honeycomb.io) trace export.
 #[derive(Debug, Clone, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub struct HoneycombConfig {
-    /// Connection endpoint
+    /// Exporter endpoint.
     pub endpoint: Url,
-    /// API Key
+    /// API key.
     pub api_key: SecretString,
-    /// Set export timeout duration
+    /// Export timeout.
     #[cfg_attr(
         feature = "serde",
         serde(deserialize_with = "humantime_serde::deserialize")

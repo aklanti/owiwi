@@ -17,33 +17,33 @@ impl<E: Into<ErrorKind>> From<E> for Error {
     }
 }
 
-/// Internal error variants for initialization failures.
+/// Error variants for initialization failures.
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum ErrorKind {
-    /// Error building exporter
+    /// Failed to build exporter.
     #[error(transparent)]
     BuildTraceExporter(#[from] opentelemetry_otlp::ExporterBuildError),
-    /// The subscriber initialization failed.
+    /// Subscriber initialization failed.
     #[error(transparent)]
     InitSubscriber(#[from] tracing_subscriber::util::TryInitError),
-    /// Error parsing trace directives
+    /// Invalid trace directive.
     #[error("parsing RUST_LOG directives: {source}")]
     ParseDirective {
         #[from]
         source: std::env::VarError,
     },
-    /// Error parsing filter
+    /// Invalid filter.
     #[error(transparent)]
     ParseFilter(#[from] tracing_subscriber::filter::ParseError),
-    /// Error parsing string to URL
+    /// Invalid URL.
     #[error(transparent)]
     ParseUrl(#[from] url::ParseError),
     #[error("unexpected error parsing env filter: {0}")]
     UnexpectedFilter(String),
-    /// Failed to shutdown a provider
+    /// Failed to shut down a provider.
     #[error("failed to shutdown provider: {0}")]
     Shutdown(opentelemetry_sdk::error::OTelSdkError),
-    /// Invalid Span exporter configuration data
+    /// Invalid span exporter configuration.
     #[error("invalid span exporter configuration")]
     ExporterConfig,
 }

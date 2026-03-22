@@ -13,13 +13,13 @@ use opentelemetry_sdk::metrics::SdkMeterProvider;
 use crate::HELP_HEADING;
 use crate::error::{Error, Result};
 
-/// Meter provider configuration data
+/// Meter provider configuration.
 #[must_use]
 #[derive(Clone, Debug, Default, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct MeterProviderOptions {
-    /// Metrics update time interval
+    /// Metrics export interval.
     #[cfg_attr(
         feature = "clap",
         arg(
@@ -37,7 +37,7 @@ pub struct MeterProviderOptions {
 }
 
 impl MeterProviderOptions {
-    /// Initializes meter provider
+    /// Initializes the meter provider.
     pub fn init_provider(
         &self,
         resource: Resource,

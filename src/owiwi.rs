@@ -28,14 +28,14 @@ use crate::OtlpConfig;
 /// Default service name
 const DEFAULT_SERVICE_NAME: &str = "unknown_service";
 
-/// Configuration for initializing a tracing subscriber with OpenTelemetry
+/// Configuration for initializing a [`tracing`] subscriber with OpenTelemetry.
 ///
-/// When the `clap` feature is enabled, flatten into a CLI parser
+/// When the `clap` feature is enabled, this type can be flattened into a CLI parser.
 #[must_use]
 #[derive(Clone, Debug, Builder)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct Owiwi {
-    /// Service name
+    /// Service name.
     #[cfg_attr(
         feature = "clap",
         arg(
@@ -47,7 +47,7 @@ pub struct Owiwi {
     #[builder(default, into)]
     pub service_name: String,
 
-    /// The event formatter to use
+    /// Event output format.
     #[cfg_attr(
         feature = "clap",
         arg(
@@ -61,9 +61,9 @@ pub struct Owiwi {
     #[builder(default)]
     pub event_format: EventFormat,
 
-    /// Traces filter directives
+    /// Trace filter directives.
     ///
-    /// Use this value to override the default value, and the `RUST_LOG` environment variable.
+    /// Overrides the default level and the `RUST_LOG` environment variable.
     #[cfg_attr(
         feature = "clap",
         arg(
@@ -76,18 +76,18 @@ pub struct Owiwi {
     #[builder(default)]
     pub tracing_directives: Vec<Directive>,
 
-    /// Tracer provider configuration options
+    /// Tracer provider configuration.
     #[cfg_attr(feature = "clap", command(flatten))]
     #[builder(default)]
     pub tracer_provider_options: TracerProviderOptions,
 
-    /// Meter provider configuration options
+    /// Meter provider configuration.
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
     #[builder(default)]
     pub meter_options: super::metrics::MeterProviderOptions,
 
-    /// Resource attributes
+    /// Resource attributes.
     #[cfg_attr(
         feature = "clap",
         arg(
@@ -100,7 +100,7 @@ pub struct Owiwi {
     #[builder(default)]
     pub resource_attrs: Vec<(String, String)>,
 
-    /// Disables all telemetry
+    /// Disables all telemetry.
     #[cfg_attr(
         feature = "clap",
         arg(
@@ -126,12 +126,12 @@ impl Default for Owiwi {
 }
 
 impl Owiwi {
-    /// Creates an `Owiwi` with default configuration
+    /// Creates an `Owiwi` with default configuration.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Initializes the tracing providers with the given exporter configuration
+    /// Initializes the tracing provider with the given exporter configuration.
     ///
     /// Sets up a [`tracing_subscriber`] registry with an OpenTelemetry layer,
     /// error layer, env filter, and the configured event formatter.
@@ -140,7 +140,7 @@ impl Owiwi {
     ///
     /// # Errors
     ///
-    /// Returns [`Error`](crate::Error) if the exporter cannot be built, filter directives
+    /// Returns an error if the exporter cannot be built, filter directives
     /// are invalid, or a global subscriber is already set.
     ///
     /// # Examples
@@ -178,7 +178,7 @@ impl Owiwi {
         )
     }
 
-    /// Initializes the tracing and metrics providers with the given exporter configuration
+    /// Initializes the tracing and metrics providers with the given exporter configuration.
     ///
     /// Sets up a [`tracing_subscriber`] registry with an OpenTelemetry layer,
     /// error layer, env filter, and the configured event formatter.
@@ -187,7 +187,7 @@ impl Owiwi {
     ///
     /// # Errors
     ///
-    /// Returns [`Error`](crate::Error) if the exporter cannot be built, filter directives
+    /// Returns an error if the exporter cannot be built, filter directives
     /// are invalid, or a global subscriber is already set.
     #[cfg(feature = "metrics")]
     pub fn try_init_with_metrics(
@@ -212,7 +212,7 @@ impl Owiwi {
         self.finish(tracer_provider, Some(meter_provider))
     }
 
-    /// Initialize tracing with a console exporter for local development.
+    /// Initializes tracing with a console exporter for local development.
     ///
     /// # Examples
     ///
@@ -251,7 +251,7 @@ impl Owiwi {
         )
     }
 
-    /// Sets the global tracing subscriber and returns the provider guard
+    /// Sets the global tracing subscriber and returns the provider guard.
     fn finish(
         self,
         tracer_provider: SdkTracerProvider,
@@ -277,7 +277,7 @@ impl Owiwi {
             meter_provider,
         })
     }
-    /// Build an OpenTelemetry resource
+    /// Builds an OpenTelemetry [`Resource`].
     fn build_resource(&mut self) -> Resource {
         let service_name = if self.service_name.is_empty() {
             #[cfg(not(feature = "clap"))]
@@ -312,7 +312,7 @@ impl Owiwi {
             .build()
     }
 
-    /// Creates a formatting layer
+    /// Creates a formatting layer.
     fn fmt_layer<S>(&self) -> impl Layer<S>
     where
         S: Subscriber + for<'span> LookupSpan<'span>,
@@ -336,7 +336,7 @@ impl Owiwi {
         layer
     }
 
-    /// Creates a filter layer from the configuration
+    /// Creates a filter layer from the configuration.
     fn filter_layer(&self) -> Result<EnvFilter> {
         let mut layer = match EnvFilter::try_from_default_env() {
             Ok(layer) => layer,

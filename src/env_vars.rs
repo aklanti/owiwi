@@ -1,28 +1,21 @@
 //! OpenTelemetry environment variables.
 
-/// The default value is <http://localhost:4317>. With the `clap` feature,
-/// you can overwrite it with `--otlp-endpoint`
+/// OTLP exporter endpoint. Defaults to `http://localhost:4317`.
 pub const OTEL_EXPORTER_OTLP_ENDPOINT: &str = "OTEL_EXPORTER_OTLP_ENDPOINT";
-/// Additional headers for OTLP exporter requests. You can overwrite it with the
-/// `--otlp-headers` when the `clap` feature is enabled
+/// Additional headers for OTLP exporter requests.
 pub const OTEL_EXPORTER_OTLP_HEADERS: &str = "OTEL_EXPORTER_OTLP_HEADERS";
-/// OTLP exporter timeout in milliseconds. You can overwrite it with
-/// `--otlp-timeout`
+/// OTLP exporter timeout.
 pub const OTEL_EXPORTER_OTLP_TIMEOUT: &str = "OTEL_EXPORTER_OTLP_TIMEOUT";
-/// Additional resource attributes as comma separated key=value pairs
-/// You can overwrite or set the value with `--otel-resource-attributes`
+/// Additional resource attributes as comma-separated `key=value` pairs.
 pub const OTEL_RESOURCE_ATTRIBUTES: &str = "OTEL_RESOURCE_ATTRIBUTES";
-/// Disables all telemetry when set to `true`. Defaults to `false`
-/// You can overwrite this value with `--otel-sdk-disabled` with feature `clap`
+/// Disables all telemetry when set to `"true"`. Defaults to `"false"`.
 pub const OTEL_SDK_DISABLED: &str = "OTEL_SDK_DISABLED";
-/// Service name for telemetry identification
-/// You can overwrite or set this value with `--otel-service-name`
-/// when `clap` is enabled
+/// Service name for telemetry identification.
 pub const OTEL_SERVICE_NAME: &str = "OTEL_SERVICE_NAME";
 
-/// Parses a comma-separated list of `key=value` entries
+/// Parses a comma-separated list of `key=value` entries.
 ///
-/// Malformed entries missing `=` are silently skipped.
+/// Returns an error if any entry is missing `=`.
 pub fn parse_key_values(header: &str) -> Result<Vec<(String, String)>, String> {
     header
         .split(',')

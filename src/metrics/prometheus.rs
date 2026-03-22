@@ -8,13 +8,13 @@ use url::Url;
 
 use crate::error::{Error, Result};
 
-/// Prometheus exporter configuration
+/// Configuration for a Prometheus OTLP metrics exporter.
 #[derive(Debug, Clone, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 pub struct PrometheusConfig {
-    /// Connection host
+    /// Exporter endpoint.
     pub endpoint: Url,
-    /// Set export timeout duration
+    /// Export timeout.
     #[cfg_attr(
         feature = "serde",
         serde(deserialize_with = "humantime_serde::deserialize")

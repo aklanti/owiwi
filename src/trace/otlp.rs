@@ -8,17 +8,17 @@ use url::Url;
 
 use crate::error::{Error, ErrorKind};
 
-/// OTLP exporter configuration
+/// Configuration for an OTLP span exporter.
 #[derive(Debug, Clone, Builder)]
 pub struct OtlpConfig {
-    /// Connection endpoint
+    /// Exporter endpoint.
     pub endpoint: Url,
-    /// Export timeout duration
+    /// Export timeout.
     pub timeout: Duration,
-    /// Additional gRPC metadata headers
+    /// Additional gRPC metadata headers.
     #[builder(default)]
     pub headers: Vec<(String, String)>,
-    /// Custom TLS configuration
+    /// Custom TLS configuration.
     pub tls_config: Option<ClientTlsConfig>,
 }
 
