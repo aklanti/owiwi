@@ -63,3 +63,30 @@ impl Drop for OwiwiGuard {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use googletest::matchers::{anything, eq, none, ok};
+    use googletest::{expect_that, gtest};
+
+    use super::*;
+
+    #[gtest]
+    fn shutdown_returns_ok() {
+        let guard = OwiwiGuard::noop();
+        expect_that!(guard.shutdown(), ok(anything()));
+    }
+
+    #[gtest]
+    fn noop_guard_has_default_tracer_provider() {
+        let guard = OwiwiGuard::noop();
+        expect_that!(format!("{:?}", guard.tracer_provider).is_empty(), eq(false));
+    }
+
+    #[cfg(feature = "metrics")]
+    #[gtest]
+    fn noop_guard_has_no_meter_provider() {
+        let guard = OwiwiGuard::noop();
+        expect_that!(guard.meter_provider, none());
+    }
+}
