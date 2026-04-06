@@ -1,10 +1,14 @@
 //! Trace output formatting styles.
 
 use std::fmt;
-use std::io::{self, IsTerminal};
+use std::io::IsTerminal;
+use std::io::{self};
 use std::str::FromStr;
 
-use tracing_subscriber::fmt::format::{Compact, Format, Full, Pretty};
+use tracing_subscriber::fmt::format::Compact;
+use tracing_subscriber::fmt::format::Format;
+use tracing_subscriber::fmt::format::Full;
+use tracing_subscriber::fmt::format::Pretty;
 use tracing_subscriber::fmt::time::SystemTime;
 
 /// Trace event output format.
@@ -81,8 +85,12 @@ impl FromStr for EventFormat {
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers::{anything, eq, err, ok};
-    use googletest::{assert_that, gtest};
+    use googletest::assert_that;
+    use googletest::gtest;
+    use googletest::matchers::anything;
+    use googletest::matchers::eq;
+    use googletest::matchers::err;
+    use googletest::matchers::ok;
     use proptest::proptest;
     use proptest::strategy::Strategy;
     use rstest::rstest;

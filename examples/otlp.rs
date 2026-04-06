@@ -11,7 +11,8 @@
 
 use std::time::Duration;
 
-use owiwi::{OtlpConfig, Owiwi};
+use owiwi::OtlpConfig;
+use owiwi::Owiwi;
 
 fn main() -> owiwi::Result<()> {
     let mut owiwi = Owiwi::new();

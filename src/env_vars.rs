@@ -30,8 +30,12 @@ pub fn parse_key_values(header: &str) -> Result<Vec<(String, String)>, String> {
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers::{anything, elements_are, eq, err};
-    use googletest::{expect_that, gtest};
+    use googletest::expect_that;
+    use googletest::gtest;
+    use googletest::matchers::anything;
+    use googletest::matchers::elements_are;
+    use googletest::matchers::eq;
+    use googletest::matchers::err;
 
     use super::*;
 

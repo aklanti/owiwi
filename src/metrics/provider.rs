@@ -11,7 +11,8 @@ use opentelemetry_sdk::metrics::SdkMeterProvider;
 
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
-use crate::error::{Error, Result};
+use crate::error::Error;
+use crate::error::Result;
 
 /// Meter provider configuration.
 #[must_use]

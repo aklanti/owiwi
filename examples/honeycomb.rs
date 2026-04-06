@@ -9,7 +9,8 @@
 #![allow(warnings)]
 use std::time::Duration;
 
-use owiwi::{HoneycombConfig, Owiwi};
+use owiwi::HoneycombConfig;
+use owiwi::Owiwi;
 
 fn main() -> owiwi::Result<()> {
     let api_key = std::env::var("HONEYCOMB_API_KEY").expect("HONEYCOMB_API_KEY must be set");

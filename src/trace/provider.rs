@@ -98,8 +98,10 @@ impl TracerProviderOptions {
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers::{anything, ok};
-    use googletest::{expect_that, gtest};
+    use googletest::expect_that;
+    use googletest::gtest;
+    use googletest::matchers::anything;
+    use googletest::matchers::ok;
 
     use super::*;
 

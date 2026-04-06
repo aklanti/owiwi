@@ -11,8 +11,10 @@ use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use tracing::Subscriber;
 use tracing_error::ErrorLayer;
-use tracing_subscriber::filter::{Directive, EnvFilter};
-use tracing_subscriber::layer::{Layer, SubscriberExt as _};
+use tracing_subscriber::filter::Directive;
+use tracing_subscriber::filter::EnvFilter;
+use tracing_subscriber::layer::Layer;
+use tracing_subscriber::layer::SubscriberExt as _;
 use tracing_subscriber::registry::LookupSpan;
 use tracing_subscriber::util::SubscriberInitExt as _;
 
@@ -20,7 +22,8 @@ use tracing_subscriber::util::SubscriberInitExt as _;
 use super::HELP_HEADING;
 use super::OwiwiGuard;
 use super::env_vars;
-use super::error::{ErrorKind, Result};
+use super::error::ErrorKind;
+use super::error::Result;
 use super::trace::TracerProviderOptions;
 use crate::EventFormat;
 use crate::OtlpConfig;
@@ -148,7 +151,8 @@ impl Owiwi {
     /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use owiwi::{Owiwi, OtlpConfig};
+    /// use owiwi::OtlpConfig;
+    /// use owiwi::Owiwi;
     ///
     /// let mut owiwi = Owiwi::new();
     /// owiwi.service_name = "owiwi-test".to_owned();
@@ -158,7 +162,6 @@ impl Owiwi {
     ///     .build();
     /// let _guard = owiwi.try_init(config)?;
     /// # Ok::<_, owiwi::Error>(())
-    ///
     /// ```
     pub fn try_init(mut self, config: impl Into<OtlpConfig>) -> Result<OwiwiGuard> {
         if self.is_disabled() {
@@ -219,12 +222,13 @@ impl Owiwi {
     /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use owiwi::{Owiwi, OtlpConfig};
+    /// use owiwi::OtlpConfig;
+    /// use owiwi::Owiwi;
     ///
     /// let mut owiwi = Owiwi::new();
     /// let _guard = owiwi.try_init_console()?;
     /// # Ok::<_, owiwi::Error>(())
-    ///```
+    /// ```
     #[cfg(feature = "console")]
     pub fn try_init_console(mut self) -> Result<OwiwiGuard> {
         let resource = self.build_resource();
@@ -398,10 +402,16 @@ impl Owiwi {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use googletest::matchers::{anything, eq, ok, pat, some};
-    use googletest::{expect_that, gtest};
+    use googletest::expect_that;
+    use googletest::gtest;
+    use googletest::matchers::anything;
+    use googletest::matchers::eq;
+    use googletest::matchers::ok;
+    use googletest::matchers::pat;
+    use googletest::matchers::some;
     use opentelemetry::Key;
+
+    use super::*;
 
     #[gtest]
     fn new_returns_default_owiwi() {

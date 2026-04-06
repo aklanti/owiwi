@@ -1,12 +1,15 @@
 use std::time::Duration;
 
 use bon::Builder;
+use opentelemetry_otlp::SpanExporter;
+use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::WithTonicConfig;
 use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
 use opentelemetry_otlp::tonic_types::transport::ClientTlsConfig;
-use opentelemetry_otlp::{SpanExporter, WithExportConfig, WithTonicConfig};
 use url::Url;
 
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
+use crate::error::ErrorKind;
 
 /// Configuration for an OTLP span exporter.
 #[derive(Debug, Clone, Builder)]
@@ -58,8 +61,12 @@ impl TryFrom<OtlpConfig> for SpanExporter {
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers::{anything, eq, ok, some};
-    use googletest::{expect_that, gtest};
+    use googletest::expect_that;
+    use googletest::gtest;
+    use googletest::matchers::anything;
+    use googletest::matchers::eq;
+    use googletest::matchers::ok;
+    use googletest::matchers::some;
 
     use super::*;
 

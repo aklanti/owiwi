@@ -4,11 +4,13 @@ use std::time::Duration;
 
 use bon::Builder;
 use opentelemetry_otlp::SpanExporter;
-use secrecy::{ExposeSecret, SecretString};
+use secrecy::ExposeSecret;
+use secrecy::SecretString;
 use url::Url;
 
 use super::otlp::OtlpConfig;
-use crate::error::{Error, Result};
+use crate::error::Error;
+use crate::error::Result;
 
 /// Configuration for [Honeycomb](https://honeycomb.io) trace export.
 #[derive(Debug, Clone, Builder)]
@@ -49,8 +51,10 @@ impl From<HoneycombConfig> for OtlpConfig {
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers::{elements_are, eq};
-    use googletest::{expect_that, gtest};
+    use googletest::expect_that;
+    use googletest::gtest;
+    use googletest::matchers::elements_are;
+    use googletest::matchers::eq;
 
     use super::*;
 

@@ -2,7 +2,8 @@
 
 use opentelemetry_sdk::trace::SdkTracerProvider;
 
-use crate::error::{ErrorKind, Result};
+use crate::error::ErrorKind;
+use crate::error::Result;
 
 /// Guard returned by [`Owiwi::try_init`](crate::Owiwi::try_init) and
 /// [`Owiwi::try_init_console`](crate::Owiwi::try_init_console).
@@ -66,8 +67,12 @@ impl Drop for OwiwiGuard {
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers::{anything, eq, none, ok};
-    use googletest::{expect_that, gtest};
+    use googletest::expect_that;
+    use googletest::gtest;
+    use googletest::matchers::anything;
+    use googletest::matchers::eq;
+    use googletest::matchers::none;
+    use googletest::matchers::ok;
 
     use super::*;
 

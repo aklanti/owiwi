@@ -3,10 +3,12 @@
 use std::time::Duration;
 
 use bon::Builder;
-use opentelemetry_otlp::{WithExportConfig, WithTonicConfig};
+use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::WithTonicConfig;
 use url::Url;
 
-use crate::error::{Error, Result};
+use crate::error::Error;
+use crate::error::Result;
 
 /// Configuration for a Prometheus OTLP metrics exporter.
 #[derive(Debug, Clone, Builder)]
@@ -47,8 +49,10 @@ impl TryFrom<PrometheusConfig> for opentelemetry_otlp::MetricExporter {
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers::{anything, ok};
-    use googletest::{expect_that, gtest};
+    use googletest::expect_that;
+    use googletest::gtest;
+    use googletest::matchers::anything;
+    use googletest::matchers::ok;
 
     use super::*;
 
