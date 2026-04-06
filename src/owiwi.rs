@@ -448,4 +448,32 @@ mod tests {
         let guard = OwiwiGuard::noop();
         expect_that!(guard.shutdown(), ok(eq(&())));
     }
+
+    #[gtest]
+    fn build_resource_with_custom_attributes() {
+        let mut owiwi = Owiwi::new();
+        owiwi.resource_attrs = vec![
+            ("env".to_owned(), "staging".to_owned()),
+            ("region".to_owned(), "us-east-1".to_owned()),
+        ];
+
+        let resource = owiwi.build_resource();
+        let env_key = Key::new("env");
+        let env_val = resource.get(&env_key).map(|v| String::from(v.as_str()));
+        expect_that!(env_val, some(eq("staging")));
+    }
+
+    #[gtest]
+    fn filter_layer_defaults_to_info() {
+        let owiwi = Owiwi::new();
+        let filter = owiwi.filter_layer();
+        expect_that!(filter, ok(anything()));
+    }
+
+    #[gtest]
+    fn filter_layer_with_empty_directives() {
+        let owiwi = Owiwi::builder().tracing_directives(vec![]).build();
+        let filter = owiwi.filter_layer();
+        expect_that!(filter, ok(anything()));
+    }
 }
