@@ -44,3 +44,34 @@ impl TryFrom<PrometheusConfig> for opentelemetry_otlp::MetricExporter {
         Ok(exporter)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use googletest::matchers::{anything, ok};
+    use googletest::{expect_that, gtest};
+
+    use super::*;
+
+    #[tokio::test]
+    #[gtest]
+    async fn prometheus_config_http_endpoint() {
+        let config = PrometheusConfig::builder()
+            .endpoint("http://localhost:9090".parse().expect("to be valid"))
+            .build();
+
+        let result: Result<opentelemetry_otlp::MetricExporter> = config.try_into();
+        expect_that!(result, ok(anything()));
+    }
+
+    #[tokio::test]
+    #[gtest]
+    async fn prometheus_config_with_timeout() {
+        let config = PrometheusConfig::builder()
+            .endpoint("http://localhost:9090".parse().expect("to be valid"))
+            .timeout(Duration::ZERO)
+            .build();
+
+        let result: Result<opentelemetry_otlp::MetricExporter> = config.try_into();
+        expect_that!(result, ok(anything()));
+    }
+}
