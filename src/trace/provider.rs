@@ -95,3 +95,24 @@ impl TracerProviderOptions {
         Ok(tracer_provider)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use googletest::matchers::{anything, ok};
+    use googletest::{expect_that, gtest};
+
+    use super::*;
+
+    #[tokio::test]
+    #[gtest]
+    async fn init_provider_with_defaults() {
+        let opts = TracerProviderOptions::default();
+        let config = OtlpConfig::builder()
+            .endpoint("http://localhost:4317".parse().expect("to be valid"))
+            .timeout(Duration::from_secs(7))
+            .build();
+        let resource = Resource::builder().with_service_name("test").build();
+        let result = opts.init_provider(config, resource);
+        expect_that!(result, ok(anything()));
+    }
+}
