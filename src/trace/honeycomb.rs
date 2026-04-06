@@ -46,3 +46,50 @@ impl From<HoneycombConfig> for OtlpConfig {
             .build()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use googletest::matchers::{elements_are, eq};
+    use googletest::{expect_that, gtest};
+
+    use super::*;
+
+    #[gtest]
+    fn honeycomb_config_sets_api_key_header() {
+        let config = HoneycombConfig::builder()
+            .endpoint("https://api.honeycomb.io".parse().expect("to be a valid"))
+            .api_key("test-key".into())
+            .timeout(Duration::ZERO)
+            .build();
+
+        let otlp: OtlpConfig = config.into();
+        expect_that!(
+            otlp.headers,
+            elements_are!((eq("x-honeycomb-team"), eq("test-key")))
+        );
+    }
+
+    #[gtest]
+    fn honeycomb_config_preserves_endpoint() {
+        let config = HoneycombConfig::builder()
+            .endpoint("https://custom.honeycomb.io".parse().expect("to be valid"))
+            .api_key("key".into())
+            .timeout(Duration::ZERO)
+            .build();
+
+        let otlp: OtlpConfig = config.into();
+        expect_that!(otlp.endpoint.as_str(), eq("https://custom.honeycomb.io"));
+    }
+
+    #[gtest]
+    fn honeycomb_config_preserve_timeout() {
+        let config = HoneycombConfig::builder()
+            .endpoint("https://api.honeycomb.io".parse().expect("to be valid"))
+            .api_key("key".into())
+            .timeout(Duration::ZERO)
+            .build();
+
+        let otlp: OtlpConfig = config.into();
+        expect_that!(otlp.timeout, eq(Duration::ZERO));
+    }
+}
