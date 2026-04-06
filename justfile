@@ -1,40 +1,57 @@
-export RUST_LOG := env("RUST_LOG", "debug")
+set unstable := true
 
-# List available recipe.
-@help:
-    just --list
+export RUST_LOG := env("RUST_LOG", "debug")
 
 alias t := test
 
-# Build the documentation.
-@doc *args:
-    cargo doc --no-deps --all-features {{ args }}
+[doc('Format all code (pass --check to verify)')]
+[group('dev')]
+@fmt *args: (rustfmt args) (sort args) (justfmt args)
 
-# Run test coverage.
-@cov *args:
+[doc('Run tests')]
+[group('dev')]
+@test *args:
+    cargo nextest run --all-features --all-targets {{ args }}
+    cargo test --doc
+
+[doc('Run test coverage')]
+[group('dev')]
+cov *args:
     cargo llvm-cov clean
     cargo llvm-cov nextest --all-features {{ args }}
 
-# Check for common mistakes
+[doc('Run all linters and format checks')]
+[group('check')]
+@lint: clippy deny hack shear (fmt "--check")
+
+[doc('Lint all code')]
+[group('check')]
 @clippy:
     cargo clippy --all-features --all-targets
 
-# Check whether the dependencies follow the established rules
+[doc('Check dependency rules')]
+[group('check')]
 @deny:
     cargo deny check
 
-# Run various formatter
-@fmt:
-    cargo +nightly fmt
-    cargo sort --grouped
-    just --fmt --unstable
-
-# Checks combinations of features flags to ensure that features are all additive as required for feature unification.
+[doc('Check feature flag combinations')]
+[group('check')]
 @hack:
     cargo hack --feature-powerset check
 
-# Install workspace tools
-@install-tools:
+[doc('Check for unused dependencies')]
+[group('check')]
+@shear *args:
+    cargo shear {{ args }}
+
+[doc('Build documentation')]
+[group('build')]
+@doc *args:
+    cargo doc --no-deps --all-features {{ args }}
+
+[doc('Install workspace tools')]
+[private]
+install-tools:
     cargo install cargo-binstall
     cargo binstall --no-confirm cargo-deny
     cargo binstall --no-confirm cargo-hack
@@ -43,16 +60,14 @@ alias t := test
     cargo binstall --no-confirm cargo-shear
     cargo binstall --no-confirm cargo-sort
 
-# Run all linters
-@lint: clippy deny hack shear
-    cargo sort --grouped --check
-    just --fmt --unstable --check 
+[private]
+@rustfmt *args:
+    cargo +nightly fmt --all {{ if args == "--check" { "-- --check" } else { "" } }}
 
-# Check for unused dependencies
-@shear *args:
-    cargo shear {{ args }}
+[private]
+@sort *args:
+    cargo sort --grouped {{ args }}
 
-# Run tests
-@test *args:
-    cargo nextest run --all-features --all-targets -j 12 {{ args }}
-    cargo test --doc
+[private]
+@justfmt *args:
+    just --fmt {{ args }}
