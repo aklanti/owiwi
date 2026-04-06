@@ -78,7 +78,7 @@ mod tests {
             .build();
 
         let otlp: OtlpConfig = config.into();
-        expect_that!(otlp.endpoint.as_str(), eq("https://custom.honeycomb.io"));
+        expect_that!(otlp.endpoint.as_str(), eq("https://custom.honeycomb.io/"));
     }
 
     #[gtest]
