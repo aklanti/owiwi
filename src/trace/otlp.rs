@@ -65,6 +65,7 @@ mod tests {
     use googletest::gtest;
     use googletest::matchers::anything;
     use googletest::matchers::eq;
+    use googletest::matchers::err;
     use googletest::matchers::ok;
     use googletest::matchers::some;
 
@@ -102,5 +103,16 @@ mod tests {
             .build();
         let metadata = config.metadata().expect("valid metadata");
         expect_that!(metadata.get("x-api-key"), some(eq("test")));
+    }
+
+    #[gtest]
+    fn metadata_rejects_invalid_header_value() {
+        let config = OtlpConfig::builder()
+            .endpoint("http://localhost:4317".parse().expect("to be valid"))
+            .timeout(Duration::ZERO)
+            .headers(vec![("valid-key".to_owned(), "\0baad-value".to_owned())])
+            .build();
+        let result = config.metadata();
+        expect_that!(result, err(anything()));
     }
 }
