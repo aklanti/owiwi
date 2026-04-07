@@ -120,6 +120,12 @@ pub struct Owiwi {
     #[command(flatten)]
     #[builder(default)]
     pub verbose: Verbosity,
+
+    /// Filter directives for the OpenTelemetry export layer
+    /// Defaults to `info`.
+    #[cfg_attr(feature = "clap", arg(skip))]
+    #[builder(default)]
+    pub export_directives: Vec<Directive>,
 }
 
 impl Default for Owiwi {
@@ -268,14 +274,19 @@ impl Owiwi {
         >,
     ) -> Result<OwiwiGuard> {
         let tracer = tracer_provider.tracer(self.service_name.clone());
-        let otel_layer = tracing_opentelemetry::layer().with_tracer(tracer);
-        let filter_layer = self.filter_layer()?;
 
-        let fmt_layer = self.fmt_layer();
+        let fmt_filter = self.filter_layer()?;
+        let export_filter = self.export_filter_layer()?;
+
+        let otel_layer = tracing_opentelemetry::layer()
+            .with_tracer(tracer)
+            .with_filter(export_filter);
+
+        let fmt_layer = self.fmt_layer().with_filter(fmt_filter);
+
         tracing_subscriber::registry()
             .with(otel_layer)
             .with(ErrorLayer::default())
-            .with(filter_layer)
             .with(fmt_layer)
             .try_init()?;
 
@@ -285,6 +296,7 @@ impl Owiwi {
             meter_provider,
         })
     }
+
     /// Builds an OpenTelemetry [`Resource`].
     fn build_resource(&mut self) -> Resource {
         let service_name = if self.service_name.is_empty() {
@@ -372,7 +384,7 @@ impl Owiwi {
                     let level = tracing::Level::INFO;
                     EnvFilter::try_new(level.as_str())?
                 } else {
-                    EnvFilter::try_new("")?
+                    EnvFilter::builder().parse("")?
                 }
             }
         };
@@ -381,6 +393,19 @@ impl Owiwi {
             layer = layer.add_directive(directive.clone());
         }
         Ok(layer)
+    }
+
+    fn export_filter_layer(&self) -> Result<EnvFilter> {
+        if self.export_directives.is_empty() {
+            return Ok(EnvFilter::try_new("info")?);
+        }
+
+        let mut filter = EnvFilter::builder().parse("")?;
+        for directive in &self.export_directives {
+            filter = filter.add_directive(directive.clone());
+        }
+
+        Ok(filter)
     }
 
     fn is_disabled(&mut self) -> bool {
