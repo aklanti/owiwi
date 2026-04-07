@@ -103,14 +103,17 @@ pub struct Owiwi {
     tracing_directives: Vec<Directive>,
     /// Filter directives for the OpenTelemetry export layer
     /// Defaults to `info`.
-    #[cfg_attr(feature  = "clap", arg(
-        long = "export-directive",
-        help = "Export filter (e.g. info, my_crate=debug)",
-        value_delimiter = ',',
-        num_args = 1..,
-        env = env_vars::OWIWI_EXPORT_LOG,
-        help_heading = HELP_HEADING,
-    ))]
+    #[cfg_attr(
+        feature = "clap",
+        arg(
+            long = "export-directive",
+            help = "Export filter (e.g. info, my_crate=debug)",
+            value_delimiter = ',',
+            num_args = 1..,
+            env = env_vars::OWIWI_EXPORT_LOG,
+            help_heading = HELP_HEADING,
+        )
+    )]
     #[builder(default)]
     export_directives: Vec<Directive>,
     /// Event output format.
@@ -299,8 +302,7 @@ impl Owiwi {
     /// ```no_run
     /// use owiwi::Owiwi;
     ///
-    /// let mut owiwi = Owiwi::new();
-    /// let _guard = owiwi.try_init_console()?;
+    /// let _guard = Owiwi::new().try_init_console()?;
     /// # Ok::<_, owiwi::Error>(())
     /// ```
     #[cfg(feature = "console")]
