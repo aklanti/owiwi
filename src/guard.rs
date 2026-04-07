@@ -109,7 +109,7 @@ mod tests {
         expect_that!(guard.shutdown(), ok(anything()));
     }
 
-#[cfg(feature = "metrics")]
+    #[cfg(feature = "metrics")]
     #[gtest]
     fn noop_guard_has_no_meter_provider() {
         let guard = OwiwiGuard::noop();
