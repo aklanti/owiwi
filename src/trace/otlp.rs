@@ -256,4 +256,41 @@ mod tests {
         let result = config.init_provider(resource);
         expect_that!(result, ok(anything()));
     }
+
+    #[gtest]
+    fn parse_sampler_always_on() {
+        let sampler = parse_sampler("always_on", None);
+        expect_that!(sampler, ok(anything()));
+    }
+
+    #[gtest]
+    fn parse_sampler_always_off() {
+        let sampler = parse_sampler("always_off", None);
+        expect_that!(sampler, ok(anything()));
+    }
+
+    #[gtest]
+    fn parse_sampler_traceidratio() {
+        let sampler = parse_sampler("traceidratio", Some("0.5"));
+        expect_that!(sampler, ok(anything()));
+    }
+
+    #[gtest]
+    fn parse_sampler_traceidratio_missing_arg() {
+        let sampler = parse_sampler("traceidratio", None);
+        expect_that!(sampler, err(anything()));
+    }
+
+    #[gtest]
+    fn parse_sampler_invalid_name() {
+        let sampler = parse_sampler("bogus", None);
+        expect_that!(sampler, err(anything()));
+    }
+
+    #[gtest]
+    fn default_config_has_spec_values() {
+        let config = OtlpConfig::default();
+        expect_that!(config.endpoint.as_str(), eq("http://localhost:4317/"));
+        expect_that!(config.timeout, eq(Duration::from_secs(10)));
+    }
 }
