@@ -5,7 +5,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// An error that occurred during subscriber initialization.
 #[derive(Debug, thiserror::Error)]
-#[error("{kind}")]
+#[error("owiwi initialization failed: {kind}")]
 pub struct Error {
     #[source]
     kind: ErrorKind,
@@ -41,8 +41,8 @@ pub(crate) enum ErrorKind {
     #[error("unexpected error parsing env filter: {0}")]
     UnexpectedFilter(String),
     /// Failed to shut down a provider.
-    #[error("failed to shutdown provider: {0}")]
-    Shutdown(opentelemetry_sdk::error::OTelSdkError),
+    #[error(transparent)]
+    Shutdown(#[from] opentelemetry_sdk::error::OTelSdkError),
     /// Invalid span exporter configuration.
     #[error("invalid span exporter configuration: {reason}")]
     ExporterConfig { reason: String },
