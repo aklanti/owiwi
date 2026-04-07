@@ -89,24 +89,10 @@ impl OtlpConfig {
     }
 
     /// Initializes the tracer provider.
-    pub fn init_provider(mut self, resource: Resource) -> Result<SdkTracerProvider, Error> {
-        let mut provider_builder = SdkTracerProvider::builder().with_resource(resource);
-        match self.sampler.take() {
-            Some(sampler) => {
-                provider_builder = provider_builder.with_sampler(sampler);
-            }
-            None => {
-                if let Ok(sampler) = std::env::var(env_vars::OTEL_TRACES_SAMPLER) {
-                    let arg = std::env::var(env_vars::OTEL_TRACES_SAMPLER_ARG).ok();
-                    let sampler = parse_sampler(&sampler, arg.as_deref())?;
-                    provider_builder = provider_builder.with_sampler(sampler);
-                }
-            }
-        }
-
-        let exporter: SpanExporter = self.build_exporter()?;
-        let tracer_provider = provider_builder.with_batch_exporter(exporter).build();
-        Ok(tracer_provider)
+    pub fn init_provider(self, resource: Resource) -> Result<SdkTracerProvider, Error> {
+        let sampler = self.sampler.clone();
+        let exporter = self.build_exporter()?;
+        build_tracer_provider(exporter, resource, sampler)
     }
 
     /// Builds the gRPC metadata map from all header sources.
@@ -152,6 +138,29 @@ impl SpanExporterConfig for OtlpConfig {
 
         Ok(builder.build()?)
     }
+}
+
+/// Builds a tracer provider from an exporter, resource, and optional sampler.
+pub(crate) fn build_tracer_provider(
+    exporter: SpanExporter,
+    resource: Resource,
+    sampler: Option<Sampler>,
+) -> Result<SdkTracerProvider, Error> {
+    let mut builder = SdkTracerProvider::builder().with_resource(resource);
+    match sampler {
+        Some(sampler) => {
+            builder = builder.with_sampler(sampler);
+        }
+        None => {
+            if let Ok(sampler) = std::env::var(env_vars::OTEL_TRACES_SAMPLER) {
+                let arg = std::env::var(env_vars::OTEL_TRACES_SAMPLER_ARG).ok();
+                let sampler = parse_sampler(&sampler, arg.as_deref())?;
+                builder = builder.with_sampler(sampler);
+            }
+        }
+    }
+
+    Ok(builder.with_batch_exporter(exporter).build())
 }
 
 /// Parses trace sampler

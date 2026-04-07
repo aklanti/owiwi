@@ -15,19 +15,14 @@ use owiwi::Owiwi;
 fn main() -> owiwi::Result<()> {
     let api_key = std::env::var("HONEYCOMB_API_KEY").expect("HONEYCOMB_API_KEY must be set");
 
-    let mut owiwi = Owiwi::builder()
-        .service_name("honeycomb-example")
-        .otlp(
-            HoneycombConfig::builder()
-                .endpoint("https://api.honeycomb.io".parse().expect("valid URL"))
-                .api_key(api_key.into())
-                .timeout(Duration::from_secs(5))
-                .build()
-                .into(),
-        )
-        .build();
+    let mut owiwi = Owiwi::builder().service_name("honeycomb-example").build();
 
-    let guard = owiwi.try_init()?;
+    let config = HoneycombConfig::builder()
+        .endpoint("https://api.honeycomb.io".parse().expect("valid URL"))
+        .api_key(api_key.into())
+        .timeout(Duration::from_secs(5))
+        .build();
+    let guard = owiwi.try_init_with(config)?;
 
     tracing::info!("sending spans to Honeycomb");
 

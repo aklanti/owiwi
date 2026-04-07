@@ -4,12 +4,16 @@ use std::time::Duration;
 
 use bon::Builder;
 use opentelemetry_otlp::SpanExporter;
+use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::WithTonicConfig;
+use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
+use opentelemetry_otlp::tonic_types::transport::ClientTlsConfig;
 use secrecy::ExposeSecret;
 use secrecy::SecretString;
 use url::Url;
 
 use super::SpanExporterConfig;
-use super::otlp::OtlpConfig;
+use crate::error::ErrorKind;
 use crate::error::Result;
 
 /// Configuration for [Honeycomb](https://honeycomb.io) trace export.
@@ -28,70 +32,29 @@ pub struct HoneycombConfig {
     pub timeout: Duration,
 }
 
-impl From<HoneycombConfig> for OtlpConfig {
-    fn from(config: HoneycombConfig) -> Self {
-        Self::builder()
-            .endpoint(config.endpoint)
-            .timeout(config.timeout)
-            .headers(vec![(
-                "x-honeycomb-team".to_owned(),
-                config.api_key.expose_secret().to_owned(),
-            )])
-            .build()
-    }
-}
-
 impl SpanExporterConfig for HoneycombConfig {
     fn build_exporter(self) -> Result<SpanExporter> {
-        OtlpConfig::from(self).build_exporter()
-    }
-}
+        let metadata = {
+            let mut map = MetadataMap::new();
+            let val = self.api_key.expose_secret().try_into().map_err(|_err| {
+                ErrorKind::ExporterConfig {
+                    reason: "invalid honeycomb API key".into(),
+                }
+            })?;
+            map.insert("x-honeycomb-team", val);
+            map
+        };
 
-#[cfg(test)]
-mod tests {
-    use googletest::expect_that;
-    use googletest::gtest;
-    use googletest::matchers::elements_are;
-    use googletest::matchers::eq;
+        let mut builder = SpanExporter::builder()
+            .with_tonic()
+            .with_endpoint(self.endpoint.as_ref())
+            .with_timeout(self.timeout)
+            .with_metadata(metadata);
 
-    use super::*;
+        if self.endpoint.scheme() == "https" {
+            builder = builder.with_tls_config(ClientTlsConfig::default().with_enabled_roots());
+        }
 
-    #[gtest]
-    fn honeycomb_config_sets_api_key_header() {
-        let config = HoneycombConfig::builder()
-            .endpoint("https://api.honeycomb.io".parse().expect("to be a valid"))
-            .api_key("test-key".into())
-            .timeout(Duration::ZERO)
-            .build();
-
-        let otlp: OtlpConfig = config.into();
-        expect_that!(
-            otlp.headers,
-            elements_are!((eq("x-honeycomb-team"), eq("test-key")))
-        );
-    }
-
-    #[gtest]
-    fn honeycomb_config_preserves_endpoint() {
-        let config = HoneycombConfig::builder()
-            .endpoint("https://custom.honeycomb.io".parse().expect("to be valid"))
-            .api_key("key".into())
-            .timeout(Duration::ZERO)
-            .build();
-
-        let otlp: OtlpConfig = config.into();
-        expect_that!(otlp.endpoint.as_str(), eq("https://custom.honeycomb.io/"));
-    }
-
-    #[gtest]
-    fn honeycomb_config_preserve_timeout() {
-        let config = HoneycombConfig::builder()
-            .endpoint("https://api.honeycomb.io".parse().expect("to be valid"))
-            .api_key("key".into())
-            .timeout(Duration::ZERO)
-            .build();
-
-        let otlp: OtlpConfig = config.into();
-        expect_that!(otlp.timeout, eq(Duration::ZERO));
+        Ok(builder.build()?)
     }
 }

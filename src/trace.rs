@@ -2,17 +2,13 @@
 
 #[cfg(feature = "honeycomb")]
 mod honeycomb;
-mod otlp;
-#[doc(hidden)]
-pub use otlp::OtlpConfig;
-
+pub(crate) mod otlp;
+use crate::Error;
 #[cfg(feature = "honeycomb")]
 #[doc(inline)]
 pub use honeycomb::HoneycombConfig;
-
 use opentelemetry_otlp::SpanExporter;
-
-use crate::Error;
+pub use otlp::OtlpConfig;
 
 /// Trait for types that can build a span exporter.
 ///

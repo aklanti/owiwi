@@ -26,8 +26,10 @@ use super::OwiwiGuard;
 use super::env_vars;
 use super::error::ErrorKind;
 use super::error::Result;
+use super::trace::otlp::build_tracer_provider;
 use crate::EventFormat;
 use crate::OtlpConfig;
+use crate::SpanExporterConfig;
 
 /// Default service name
 const DEFAULT_SERVICE_NAME: &str = "unknown_service";
@@ -169,10 +171,6 @@ impl Owiwi {
     /// Returns an error if the exporter cannot be built, filter directives
     /// are invalid, or a global subscriber is already set.
     ///
-    /// # Panics
-    ///
-    /// Panics if called outside a [tokio](https://docs.rs/tokio) runtime
-    ///
     /// # Examples
     ///
     /// ```no_run
@@ -180,7 +178,7 @@ impl Owiwi {
     ///
     /// use owiwi::Owiwi;
     ///
-    /// let mut owiwi = Owiwi::builder().service_name("owiwi-test").build();
+    /// let owiwi = Owiwi::builder().service_name("owiwi-test").build();
     /// let _guard = owiwi.try_init()?;
     /// # Ok::<_, owiwi::Error>(())
     /// ```
@@ -200,6 +198,50 @@ impl Owiwi {
         )
     }
 
+    /// Initializes the tracing provider with a custom exporter configuration.
+    ///
+    /// Use this when the default [`OtlpConfig`] (from the builder or CLI) is not
+    /// the desired backend. The sampler is still read from the builder's
+    /// [`OtlpConfig::sampler`] field or the `OTEL_TRACES_SAMPLER` env var.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the exporter cannot be built, filter directives
+    /// are invalid, no tokio runtime is available, or a global subscriber
+    /// is already set.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use owiwi::{Owiwi, OtlpConfig};
+    ///
+    /// let config = OtlpConfig::builder()
+    ///     .endpoint("http://collector.internal:4317".parse()?)
+    ///     .timeout(std::time::Duration::from_secs(30))
+    ///     .build();
+    ///
+    /// let guard = Owiwi::builder()
+    ///     .service_name("my-service")
+    ///     .build()
+    ///     .try_init_with(config)?;
+    /// # Ok::<_, Box<dyn std::error::Error>>(())
+    /// ```
+    pub fn try_init_with(mut self, config: impl SpanExporterConfig) -> Result<OwiwiGuard> {
+        if self.is_disabled() {
+            return self.noop();
+        }
+
+        let resource = self.build_resource();
+        let sampler = self.otlp.sampler.take();
+        let exporter = config.build_exporter()?;
+        let tracer_provider = build_tracer_provider(exporter, resource, sampler)?;
+
+        self.finish(
+            tracer_provider,
+            #[cfg(feature = "metrics")]
+            None,
+        )
+    }
     /// Initializes the tracing and metrics providers with the given exporter configuration.
     ///
     /// Sets up a [`tracing_subscriber`] registry with an OpenTelemetry layer,
@@ -211,10 +253,6 @@ impl Owiwi {
     ///
     /// Returns an error if the exporter cannot be built, filter directives
     /// are invalid, or a global subscriber is already set.
-    ///
-    /// # Panics
-    ///
-    /// Panics if called outside a [tokio](https://docs.rs/tokio) runtime
     #[cfg(feature = "metrics")]
     pub fn try_init_with_metrics(
         mut self,
@@ -234,16 +272,18 @@ impl Owiwi {
             builder = builder.with_interval(interval);
         } else {
             #[cfg(not(feature = "clap"))]
-            if let Ok(interval) = std::env::var(env_vars::OWIWI_METRICS_INTERVAL) {
+            if let Ok(raw) = std::env::var(env_vars::OWIWI_METRICS_INTERVAL) {
+                let interval =
+                    humantime::parse_duration(&raw).map_err(|_err| ErrorKind::ExporterConfig {
+                        reason: format!("invalid metrics interval `{raw}`"),
+                    })?;
                 builder = builder.with_interval(interval);
             }
         }
 
-        let reader = builder.build();
-
         let meter_provider = SdkMeterProvider::builder()
             .with_resource(resource.clone())
-            .with_reader(reader)
+            .with_reader(builder.build())
             .build();
 
         let otlp = std::mem::take(&mut self.otlp);
@@ -254,15 +294,9 @@ impl Owiwi {
 
     /// Initializes tracing with a console exporter for local development.
     ///
-    /// # Panics
-    ///
-    /// Panics if called outside a [tokio](https://docs.rs/tokio) runtime
-    ///
     /// # Examples
     ///
     /// ```no_run
-    /// use std::time::Duration;
-    ///
     /// use owiwi::Owiwi;
     ///
     /// let mut owiwi = Owiwi::new();
@@ -279,10 +313,22 @@ impl Owiwi {
 
         #[cfg(feature = "metrics")]
         let meter_provider = {
+            use opentelemetry_sdk::metrics::PeriodicReader;
             let exporter = opentelemetry_stdout::MetricExporter::default();
+
+            let mut builder = PeriodicReader::builder(exporter);
+            if let Some(interval) = self.metrics_interval.take() {
+                builder = builder.with_interval(interval);
+            } else {
+                #[cfg(not(feature = "clap"))]
+                if let Ok(interval) = std::env::var(env_vars::OWIWI_METRICS_INTERVAL) {
+                    builder = builder.with_interval(interval);
+                }
+            }
+
             let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
                 .with_resource(resource.clone())
-                .with_periodic_exporter(exporter)
+                .with_reader(builder.build())
                 .build();
             Some(provider)
         };
@@ -329,8 +375,8 @@ impl Owiwi {
             .try_init()?;
 
         #[cfg(feature = "metrics")]
-        if let Some(meter_provider) = meter_provider.clone() {
-            opentelemetry::global::set_meter_provider(meter_provider);
+        if let Some(meter_provider) = &meter_provider {
+            opentelemetry::global::set_meter_provider(meter_provider.clone());
         }
 
         Ok(OwiwiGuard {
@@ -423,7 +469,7 @@ impl Owiwi {
                         }
                         None => {
                             tracing::error!("{err:?}");
-                            return Err(ErrorKind::UnexpectedFilter(Box::new(err)).into());
+                            return Err(ErrorKind::UnexpectedFilter(err.to_string()).into());
                         }
                     }
                 }
@@ -456,7 +502,7 @@ impl Owiwi {
         }
 
         #[cfg(not(feature = "clap"))]
-        if let Ok(val) = std::env::var("OWIWI_EXPORT_LOG") {
+        if let Ok(val) = std::env::var(env_vars::OWIWI_EXPORT_LOG) {
             return Ok(EnvFilter::try_new(val)?);
         }
 

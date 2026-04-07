@@ -39,7 +39,7 @@ pub(crate) enum ErrorKind {
     #[error(transparent)]
     ParseUrl(#[from] url::ParseError),
     #[error("unexpected error parsing env filter: {0}")]
-    UnexpectedFilter(Box<dyn std::error::Error + Send + Sync>),
+    UnexpectedFilter(String),
     /// Failed to shut down a provider.
     #[error(transparent)]
     Shutdown(#[from] opentelemetry_sdk::error::OTelSdkError),
