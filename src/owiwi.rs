@@ -448,6 +448,7 @@ impl Owiwi {
             return Ok(filter);
         }
 
+        #[cfg(not(feature = "clap"))]
         if let Ok(val) = std::env::var("OWIWI_EXPORT_LOG") {
             return Ok(EnvFilter::try_new(val)?);
         }
