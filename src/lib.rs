@@ -5,12 +5,17 @@
 //! ## Decisions
 //! - **Transport:** gRPC is the only supported transport protocol.
 //!   `OTEL_EXPORTER_OTLP_PROTOCOL` is not read.
-//! - **Export strategy:** Only batch export is supported. Spans are buffered and flushed
+//! - **Export strategy:** Batch export for OTLP backends. The console exporter
+//!   (`try_init_console`) uses synchronous export for immediate output.
 //!   periodically. There is no simple/synchronous exporter option.
-//! - **Subscriber layers** bottom to top: OpenTelemetry with export filter, `ErrorLayer`, fmt with env filter.
+//! - **Subscriber layers** bottom to top: OpenTelemetry with export filter, `ErrorLayer`,
+//!   fmt with env filter.
 //! - **Backend selection** This is determined by which initialization method you call, not
 //!   by the `OTEL_TRACES_EXPORTER`.
-//! - **TLS:** It's auto-enabled for HTTPS endpoints using system roots but can be configured.
+//! - **TLS:** Its auto-enabled for HTTPS endpoints using system roots but can be configured.
+//! - **Ignored environment variables:** `OTEL_TRACES_EXPORTER` and `OTEL_METRICS_EXPORTER` are
+//!   spec-defined but not read. The backend selection is determined by which initialization method
+//!   you call, not by environment.
 
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
