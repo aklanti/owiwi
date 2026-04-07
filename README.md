@@ -16,7 +16,7 @@ Opinionated [`tracing`][url-tracing] subscriber with OpenTelemetry export.
 
 ```toml
 [dependencies]
-owiwi = { version = "1.1.0", features = ["console"] }
+owiwi = { version = "2.0.0-alpha.0", features = ["console"] }
 tracing = "0.1"
 ```
 
@@ -26,8 +26,7 @@ tracing = "0.1"
 use owiwi::Owiwi;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut owiwi = Owiwi::new();
-    owiwi.service_name = "my-service".to_owned();
+    let owiwi = Owiwi::builder().service_name("my-service").build();
     let guard = owiwi.try_init_console()?;
 
     tracing::info!("credential issues");
@@ -42,15 +41,17 @@ Hold the returned [`OwiwiGuard`][url-owiwi-guard] until shutdown. Dropping it st
 ## OTLP export
 
 ```rust,no_run
-use std::time::Duration;
 use owiwi::{Owiwi, OtlpConfig};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = OtlpConfig::builder()
-        .endpoint("http://localhost:4317".parse()?)
-        .timeout(Duration::from_secs(10))
-        .build();
-    let guard = Owiwi::new().try_init(config)?;
+    let guard = Owiwi::builder()
+        .service_name("my-service")
+        .otlp(OtlpConfig::builder()
+            .endpoint("http://localhost:4317".parse()?)
+            .timeout(std::time::Duration::from_secs(10))
+            .build())
+        .build()
+        .try_init()?;
 
     tracing::info!("credential issues");
 
@@ -82,12 +83,7 @@ struct Cli {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
-    let config = HoneycombConfig::builder()
-        .endpoint("https://api.honeycomb.io".parse()?)
-        .api_key("your-api-key".into())
-        .timeout(std::time::Duration::from_secs(5))
-        .build();
-    let guard = cli.owiwi.try_init(config)?;
+    let guard = cli.owiwi.try_init()?;
     guard.shutdown()?;
     Ok(())
 }
@@ -103,17 +99,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Environment Variables
 
-Per the [OpenTelemetry spec][url-otel-env]. With `clap`, Each has a CLI flag.
+Per the [OpenTelemetry spec][url-otel-env]. With `clap`, each has a CLI flag.
 
 | Variable | Flag | |
 |----------|------|-|
-| `OTEL_SERVICE_NAME` | `--otel-service-name` | Service name |
-| `OTEL_SDK_DISABLED` | `--otel-sdk-disabled` | Disable telemetry |
-| `OTEL_RESOURCE_ATTRIBUTES` | `--otel-resource-attributes` | `key=value,key=value` |
+| `OTEL_SERVICE_NAME` | `--service-name` | Service name |
+| `OTEL_SDK_DISABLED` | `--no-telemetry` | Disable telemetry |
+| `OTEL_RESOURCE_ATTRIBUTES` | `--resource-attrs` | `key=value,key=value` |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `--otlp-endpoint` | Exporter endpoint |
 | `OTEL_EXPORTER_OTLP_HEADERS` | `--otlp-headers` | Extra gRPC headers |
 | `OTEL_EXPORTER_OTLP_TIMEOUT` | `--otlp-timeout` | Export timeout |
-| `RUST_LOG` | `--trace-directive` | `info` · `my_crate=debug` |
+| `RUST_LOG` | `--trace-directive` | `info` / `my_crate=debug` |
+| `OWIWI_EXPORT_LOG` | `--export-directive` | Export filter (default: `info`) |
 
 ## Features
 

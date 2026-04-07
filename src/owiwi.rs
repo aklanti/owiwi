@@ -82,7 +82,7 @@ pub struct Owiwi {
         help_heading = HELP_HEADING,
     ),
 )]
-    pub metrics_interval: Option<std::time::Duration>,
+    metrics_interval: Option<std::time::Duration>,
 
     /// Trace filter directives to overwrite the default level and `RUST_LOG`.
     #[cfg_attr(
