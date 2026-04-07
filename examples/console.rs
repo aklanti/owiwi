@@ -5,9 +5,7 @@
 use owiwi::Owiwi;
 
 fn main() -> owiwi::Result<()> {
-    let mut owiwi = Owiwi::new();
-
-    "console-example".clone_into(&mut owiwi.service_name);
+    let mut owiwi = Owiwi::builder().service_name("console-example").build();
     let guard = owiwi.try_init_console()?;
     tracing::info!("hello from console  exporter");
 

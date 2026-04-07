@@ -50,7 +50,7 @@ pub struct Owiwi {
         )
     )]
     #[builder(default, into)]
-    pub service_name: String,
+    service_name: String,
     /// Resource attributes.
     #[cfg_attr(
         feature = "clap",
@@ -64,17 +64,17 @@ pub struct Owiwi {
         )
     )]
     #[builder(default)]
-    pub resource_attrs: Vec<(String, String)>,
+    resource_attrs: Vec<(String, String)>,
 
     /// Tracer provider configuration.
     #[cfg_attr(feature = "clap", command(flatten))]
     #[builder(default)]
-    pub otlp: OtlpConfig,
+    otlp: OtlpConfig,
     /// Meter provider configuration.
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
     #[builder(default)]
-    pub meter_options: super::metrics::MeterProviderOptions,
+    meter_options: super::metrics::MeterProviderOptions,
 
     /// Trace filter directives to overwrite the default level and `RUST_LOG`.
     #[cfg_attr(
@@ -88,12 +88,12 @@ pub struct Owiwi {
         )
     )]
     #[builder(default)]
-    pub tracing_directives: Vec<Directive>,
+    tracing_directives: Vec<Directive>,
     /// Filter directives for the OpenTelemetry export layer
     /// Defaults to `info`.
     #[cfg_attr(feature = "clap", arg(skip))]
     #[builder(default)]
-    pub export_directives: Vec<Directive>,
+    export_directives: Vec<Directive>,
     /// Event output format.
     #[cfg_attr(
         feature = "clap",
@@ -107,12 +107,12 @@ pub struct Owiwi {
         )
     )]
     #[builder(default)]
-    pub event_format: EventFormat,
+    event_format: EventFormat,
     /// Verbosity level
     #[cfg(feature = "clap")]
     #[command(flatten)]
     #[builder(default)]
-    pub verbose: Verbosity,
+    verbose: Verbosity,
 
     /// Disables all telemetry.
     #[cfg_attr(
@@ -125,7 +125,7 @@ pub struct Owiwi {
         )
     )]
     #[builder(default)]
-    pub disable_sdk: bool,
+    disable_sdk: bool,
 }
 
 impl Default for Owiwi {
@@ -163,8 +163,7 @@ impl Owiwi {
     ///
     /// use owiwi::Owiwi;
     ///
-    /// let mut owiwi = Owiwi::new();
-    /// owiwi.service_name = "owiwi-test".to_owned();
+    /// let mut owiwi = Owiwi::builder().service_name("owiwi-test").build();
     /// let _guard = owiwi.try_init()?;
     /// # Ok::<_, owiwi::Error>(())
     /// ```
@@ -191,14 +190,14 @@ impl Owiwi {
     ///
     /// Returns an [`OwiwiGuard`] that must be held for the lifetime of the program.
     ///
-    /// # Panics
-    ///
-    /// Panics if called outside a [tokio](https://docs.rs/tokio) runtime
-    ///
     /// # Errors
     ///
     /// Returns an error if the exporter cannot be built, filter directives
     /// are invalid, or a global subscriber is already set.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called outside a [tokio](https://docs.rs/tokio) runtime
     #[cfg(feature = "metrics")]
     pub fn try_init_with_metrics(
         mut self,
