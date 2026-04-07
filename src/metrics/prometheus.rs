@@ -44,7 +44,7 @@ impl TryFrom<PrometheusConfig> for opentelemetry_otlp::MetricExporter {
 
         for (key, val) in &config.headers {
             let val = val.try_into().map_err(|_| ErrorKind::ExporterConfig {
-                reason: format!("invalid metadata  value for header `{key}`"),
+                reason: format!("invalid metadata value for header `{key}`"),
             })?;
 
             metadata
