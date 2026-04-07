@@ -231,6 +231,10 @@ impl Owiwi {
     /// ```
     #[cfg(feature = "console")]
     pub fn try_init_console(mut self) -> Result<OwiwiGuard> {
+        if self.is_disabled() {
+            return self.noop();
+        }
+
         let resource = self.build_resource();
 
         #[cfg(feature = "metrics")]
