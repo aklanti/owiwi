@@ -5,10 +5,12 @@ use std::time::Duration;
 use bon::Builder;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_otlp::WithTonicConfig;
+use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
 use opentelemetry_otlp::tonic_types::transport::ClientTlsConfig;
 use url::Url;
 
 use crate::error::Error;
+use crate::error::ErrorKind;
 use crate::error::Result;
 
 /// Configuration for a Prometheus OTLP metrics exporter.
@@ -28,15 +30,36 @@ pub struct PrometheusConfig {
     /// the system roots are used.
     #[cfg_attr(feature = "serde", serde(skip))]
     pub tls_config: Option<ClientTlsConfig>,
+
+    /// Additional gRPC metadata headers.
+    #[builder(default)]
+    pub headers: Vec<(String, String)>,
 }
 
 impl TryFrom<PrometheusConfig> for opentelemetry_otlp::MetricExporter {
     type Error = Error;
 
     fn try_from(config: PrometheusConfig) -> Result<Self> {
+        let mut metadata = MetadataMap::with_capacity(config.headers.len());
+
+        for (key, val) in &config.headers {
+            let val = val.try_into().map_err(|_| ErrorKind::ExporterConfig {
+                reason: format!("invalid metadata  value for header `{key}`"),
+            })?;
+
+            metadata
+                .entry(key.as_str())
+                .map_err(|_| ErrorKind::ExporterConfig {
+                    reason: format!("invalid  metadata key `{key}`"),
+                })?
+                .or_insert(val);
+        }
+
         let mut builder = Self::builder()
             .with_tonic()
-            .with_endpoint(config.endpoint.as_ref());
+            .with_endpoint(config.endpoint.as_ref())
+            .with_metadata(metadata);
+
         if let Some(timeout) = config.timeout {
             builder = builder.with_timeout(timeout);
         }
