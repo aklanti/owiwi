@@ -44,10 +44,12 @@ pub struct Owiwi {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name="otel-service-name",
+            name = "otel-service-name",
+            long,
+            help = "Service name for telemetry (e.g. my-api)",
             default_value = DEFAULT_SERVICE_NAME,
-            env=env_vars::OTEL_SERVICE_NAME,
-         )
+            env = env_vars::OTEL_SERVICE_NAME,
+        )
     )]
     #[builder(default, into)]
     pub service_name: String,
@@ -59,6 +61,7 @@ pub struct Owiwi {
             name = "event-format",
             long,
             value_enum,
+            help = "Output format for trace events",
             default_value_t = Default::default(),
             help_heading = HELP_HEADING,
         )
@@ -73,8 +76,9 @@ pub struct Owiwi {
         feature = "clap",
         arg(
             long = "trace-directive",
+            help = "Trace filter (e.g. info, my_crate=debug)",
             value_delimiter = ',',
-            num_args = 0..,
+            num_args = 1..,
             help_heading = HELP_HEADING,
         )
     )]
@@ -98,10 +102,13 @@ pub struct Owiwi {
         arg(
             name = "otel-resource-attributes",
             long,
+            alias = "resource-attrs",
+            help = "Resource attributes (key=value,key=value)",
             value_parser = env_vars::parse_key_values,
             env = env_vars::OTEL_RESOURCE_ATTRIBUTES,
             help_heading = HELP_HEADING,
-        ))]
+        )
+    )]
     #[builder(default)]
     pub resource_attrs: Vec<(String, String)>,
 
@@ -111,13 +118,14 @@ pub struct Owiwi {
         arg(
             name = "otel-sdk-disabled",
             long,
-            env=env_vars::OTEL_SDK_DISABLED
+            help = "Disable all telemetry",
+            env = env_vars::OTEL_SDK_DISABLED,
         )
     )]
     #[builder(default)]
     pub disable_sdk: bool,
 
-    #[expect(missing_docs, reason = "is flatten command")]
+    /// Verbosity level
     #[cfg(feature = "clap")]
     #[command(flatten)]
     #[builder(default)]

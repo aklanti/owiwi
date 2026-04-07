@@ -32,6 +32,7 @@ pub struct TracerProviderOptions {
         arg(
             name = "otlp-timeout",
             long,
+            help = "Export timeout (e.g. 10s, 5m)",
             value_parser = humantime::parse_duration,
             env = env_vars::OTEL_EXPORTER_OTLP_TIMEOUT,
             help_heading = HELP_HEADING,
@@ -45,6 +46,7 @@ pub struct TracerProviderOptions {
         arg(
             name = "otlp-endpoint",
             long,
+            help = "Exporter endpoint (e.g. http://localhost:4317)",
             env = env_vars::OTEL_EXPORTER_OTLP_ENDPOINT,
             help_heading = HELP_HEADING,
         ),
@@ -57,6 +59,7 @@ pub struct TracerProviderOptions {
         arg(
             name = "otlp-headers",
             long,
+            help = "gRPC metadata headers (key=value,key=value)",
             value_parser = env_vars::parse_key_values,
             env = env_vars::OTEL_EXPORTER_OTLP_HEADERS,
             help_heading = HELP_HEADING,

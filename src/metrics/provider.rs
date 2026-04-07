@@ -24,8 +24,9 @@ pub struct MeterProviderOptions {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name="metrics-interval",
+            name = "metrics-interval",
             long,
+            help = "Metrics export interval (e.g. 30s, 1m)",
             value_parser = humantime::parse_duration,
             help_heading = HELP_HEADING,
         ),
