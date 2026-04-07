@@ -1,6 +1,7 @@
 //! RAII guard for the tracing and telemetry providers.
 
 use opentelemetry_sdk::trace::SdkTracerProvider;
+use tracing_subscriber::filter::EnvFilter;
 
 use crate::error::ErrorKind;
 use crate::error::Result;
@@ -11,11 +12,16 @@ use crate::error::Result;
 /// Flushes buffered spans and shuts down the underlying [`SdkTracerProvider`]
 /// when dropped. Must be held for the lifetime of the program; dropping it
 /// early stops telemetry export.
-#[derive(Debug)]
 pub struct OwiwiGuard {
     pub(crate) tracer_provider: SdkTracerProvider,
     #[cfg(feature = "metrics")]
     pub(crate) meter_provider: Option<opentelemetry_sdk::metrics::SdkMeterProvider>,
+    pub(crate) filter_handle: Option<FilterHandle>,
+}
+
+/// Handle for changing the tracing filter at runtime.
+pub struct FilterHandle {
+    pub(crate) inner: Box<dyn Fn(EnvFilter) -> Result<()> + Send + Sync>,
 }
 
 impl OwiwiGuard {
@@ -35,6 +41,12 @@ impl OwiwiGuard {
         Ok(())
     }
 
+    /// Returns a handle for replacing active filter
+    #[must_use]
+    pub fn filter_handle(&self) -> Option<&FilterHandle> {
+        self.filter_handle.as_ref()
+    }
+
     #[allow(
         dead_code,
         reason = "Only called when SDK is disabled and cannot be behind a cfg"
@@ -44,6 +56,7 @@ impl OwiwiGuard {
             tracer_provider: SdkTracerProvider::default(),
             #[cfg(feature = "metrics")]
             meter_provider: None,
+            filter_handle: None,
         }
     }
 }
@@ -62,6 +75,13 @@ impl Drop for OwiwiGuard {
                 eprintln!("failed to shutdown meter provider {err}");
             }
         }
+    }
+}
+
+impl FilterHandle {
+    /// Replaces active filter.
+    pub fn reload(&self, new_filter: EnvFilter) -> Result<()> {
+        (self.inner)(new_filter)
     }
 }
 

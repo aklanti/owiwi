@@ -46,4 +46,7 @@ pub(crate) enum ErrorKind {
     /// Invalid span exporter configuration.
     #[error("invalid span exporter configuration")]
     ExporterConfig,
+    /// Failed to replace active filter
+    #[error(transparent)]
+    FilterReload(#[from] tracing_subscriber::reload::Error),
 }

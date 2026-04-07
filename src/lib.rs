@@ -31,6 +31,8 @@ pub use error::Result;
 #[doc(inline)]
 pub use format::EventFormat;
 #[doc(inline)]
+pub use guard::FilterHandle;
+#[doc(inline)]
 pub use guard::OwiwiGuard;
 #[cfg(feature = "prometheus")]
 pub use metrics::PrometheusConfig;

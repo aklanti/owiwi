@@ -16,8 +16,10 @@ use tracing_subscriber::filter::EnvFilter;
 use tracing_subscriber::layer::Layer;
 use tracing_subscriber::layer::SubscriberExt as _;
 use tracing_subscriber::registry::LookupSpan;
+use tracing_subscriber::reload;
 use tracing_subscriber::util::SubscriberInitExt as _;
 
+use super::FilterHandle;
 #[cfg(feature = "clap")]
 use super::HELP_HEADING;
 use super::OwiwiGuard;
@@ -275,14 +277,14 @@ impl Owiwi {
     ) -> Result<OwiwiGuard> {
         let tracer = tracer_provider.tracer(self.service_name.clone());
 
-        let fmt_filter = self.filter_layer()?;
+        let (filter_layer, reload_handle) = self.filter_layer().map(reload::Layer::new)?;
         let export_filter = self.export_filter_layer()?;
 
         let otel_layer = tracing_opentelemetry::layer()
             .with_tracer(tracer)
             .with_filter(export_filter);
 
-        let fmt_layer = self.fmt_layer().with_filter(fmt_filter);
+        let fmt_layer = self.fmt_layer().with_filter(filter_layer);
 
         tracing_subscriber::registry()
             .with(otel_layer)
@@ -294,6 +296,13 @@ impl Owiwi {
             tracer_provider,
             #[cfg(feature = "metrics")]
             meter_provider,
+            filter_handle: Some(FilterHandle {
+                inner: Box::new(move |filter| {
+                    reload_handle
+                        .reload(filter)
+                        .map_err(|err| ErrorKind::FilterReload(err).into())
+                }),
+            }),
         })
     }
 
