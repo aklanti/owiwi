@@ -5,6 +5,7 @@ use std::time::Duration;
 use bon::Builder;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_otlp::WithTonicConfig;
+use opentelemetry_otlp::tonic_types::transport::ClientTlsConfig;
 use url::Url;
 
 use crate::error::Error;
@@ -22,6 +23,11 @@ pub struct PrometheusConfig {
         serde(deserialize_with = "humantime_serde::deserialize")
     )]
     pub timeout: Option<Duration>,
+
+    /// Custom TLS configuration. When `None` and endpoint is HTTPS,
+    /// the system roots are used.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub tls_config: Option<ClientTlsConfig>,
 }
 
 impl TryFrom<PrometheusConfig> for opentelemetry_otlp::MetricExporter {
@@ -36,10 +42,10 @@ impl TryFrom<PrometheusConfig> for opentelemetry_otlp::MetricExporter {
         }
 
         if config.endpoint.scheme() == "https" {
-            builder = builder.with_tls_config(
-                opentelemetry_otlp::tonic_types::transport::ClientTlsConfig::default()
-                    .with_enabled_roots(),
-            );
+            let tls = config
+                .tls_config
+                .unwrap_or_else(|| ClientTlsConfig::default().with_enabled_roots());
+            builder = builder.with_tls_config(tls);
         }
 
         let exporter = builder.build()?;
