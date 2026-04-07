@@ -2,7 +2,9 @@
 
 #[cfg(feature = "honeycomb")]
 mod honeycomb;
-pub mod otlp;
+mod otlp;
+#[doc(hidden)]
+pub use otlp::OtlpConfig;
 
 #[cfg(feature = "honeycomb")]
 #[doc(inline)]
