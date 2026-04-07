@@ -137,7 +137,7 @@ pub struct Owiwi {
 
 impl Default for Owiwi {
     fn default() -> Self {
-        Self::builder().service_name(DEFAULT_SERVICE_NAME).build()
+        Self::builder().build()
     }
 }
 
