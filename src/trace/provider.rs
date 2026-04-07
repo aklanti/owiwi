@@ -5,6 +5,7 @@ use std::time::Duration;
 use bon::Builder;
 use opentelemetry_otlp::SpanExporter;
 use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::trace::Sampler;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
@@ -12,7 +13,7 @@ use url::Url;
 use crate::HELP_HEADING;
 use crate::OtlpConfig;
 use crate::env_vars;
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 /// Tracer provider configuration.
 #[must_use]
@@ -61,6 +62,11 @@ pub struct TracerProviderOptions {
         )
     )]
     pub headers: Vec<(String, String)>,
+
+    /// Span sampler. Defaults to the SDK default value
+    #[cfg_attr(feature = "clap", arg(skip))]
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub sampler: Option<Sampler>,
 }
 
 impl TracerProviderOptions {
@@ -70,9 +76,21 @@ impl TracerProviderOptions {
         config: impl Into<OtlpConfig>,
         resource: Resource,
     ) -> Result<SdkTracerProvider, Error> {
-        let mut config = config.into();
+        let mut provider_builder = SdkTracerProvider::builder().with_resource(resource);
+        match &self.sampler {
+            Some(sampler) => {
+                provider_builder = provider_builder.with_sampler(sampler.clone());
+            }
+            None => {
+                if let Ok(sampler) = std::env::var(env_vars::OTEL_TRACES_SAMPLER) {
+                    let arg = std::env::var(env_vars::OTEL_TRACES_SAMPLER_ARG).ok();
+                    let sampler = parse_sampler(&sampler, arg.as_deref())?;
+                    provider_builder = provider_builder.with_sampler(sampler);
+                }
+            }
+        }
 
-        let provider_builder = SdkTracerProvider::builder().with_resource(resource);
+        let mut config = config.into();
         if let Some(endpoint) = self.endpoint.clone() {
             config.endpoint = endpoint;
         }
@@ -93,6 +111,24 @@ impl TracerProviderOptions {
         let exporter: SpanExporter = config.try_into()?;
         let tracer_provider = provider_builder.with_batch_exporter(exporter).build();
         Ok(tracer_provider)
+    }
+}
+
+/// Parses trace sampler
+fn parse_sampler(name: &str, arg: Option<&str>) -> Result<Sampler, Error> {
+    match name {
+        "always_on" => Ok(Sampler::AlwaysOn),
+        "always_off" => Ok(Sampler::AlwaysOff),
+        "traceidratio" => {
+            let ratio: f64 = arg
+                .ok_or_else(|| ErrorKind::ExporterConfig)?
+                .parse()
+                .map_err(|_err| ErrorKind::ExporterConfig)?;
+            Ok(Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(
+                ratio,
+            ))))
+        }
+        _ => Err(ErrorKind::ExporterConfig.into()),
     }
 }
 

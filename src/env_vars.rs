@@ -12,6 +12,10 @@ pub const OTEL_RESOURCE_ATTRIBUTES: &str = "OTEL_RESOURCE_ATTRIBUTES";
 pub const OTEL_SDK_DISABLED: &str = "OTEL_SDK_DISABLED";
 /// Service name for telemetry identification.
 pub const OTEL_SERVICE_NAME: &str = "OTEL_SERVICE_NAME";
+/// Sampler type
+pub const OTEL_TRACES_SAMPLER: &str = "OTEL_TRACES_SAMPLER";
+/// Sampler argument. For `traceidratio`, this is the ratio.
+pub const OTEL_TRACES_SAMPLER_ARG: &str = "OTEL_TRACES_SAMPLER_ARG";
 
 /// Parses a comma-separated list of `key=value` entries.
 ///
