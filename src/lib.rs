@@ -44,6 +44,5 @@ pub use owiwi::Owiwi;
 pub use trace::HoneycombConfig;
 #[doc(inline)]
 pub use trace::OtlpConfig;
-#[cfg(feature = "clap")]
 /// Help heading for instrumentation options.
 pub const HELP_HEADING: &str = "Instrumentation options";
