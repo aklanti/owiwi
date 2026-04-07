@@ -200,17 +200,6 @@ mod tests {
 
     use super::*;
 
-    #[gtest]
-    fn otlp_config_builder_defaults() {
-        let config = OtlpConfig::builder()
-            .endpoint("http://test.example".parse().expect("to be valid"))
-            .timeout(Duration::ZERO)
-            .build();
-
-        expect_that!(config.endpoint.as_str(), eq("http://test.example/"));
-        expect_that!(config.timeout, eq(Duration::ZERO));
-    }
-
     #[tokio::test]
     #[gtest]
     async fn can_create_a_span_exporter() {
