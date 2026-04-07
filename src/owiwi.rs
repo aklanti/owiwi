@@ -174,8 +174,6 @@ impl Owiwi {
     /// # Examples
     ///
     /// ```no_run
-    /// use std::time::Duration;
-    ///
     /// use owiwi::Owiwi;
     ///
     /// let owiwi = Owiwi::builder().service_name("owiwi-test").build();
@@ -243,6 +241,7 @@ impl Owiwi {
             None,
         )
     }
+
     /// Initializes the tracing and metrics providers with the given exporter configuration.
     ///
     /// Sets up a [`tracing_subscriber`] registry with an OpenTelemetry layer,
@@ -322,7 +321,12 @@ impl Owiwi {
                 builder = builder.with_interval(interval);
             } else {
                 #[cfg(not(feature = "clap"))]
-                if let Ok(interval) = std::env::var(env_vars::OWIWI_METRICS_INTERVAL) {
+                if let Ok(raw) = std::env::var(env_vars::OWIWI_METRICS_INTERVAL) {
+                    let interval = humantime::parse_duration(&raw).map_err(|_err| {
+                        ErrorKind::ExporterConfig {
+                            reason: format!("invalid metrics interval `{raw}`"),
+                        }
+                    })?;
                     builder = builder.with_interval(interval);
                 }
             }
@@ -591,5 +595,4 @@ mod tests {
         let filter = owiwi.filter_layer();
         expect_that!(filter, ok(anything()));
     }
-
 }

@@ -5,8 +5,10 @@
 use owiwi::Owiwi;
 
 fn main() -> owiwi::Result<()> {
-    let mut owiwi = Owiwi::builder().service_name("console-example").build();
-    let guard = owiwi.try_init_console()?;
+    let guard = Owiwi::builder()
+        .service_name("console-example")
+        .build()
+        .try_init_console()?;
     tracing::info!("hello from console  exporter");
 
     {
