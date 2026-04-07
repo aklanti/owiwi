@@ -7,6 +7,18 @@
 
 Opinionated [`tracing`][url-tracing] subscriber with OpenTelemetry export.
 
+
+## Decisions
+
+- **Transport:** gRPC is the only supported transport protocol.
+`OTEL_EXPORTER_OTLP_PROTOCOL` is not read.
+**Export strategy:** Only batch export is supported. Spans are buffered and flushed
+periodically. There is no simple/synchronous exporter option.
+- **Subscriber layers** bottom to top: Opentelemetry, `ErrorLayer`, `EnvFilter`, fmt.
+- **Backend selection** This is determined by which initialization method you call, not
+  by the `OTEL_TRACES_EXPORTER`.
+- **TLS:** Its auto-enabled for HTTPS endpoints using system roots but can be configured.
+
 ## Install
 
 ```toml
@@ -54,7 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## CLI integration
+## CLI Integration
 
 Flatten `Owiwi` into your CLI struct. Requires the `clap` feature.
 
@@ -96,9 +108,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 | Console (stdout) | — | `console` |
 | [Honeycomb](https://honeycomb.io) | `HoneycombConfig` | `honeycomb` |
 
-## Environment variables
+## Environment Variables
 
-Per the [OpenTelemetry spec][url-otel-env]. With `clap`, each has a CLI flag.
+Per the [OpenTelemetry spec][url-otel-env]. With `clap`, Each has a CLI flag.
 
 | Variable | Flag | |
 |----------|------|-|

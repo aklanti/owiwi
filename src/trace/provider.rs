@@ -13,7 +13,8 @@ use url::Url;
 use crate::HELP_HEADING;
 use crate::OtlpConfig;
 use crate::env_vars;
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
+use crate::error::ErrorKind;
 
 /// Tracer provider configuration.
 #[must_use]
