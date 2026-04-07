@@ -213,7 +213,8 @@ impl Owiwi {
     /// # Examples
     ///
     /// ```no_run
-    /// use owiwi::{Owiwi, OtlpConfig};
+    /// use owiwi::OtlpConfig;
+    /// use owiwi::Owiwi;
     ///
     /// let config = OtlpConfig::builder()
     ///     .endpoint("http://collector.internal:4317".parse()?)
