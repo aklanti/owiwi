@@ -416,7 +416,7 @@ impl Owiwi {
                         }
                         None => {
                             tracing::error!("{err:?}");
-                            return Err(ErrorKind::UnexpectedFilter(err.to_string()).into());
+                            return Err(ErrorKind::UnexpectedFilter(Box::new(err)).into());
                         }
                     }
                 }
