@@ -58,3 +58,37 @@ impl SpanExporterConfig for HoneycombConfig {
         Ok(builder.build()?)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use googletest::expect_that;
+    use googletest::gtest;
+    use googletest::matchers::anything;
+    use googletest::matchers::err;
+    use googletest::matchers::ok;
+
+    use super::*;
+
+    #[tokio::test]
+    #[gtest]
+    async fn build_exporter_succeeds() {
+        let config = HoneycombConfig::builder()
+            .endpoint("http://localhost:4317".parse().expect("to be valid"))
+            .api_key("test-key".into())
+            .timeout(Duration::from_secs(5))
+            .build();
+
+        expect_that!(config.build_exporter(), ok(anything()));
+    }
+
+    #[gtest]
+    fn build_exporter_rejects_invalid_api_key() {
+        let config = HoneycombConfig::builder()
+            .endpoint("http://localhost:4317".parse().expect("to be valid"))
+            .api_key("\0bad-key".into())
+            .timeout(Duration::from_secs(5))
+            .build();
+
+        expect_that!(config.build_exporter(), err(anything()));
+    }
+}
