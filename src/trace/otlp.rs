@@ -30,9 +30,13 @@ impl OtlpConfig {
     fn metadata(&self) -> Result<MetadataMap, Error> {
         let mut map = MetadataMap::with_capacity(self.headers.len());
         for (key, val) in &self.headers {
-            let val = val.try_into().map_err(|_e| ErrorKind::ExporterConfig)?;
+            let val = val.try_into().map_err(|_| ErrorKind::ExporterConfig {
+                reason: format!("invalid metadata value for header `{key}`"),
+            })?;
             map.entry(key.as_str())
-                .map_err(|_e| ErrorKind::ExporterConfig)?
+                .map_err(|_| ErrorKind::ExporterConfig {
+                    reason: format!("invalid metadata key `{key}`"),
+                })?
                 .or_insert(val);
         }
         Ok(map)

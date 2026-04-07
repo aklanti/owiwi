@@ -13,8 +13,7 @@ use url::Url;
 use crate::HELP_HEADING;
 use crate::OtlpConfig;
 use crate::env_vars;
-use crate::error::Error;
-use crate::error::ErrorKind;
+use crate::error::{Error, ErrorKind};
 
 /// Tracer provider configuration.
 #[must_use]
@@ -122,14 +121,21 @@ fn parse_sampler(name: &str, arg: Option<&str>) -> Result<Sampler, Error> {
         "always_off" => Ok(Sampler::AlwaysOff),
         "traceidratio" => {
             let ratio: f64 = arg
-                .ok_or_else(|| ErrorKind::ExporterConfig)?
+                .ok_or_else(|| ErrorKind::ExporterConfig {
+                    reason: String::from("missing trace id ratio"),
+                })?
                 .parse()
-                .map_err(|_err| ErrorKind::ExporterConfig)?;
+                .map_err(|err| ErrorKind::ExporterConfig {
+                    reason: format!("unable to parse trace id argument `{err}`"),
+                })?;
             Ok(Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(
                 ratio,
             ))))
         }
-        _ => Err(ErrorKind::ExporterConfig.into()),
+        other => Err(ErrorKind::ExporterConfig {
+            reason: format!("invalid sampler `{other}`"),
+        }
+        .into()),
     }
 }
 

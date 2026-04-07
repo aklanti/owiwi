@@ -44,8 +44,8 @@ pub(crate) enum ErrorKind {
     #[error("failed to shutdown provider: {0}")]
     Shutdown(opentelemetry_sdk::error::OTelSdkError),
     /// Invalid span exporter configuration.
-    #[error("invalid span exporter configuration")]
-    ExporterConfig,
+    #[error("invalid span exporter configuration: {reason}")]
+    ExporterConfig { reason: String },
     /// Failed to replace active filter
     #[error(transparent)]
     FilterReload(#[from] tracing_subscriber::reload::Error),
