@@ -604,4 +604,19 @@ mod tests {
         let filter = owiwi.filter_layer();
         expect_that!(filter, ok(anything()));
     }
+
+    #[gtest]
+    fn export_filter_layer_with_directives() {
+        let owiwi = Owiwi::builder()
+            .export_directives(vec!["debug".parse().expect("valid  directive")])
+            .build();
+
+        expect_that!(owiwi.export_filter_layer(), ok(anything()));
+    }
+
+    #[gtest]
+    fn export_filter_layer_defaults_to_info() {
+        let owiwi = Owiwi::new();
+        expect_that!(owiwi.export_filter_layer(), ok(anything()));
+    }
 }
