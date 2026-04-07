@@ -7,7 +7,8 @@
 //!   `OTEL_EXPORTER_OTLP_PROTOCOL` is not read.
 //! - **Export strategy:** Only batch export is supported. Spans are buffered and flushed
 //!   periodically. There is no simple/synchronous exporter option.
-//! - **Subscriber layers** bottom to top: Opentelemetry, `ErrorLayer`, `EnvFilter`, fmt.
+//! - **Subscriber layers** bottom to top: Opentelemetry with export filter, `ErrorLayer`,
+//!   `EnvFilter` with env filter, and fmt.
 //! - **Backend selection** This is determined by which initialization method you call, not
 //!   by the `OTEL_TRACES_EXPORTER`.
 //! - **TLS:** It's auto-enabled for HTTPS endpoints using system roots but can be configured.

@@ -230,7 +230,6 @@ impl Owiwi {
     /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use owiwi::OtlpConfig;
     /// use owiwi::Owiwi;
     ///
     /// let mut owiwi = Owiwi::new();
