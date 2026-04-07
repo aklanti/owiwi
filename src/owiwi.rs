@@ -1,13 +1,14 @@
 //! Tracing and telemetry initialization.
 
+use std::env::VarError;
+use std::error::Error as _;
+
 use bon::Builder;
 #[cfg(feature = "clap")]
 use clap_verbosity_flag::Verbosity;
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
-use std::env::VarError;
-use std::error::Error as _;
 use tracing::Subscriber;
 use tracing_error::ErrorLayer;
 use tracing_subscriber::filter::Directive;
