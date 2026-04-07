@@ -156,7 +156,7 @@ impl Owiwi {
     ///
     /// # Panics
     ///
-    /// Panics if called outsite a [tokio](https://docs.rs/tokio) runtime
+    /// Panics if called outside a [tokio](https://docs.rs/tokio) runtime
     ///
     /// # Examples
     ///
@@ -202,7 +202,7 @@ impl Owiwi {
     ///
     /// # Panics
     ///
-    /// Panics if called outsite a [tokio](https://docs.rs/tokio) runtime
+    /// Panics if called outside a [tokio](https://docs.rs/tokio) runtime
     ///
     /// # Errors
     ///
@@ -235,7 +235,7 @@ impl Owiwi {
     ///
     /// # Panics
     ///
-    /// Panics if called outsite a [tokio](https://docs.rs/tokio) runtime
+    /// Panics if called outside a [tokio](https://docs.rs/tokio) runtime
     ///
     /// # Examples
     ///
