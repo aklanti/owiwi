@@ -46,3 +46,5 @@ pub use trace::HoneycombConfig;
 pub use trace::OtlpConfig;
 /// Help heading for instrumentation options.
 pub const HELP_HEADING: &str = "Instrumentation options";
+#[doc(inline)]
+pub use trace::SpanExporterConfig;

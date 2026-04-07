@@ -8,8 +8,8 @@ use secrecy::ExposeSecret;
 use secrecy::SecretString;
 use url::Url;
 
+use super::SpanExporterConfig;
 use super::otlp::OtlpConfig;
-use crate::error::Error;
 use crate::error::Result;
 
 /// Configuration for [Honeycomb](https://honeycomb.io) trace export.
@@ -28,14 +28,6 @@ pub struct HoneycombConfig {
     pub timeout: Duration,
 }
 
-impl TryFrom<HoneycombConfig> for SpanExporter {
-    type Error = Error;
-
-    fn try_from(config: HoneycombConfig) -> Result<Self> {
-        OtlpConfig::from(config).try_into()
-    }
-}
-
 impl From<HoneycombConfig> for OtlpConfig {
     fn from(config: HoneycombConfig) -> Self {
         Self::builder()
@@ -46,6 +38,12 @@ impl From<HoneycombConfig> for OtlpConfig {
                 config.api_key.expose_secret().to_owned(),
             )])
             .build()
+    }
+}
+
+impl SpanExporterConfig for HoneycombConfig {
+    fn build_exporter(self) -> Result<SpanExporter> {
+        OtlpConfig::from(self).build_exporter()
     }
 }
 

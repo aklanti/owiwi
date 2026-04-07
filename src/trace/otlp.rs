@@ -11,6 +11,7 @@ use opentelemetry_sdk::trace::Sampler;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
+use super::SpanExporterConfig;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 use crate::env_vars;
@@ -69,7 +70,8 @@ pub struct OtlpConfig {
     #[builder(default)]
     pub headers: Vec<(String, String)>,
 
-    /// Span sampler. Defaults to the SDK default value
+    /// Span sampler. Defaults to the SDK default to `ParentBased(AlwaysOn)`
+    /// when not set and `OTEL_TRACES_SAMPLER` is absent.
     #[cfg_attr(feature = "clap", arg(skip))]
     #[cfg_attr(feature = "serde", serde(skip))]
     pub sampler: Option<Sampler>,
@@ -102,7 +104,7 @@ impl OtlpConfig {
             }
         }
 
-        let exporter: SpanExporter = self.try_into()?;
+        let exporter: SpanExporter = self.build_exporter()?;
         let tracer_provider = provider_builder.with_batch_exporter(exporter).build();
         Ok(tracer_provider)
     }
@@ -132,17 +134,17 @@ impl Default for OtlpConfig {
             .build()
     }
 }
-impl TryFrom<OtlpConfig> for SpanExporter {
-    type Error = Error;
-    fn try_from(config: OtlpConfig) -> Result<Self, Self::Error> {
-        let metadata = config.metadata()?;
+
+impl SpanExporterConfig for OtlpConfig {
+    fn build_exporter(self) -> Result<SpanExporter, Error> {
+        let metadata = self.metadata()?;
         let mut builder = SpanExporter::builder()
             .with_tonic()
-            .with_endpoint(config.endpoint.as_ref())
+            .with_endpoint(self.endpoint.as_ref())
             .with_metadata(metadata);
 
-        if config.endpoint.scheme() == "https" {
-            let tls = config
+        if self.endpoint.scheme() == "https" {
+            let tls = self
                 .tls_config
                 .unwrap_or_else(|| ClientTlsConfig::default().with_enabled_roots());
             builder = builder.with_tls_config(tls);
@@ -208,7 +210,7 @@ mod tests {
             .timeout(Duration::ZERO)
             .build();
 
-        let result: Result<SpanExporter, _> = config.try_into();
+        let result: Result<SpanExporter, _> = config.build_exporter();
         expect_that!(result, ok(anything()));
     }
 
