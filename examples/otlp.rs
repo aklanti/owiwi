@@ -15,16 +15,18 @@ use owiwi::OtlpConfig;
 use owiwi::Owiwi;
 
 fn main() -> owiwi::Result<()> {
-    let mut owiwi = Owiwi::new();
-    owiwi.service_name = "otlp-example".into();
-
-    let config = OtlpConfig::builder()
-        .endpoint("http://localhost:4317".parse().expect("valid URL"))
-        .timeout(Duration::from_secs(10))
-        .headers(vec![("x-custom-header".into(), "value".into())])
+    let mut owiwi = Owiwi::builder()
+        .service_name("otlp-example")
+        .otlp(
+            OtlpConfig::builder()
+                .endpoint("http://localhost:4317".parse().expect("valid URL"))
+                .timeout(Duration::from_secs(10))
+                .headers(vec![("x-custom-header".into(), "value".into())])
+                .build(),
+        )
         .build();
 
-    let guard = owiwi.try_init(config)?;
+    let guard = owiwi.try_init()?;
 
     tracing::info!("connected to OTLP backend");
 

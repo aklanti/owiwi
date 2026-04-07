@@ -26,7 +26,6 @@ use super::OwiwiGuard;
 use super::env_vars;
 use super::error::ErrorKind;
 use super::error::Result;
-use super::trace::TracerProviderOptions;
 use crate::EventFormat;
 use crate::OtlpConfig;
 
@@ -70,7 +69,7 @@ pub struct Owiwi {
     /// Tracer provider configuration.
     #[cfg_attr(feature = "clap", command(flatten))]
     #[builder(default)]
-    pub tracer_provider_options: TracerProviderOptions,
+    pub otlp: OtlpConfig,
     /// Meter provider configuration.
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", command(flatten))]
@@ -162,28 +161,21 @@ impl Owiwi {
     /// ```no_run
     /// use std::time::Duration;
     ///
-    /// use owiwi::OtlpConfig;
     /// use owiwi::Owiwi;
     ///
     /// let mut owiwi = Owiwi::new();
     /// owiwi.service_name = "owiwi-test".to_owned();
-    /// let config = OtlpConfig::builder()
-    ///     .endpoint("http://localhost:4317".parse().expect("valid URL"))
-    ///     .timeout(Duration::from_secs(10))
-    ///     .build();
-    /// let _guard = owiwi.try_init(config)?;
+    /// let _guard = owiwi.try_init()?;
     /// # Ok::<_, owiwi::Error>(())
     /// ```
-    pub fn try_init(mut self, config: impl Into<OtlpConfig>) -> Result<OwiwiGuard> {
+    pub fn try_init(mut self) -> Result<OwiwiGuard> {
         if self.is_disabled() {
             return self.noop();
         }
 
+        let otlp = std::mem::take(&mut self.otlp);
         let resource = self.build_resource();
-
-        let tracer_provider = self
-            .tracer_provider_options
-            .init_provider(config, resource)?;
+        let tracer_provider = otlp.init_provider(resource)?;
 
         self.finish(
             tracer_provider,
@@ -210,7 +202,6 @@ impl Owiwi {
     #[cfg(feature = "metrics")]
     pub fn try_init_with_metrics(
         mut self,
-        config: impl Into<OtlpConfig>,
         metrics_exporter: impl TryInto<opentelemetry_otlp::MetricExporter, Error = crate::Error>,
     ) -> Result<OwiwiGuard> {
         if self.is_disabled() {
@@ -223,9 +214,8 @@ impl Owiwi {
             .meter_options
             .init_provider(resource.clone(), metrics_exporter)?;
 
-        let tracer_provider = self
-            .tracer_provider_options
-            .init_provider(config, resource)?;
+        let otlp = std::mem::take(&mut self.otlp);
+        let tracer_provider = otlp.init_provider(resource)?;
 
         self.finish(tracer_provider, Some(meter_provider))
     }
