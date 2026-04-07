@@ -1,5 +1,7 @@
 //! RAII guard for the tracing and telemetry providers.
 
+use std::fmt;
+
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use tracing_subscriber::filter::EnvFilter;
 
@@ -12,6 +14,7 @@ use crate::error::Result;
 /// Flushes buffered spans and shuts down the underlying [`SdkTracerProvider`]
 /// when dropped. Must be held for the lifetime of the program; dropping it
 /// early stops telemetry export.
+#[derive(Debug)]
 pub struct OwiwiGuard {
     pub(crate) tracer_provider: SdkTracerProvider,
     #[cfg(feature = "metrics")]
@@ -57,6 +60,12 @@ impl OwiwiGuard {
             meter_provider: None,
             filter_handle: None,
         }
+    }
+}
+
+impl fmt::Debug for FilterHandle {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FilterHandle").finish_non_exhaustive()
     }
 }
 

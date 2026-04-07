@@ -49,4 +49,6 @@ pub(crate) enum ErrorKind {
     /// Failed to replace active filter
     #[error(transparent)]
     FilterReload(#[from] tracing_subscriber::reload::Error),
+    #[error("no tokio runtime found. owiwi requires a running tokio runtime for batch export")]
+    NoTokioRuntime,
 }

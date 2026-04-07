@@ -50,6 +50,8 @@ secrecy = { version = "0.10", features = ["serde"], optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
 # Provides `derive(Error)``
 thiserror = "2"
+# Asynchronous runtime
+tokio = "1"
 # A framework for instrumentation
 tracing = "0.1"
 # Utilities for enriching error handling with tracing diagnostic information.
@@ -110,6 +112,7 @@ unused-macro-rules = "warn"
 unused_import_braces = "warn"
 unused_must_use = "deny"
 ambiguous_negative_literals = "warn"
+missing_debug_implementations = "warn"
 redundant_imports = "warn"
 redundant_lifetimes = "warn"
 unused_lifetimes = "warn"

@@ -1,14 +1,13 @@
 //! Tracing and telemetry initialization.
 
-use std::env::VarError;
-use std::error::Error as _;
-
 use bon::Builder;
 #[cfg(feature = "clap")]
 use clap_verbosity_flag::Verbosity;
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_sdk::Resource;
 use opentelemetry_sdk::trace::SdkTracerProvider;
+use std::env::VarError;
+use std::error::Error as _;
 use tracing::Subscriber;
 use tracing_error::ErrorLayer;
 use tracing_subscriber::filter::Directive;
@@ -70,11 +69,20 @@ pub struct Owiwi {
     #[cfg_attr(feature = "clap", command(flatten))]
     #[builder(default)]
     otlp: OtlpConfig,
-    /// Meter provider configuration.
+
+    /// Metrics exports interval
     #[cfg(feature = "metrics")]
-    #[cfg_attr(feature = "clap", command(flatten))]
-    #[builder(default)]
-    meter_options: super::metrics::MeterProviderOptions,
+    #[cfg_attr(
+    feature = "clap",
+    arg(
+        name = "metrics-interval",
+        long,
+        help = "Metrics export interval (e.g. 30s, 1m)",
+        value_parser = humantime::parse_duration,
+        help_heading = HELP_HEADING,
+    ),
+)]
+    pub metrics_interval: Option<std::time::Duration>,
 
     /// Trace filter directives to overwrite the default level and `RUST_LOG`.
     #[cfg_attr(
@@ -210,15 +218,26 @@ impl Owiwi {
         mut self,
         metrics_exporter: impl TryInto<opentelemetry_otlp::MetricExporter, Error = crate::Error>,
     ) -> Result<OwiwiGuard> {
+        use opentelemetry_sdk::metrics::PeriodicReader;
+        use opentelemetry_sdk::metrics::SdkMeterProvider;
+
         if self.is_disabled() {
             return self.noop();
         }
 
         let resource = self.build_resource();
+        let exporter = metrics_exporter.try_into()?;
+        let mut builder = PeriodicReader::builder(exporter);
+        if let Some(interval) = self.metrics_interval {
+            builder = builder.with_interval(interval);
+        }
 
-        let meter_provider = self
-            .meter_options
-            .init_provider(resource.clone(), metrics_exporter)?;
+        let reader = builder.build();
+
+        let meter_provider = SdkMeterProvider::builder()
+            .with_resource(resource.clone())
+            .with_reader(reader)
+            .build();
 
         let otlp = std::mem::take(&mut self.otlp);
         let tracer_provider = otlp.init_provider(resource)?;
@@ -276,11 +295,15 @@ impl Owiwi {
     /// Sets the global tracing subscriber and returns the provider guard.
     fn finish(
         self,
+
         tracer_provider: SdkTracerProvider,
         #[cfg(feature = "metrics")] meter_provider: Option<
             opentelemetry_sdk::metrics::SdkMeterProvider,
         >,
     ) -> Result<OwiwiGuard> {
+        if tokio::runtime::Handle::try_current().is_err() {
+            return Err(ErrorKind::NoTokioRuntime.into());
+        }
         let tracer = tracer_provider.tracer(self.service_name.clone());
 
         let (filter_layer, reload_handle) = self.filter_layer().map(reload::Layer::new)?;
@@ -297,6 +320,11 @@ impl Owiwi {
             .with(ErrorLayer::default())
             .with(fmt_layer)
             .try_init()?;
+
+        #[cfg(feature = "metrics")]
+        if let Some(meter_provider) = meter_provider.clone() {
+            opentelemetry::global::set_meter_provider(meter_provider);
+        }
 
         Ok(OwiwiGuard {
             tracer_provider,
