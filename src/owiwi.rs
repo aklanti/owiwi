@@ -154,6 +154,10 @@ impl Owiwi {
     /// Returns an error if the exporter cannot be built, filter directives
     /// are invalid, or a global subscriber is already set.
     ///
+    /// # Panics
+    ///
+    /// Panics if called outsite a [tokio](https://docs.rs/tokio) runtime
+    ///
     /// # Examples
     ///
     /// ```no_run
@@ -196,6 +200,10 @@ impl Owiwi {
     ///
     /// Returns an [`OwiwiGuard`] that must be held for the lifetime of the program.
     ///
+    /// # Panics
+    ///
+    /// Panics if called outsite a [tokio](https://docs.rs/tokio) runtime
+    ///
     /// # Errors
     ///
     /// Returns an error if the exporter cannot be built, filter directives
@@ -224,6 +232,10 @@ impl Owiwi {
     }
 
     /// Initializes tracing with a console exporter for local development.
+    ///
+    /// # Panics
+    ///
+    /// Panics if called outsite a [tokio](https://docs.rs/tokio) runtime
     ///
     /// # Examples
     ///

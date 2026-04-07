@@ -26,14 +26,13 @@ pub struct FilterHandle {
 
 impl OwiwiGuard {
     /// Shuts down all providers.
-    pub fn shutdown(self) -> Result<()> {
-        self.tracer_provider
-            .shutdown()
-            .map_err(ErrorKind::Shutdown)?;
+    pub fn shutdown(mut self) -> Result<()> {
+        let tracer_provider = std::mem::take(&mut self.tracer_provider);
+        tracer_provider.shutdown().map_err(ErrorKind::Shutdown)?;
 
         #[cfg(feature = "metrics")]
         {
-            if let Some(meter_provider) = &self.meter_provider {
+            if let Some(meter_provider) = self.meter_provider.take() {
                 meter_provider.shutdown().map_err(ErrorKind::Shutdown)?;
             }
         }
