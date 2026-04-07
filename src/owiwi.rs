@@ -78,6 +78,7 @@ pub struct Owiwi {
         name = "metrics-interval",
         long,
         help = "Metrics export interval (e.g. 30s, 1m)",
+        env = env_vars::OWIWI_METRICS_INTERVAL,
         value_parser = humantime::parse_duration,
         help_heading = HELP_HEADING,
     ),
@@ -230,6 +231,11 @@ impl Owiwi {
         let mut builder = PeriodicReader::builder(exporter);
         if let Some(interval) = self.metrics_interval {
             builder = builder.with_interval(interval);
+        } else {
+            #[cfg(not(feature = "clap"))]
+            if let Ok(interval) = std::env::var(env_vars::OWIWI_METRICS_INTERVAL) {
+                builder = builder.with_interval(interval);
+            }
         }
 
         let reader = builder.build();

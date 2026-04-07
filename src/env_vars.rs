@@ -20,6 +20,8 @@ pub const OTEL_TRACES_SAMPLER_ARG: &str = "OTEL_TRACES_SAMPLER_ARG";
 /// OpenTelemetry collector, independent of terminal output `RUST_LOG`
 /// Accepts the same syntax as `RUST_LOG` and default to `info`
 pub const OWIWI_EXPORT_LOG: &str = "OWIWI_EXPORT_LOG";
+/// Metrics export interval
+pub const OWIWI_METRICS_INTERVAL: &str = "OWIWI_METRICS_INTERVAL";
 
 /// Parses a comma-separated list of `key=value` entries.
 ///
