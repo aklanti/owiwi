@@ -7,17 +7,10 @@
 
 Opinionated [`tracing`][url-tracing] subscriber with OpenTelemetry export.
 
+## Known Limitations
 
-## Decisions
-
-- **Transport:** gRPC is the only supported transport protocol.
-`OTEL_EXPORTER_OTLP_PROTOCOL` is not read.
-**Export strategy:** Only batch export is supported. Spans are buffered and flushed
-periodically. There is no simple/synchronous exporter option.
-- **Subscriber layers** bottom to top: Opentelemetry, `ErrorLayer`, `EnvFilter`, fmt.
-- **Backend selection** This is determined by which initialization method you call, not
-  by the `OTEL_TRACES_EXPORTER`.
-- **TLS:** Its auto-enabled for HTTPS endpoints using system roots but can be configured.
+- gRPC only. `OTEL_EXPORTER_OTLP_PROTOCOL` ignored
+- `OTEL_TRACES_EXPORTER` / `OTEL_METRICS_EXPORTER` not supported
 
 ## Install
 
