@@ -20,16 +20,23 @@ pub const OTEL_TRACES_SAMPLER_ARG: &str = "OTEL_TRACES_SAMPLER_ARG";
 /// Parses a comma-separated list of `key=value` entries.
 ///
 /// Returns an error if any entry is missing `=`.
-pub fn parse_key_values(header: &str) -> Result<Vec<(String, String)>, String> {
+pub(super) fn parse_key_values(header: &str) -> Result<Vec<(String, String)>, ParseKeyValueError> {
     header
         .split(',')
         .map(|entry| {
-            let (key, val) = entry
-                .split_once('=')
-                .ok_or_else(|| format!("invalid header: expected `key=value`, got `{entry}`"))?;
+            let (key, val) = entry.split_once('=').ok_or_else(|| ParseKeyValueError {
+                entry: entry.to_owned(),
+            })?;
             Ok((key.trim().to_owned(), val.trim().to_owned()))
         })
         .collect()
+}
+
+/// Error parsing a key=value list
+#[derive(Debug, thiserror::Error)]
+#[error("invalid header: expected `key=value`, got `{entry}`")]
+pub(super) struct ParseKeyValueError {
+    entry: String,
 }
 
 #[cfg(test)]
