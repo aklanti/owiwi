@@ -22,6 +22,19 @@ use crate::error::ErrorKind;
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct TracerProviderOptions {
+    /// Exporter endpoint.
+    #[cfg_attr(
+        feature = "clap",
+        arg(
+            name = "otlp-endpoint",
+            long,
+            help = "Exporter endpoint (e.g. http://localhost:4317)",
+            env = env_vars::OTEL_EXPORTER_OTLP_ENDPOINT,
+            help_heading = HELP_HEADING,
+        ),
+    )]
+    pub endpoint: Option<Url>,
+
     /// Export timeout.
     #[cfg_attr(
         feature = "serde",
@@ -39,19 +52,6 @@ pub struct TracerProviderOptions {
         )
     )]
     pub timeout: Option<Duration>,
-
-    /// Exporter endpoint.
-    #[cfg_attr(
-        feature = "clap",
-        arg(
-            name = "otlp-endpoint",
-            long,
-            help = "Exporter endpoint (e.g. http://localhost:4317)",
-            env = env_vars::OTEL_EXPORTER_OTLP_ENDPOINT,
-            help_heading = HELP_HEADING,
-        ),
-    )]
-    pub endpoint: Option<Url>,
 
     /// Additional gRPC metadata headers.
     #[cfg_attr(

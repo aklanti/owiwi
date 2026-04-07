@@ -44,7 +44,6 @@ pub struct Owiwi {
     #[cfg_attr(
         feature = "clap",
         arg(
-            name = "otel-service-name",
             long,
             help = "Service name for telemetry (e.g. my-api)",
             default_value = DEFAULT_SERVICE_NAME,
@@ -53,7 +52,49 @@ pub struct Owiwi {
     )]
     #[builder(default, into)]
     pub service_name: String,
+    /// Resource attributes.
+    #[cfg_attr(
+        feature = "clap",
+        arg(
+            name = "resource-attributes",
+            long = "resource-attrs",
+            help = "Resource attributes (key=value,key=value)",
+            value_parser = env_vars::parse_key_values,
+            env = env_vars::OTEL_RESOURCE_ATTRIBUTES,
+            help_heading = HELP_HEADING,
+        )
+    )]
+    #[builder(default)]
+    pub resource_attrs: Vec<(String, String)>,
 
+    /// Tracer provider configuration.
+    #[cfg_attr(feature = "clap", command(flatten))]
+    #[builder(default)]
+    pub tracer_provider_options: TracerProviderOptions,
+    /// Meter provider configuration.
+    #[cfg(feature = "metrics")]
+    #[cfg_attr(feature = "clap", command(flatten))]
+    #[builder(default)]
+    pub meter_options: super::metrics::MeterProviderOptions,
+
+    /// Trace filter directives to overwrite the default level and `RUST_LOG`.
+    #[cfg_attr(
+        feature = "clap",
+        arg(
+            long = "trace-directive",
+            help = "Trace filter (e.g. info, my_crate=debug)",
+            value_delimiter = ',',
+            num_args = 1..,
+            help_heading = HELP_HEADING,
+        )
+    )]
+    #[builder(default)]
+    pub tracing_directives: Vec<Directive>,
+    /// Filter directives for the OpenTelemetry export layer
+    /// Defaults to `info`.
+    #[cfg_attr(feature = "clap", arg(skip))]
+    #[builder(default)]
+    pub export_directives: Vec<Directive>,
     /// Event output format.
     #[cfg_attr(
         feature = "clap",
@@ -68,74 +109,24 @@ pub struct Owiwi {
     )]
     #[builder(default)]
     pub event_format: EventFormat,
-
-    /// Trace filter directives.
-    ///
-    /// Overrides the default level and the `RUST_LOG` environment variable.
-    #[cfg_attr(
-        feature = "clap",
-        arg(
-            long = "trace-directive",
-            help = "Trace filter (e.g. info, my_crate=debug)",
-            value_delimiter = ',',
-            num_args = 1..,
-            help_heading = HELP_HEADING,
-        )
-    )]
-    #[builder(default)]
-    pub tracing_directives: Vec<Directive>,
-
-    /// Tracer provider configuration.
-    #[cfg_attr(feature = "clap", command(flatten))]
-    #[builder(default)]
-    pub tracer_provider_options: TracerProviderOptions,
-
-    /// Meter provider configuration.
-    #[cfg(feature = "metrics")]
-    #[cfg_attr(feature = "clap", command(flatten))]
-    #[builder(default)]
-    pub meter_options: super::metrics::MeterProviderOptions,
-
-    /// Resource attributes.
-    #[cfg_attr(
-        feature = "clap",
-        arg(
-            name = "otel-resource-attributes",
-            long,
-            alias = "resource-attrs",
-            help = "Resource attributes (key=value,key=value)",
-            value_parser = env_vars::parse_key_values,
-            env = env_vars::OTEL_RESOURCE_ATTRIBUTES,
-            help_heading = HELP_HEADING,
-        )
-    )]
-    #[builder(default)]
-    pub resource_attrs: Vec<(String, String)>,
-
-    /// Disables all telemetry.
-    #[cfg_attr(
-        feature = "clap",
-        arg(
-            name = "otel-sdk-disabled",
-            long,
-            help = "Disable all telemetry",
-            env = env_vars::OTEL_SDK_DISABLED,
-        )
-    )]
-    #[builder(default)]
-    pub disable_sdk: bool,
-
     /// Verbosity level
     #[cfg(feature = "clap")]
     #[command(flatten)]
     #[builder(default)]
     pub verbose: Verbosity,
 
-    /// Filter directives for the OpenTelemetry export layer
-    /// Defaults to `info`.
-    #[cfg_attr(feature = "clap", arg(skip))]
+    /// Disables all telemetry.
+    #[cfg_attr(
+        feature = "clap",
+        arg(
+            name = "no-telemetry",
+            long = "no-telemetry",
+            help = "Disable all telemetry",
+            env = env_vars::OTEL_SDK_DISABLED,
+        )
+    )]
     #[builder(default)]
-    pub export_directives: Vec<Directive>,
+    pub disable_sdk: bool,
 }
 
 impl Default for Owiwi {
