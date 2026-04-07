@@ -16,6 +16,10 @@ pub const OTEL_SERVICE_NAME: &str = "OTEL_SERVICE_NAME";
 pub const OTEL_TRACES_SAMPLER: &str = "OTEL_TRACES_SAMPLER";
 /// Sampler argument. For `traceidratio`, this is the ratio.
 pub const OTEL_TRACES_SAMPLER_ARG: &str = "OTEL_TRACES_SAMPLER_ARG";
+/// Export filter directives. It controls the verbosity of the spans sent to
+/// OpenTelemetry collector, independent of terminal output `RUST_LOG`
+/// Accepts the same syntax as `RUST_LOG` and default to `info`
+pub const OWIWI_EXPORT_LOG: &str = "OWIWI_EXPORT_LOG";
 
 /// Parses a comma-separated list of `key=value` entries.
 ///

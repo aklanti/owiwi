@@ -49,7 +49,7 @@ pub struct Owiwi {
             env = env_vars::OTEL_SERVICE_NAME,
         )
     )]
-    #[builder(default, into)]
+    #[builder(default=DEFAULT_SERVICE_NAME, into)]
     service_name: String,
     /// Resource attributes.
     #[cfg_attr(
@@ -91,7 +91,14 @@ pub struct Owiwi {
     tracing_directives: Vec<Directive>,
     /// Filter directives for the OpenTelemetry export layer
     /// Defaults to `info`.
-    #[cfg_attr(feature = "clap", arg(skip))]
+    #[cfg_attr(feature  = "clap", arg(
+        long = "export-directive",
+        help = "Export filter (e.g. info, my_crate=debug)",
+        value_delimiter = ',',
+        num_args = 1..,
+        env = env_vars::OWIWI_EXPORT_LOG,
+        help_heading = HELP_HEADING,
+    ))]
     #[builder(default)]
     export_directives: Vec<Directive>,
     /// Event output format.
@@ -404,16 +411,20 @@ impl Owiwi {
     }
 
     fn export_filter_layer(&self) -> Result<EnvFilter> {
-        if self.export_directives.is_empty() {
-            return Ok(EnvFilter::try_new("info")?);
+        if !self.export_directives.is_empty() {
+            let mut filter = EnvFilter::builder().parse("")?;
+            for directive in &self.export_directives {
+                filter = filter.add_directive(directive.clone());
+            }
+
+            return Ok(filter);
         }
 
-        let mut filter = EnvFilter::builder().parse("")?;
-        for directive in &self.export_directives {
-            filter = filter.add_directive(directive.clone());
+        if let Ok(val) = std::env::var("OWIWI_EXPORT_LOG") {
+            return Ok(EnvFilter::try_new(val)?);
         }
 
-        Ok(filter)
+        Ok(EnvFilter::try_new("info")?)
     }
 
     fn is_disabled(&mut self) -> bool {
@@ -428,11 +439,8 @@ impl Owiwi {
 
     fn noop(self) -> Result<OwiwiGuard> {
         let filter_layer = self.filter_layer()?;
-        let fmt_layer = self.fmt_layer();
-        tracing_subscriber::registry()
-            .with(filter_layer)
-            .with(fmt_layer)
-            .try_init()?;
+        let fmt_layer = self.fmt_layer().with_filter(filter_layer);
+        tracing_subscriber::registry().with(fmt_layer).try_init()?;
         Ok(OwiwiGuard::noop())
     }
 }
