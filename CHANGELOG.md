@@ -1,9 +1,46 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [2.0.0] - 2026-04-10
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### Added
+
+- `SpanExporterConfig` trait for custom exporter backends
+- `Owiwi::try_init_with` method accepting any `impl SpanExporterConfig`
+- `FilterHandle` for runtime filter reloading via `OwiwiGuard::filter_handle`
+- Per-layer filtering: independent `EnvFilter` for fmt and OTel export layers
+- `--export-directive` CLI flag and `OWIWI_EXPORT_LOG` env var for export filter control
+- `--no-telemetry` CLI flag (replaces `--disable-sdk`)
+- `--metrics-interval` env var support (`OWIWI_METRICS_INTERVAL`)
+- `OTEL_TRACES_SAMPLER` and `OTEL_TRACES_SAMPLER_ARG` env var support
+- `OtlpConfig::sampler` field for programmatic sampler configuration
+- `PrometheusConfig::tls_config` field for custom TLS certificates
+- `PrometheusConfig::headers` field for auth headers
+- `NoTokioRuntime` error variant (returns error instead of panicking)
+- Help text with format hints on all CLI flags
+- `Debug` impl for `FilterHandle` and `OwiwiGuard`
+
+### Changed
+
+- `Owiwi` fields are now private; use the builder for construction
+- `Owiwi::try_init` no longer takes a config argument; uses the builder's `OtlpConfig`
+- `OtlpConfig` absorbs `TracerProviderOptions` (endpoint, timeout, headers, sampler, TLS)
+- `MeterProviderOptions` removed; `metrics_interval` inlined onto `Owiwi`
+- `HoneycombConfig` implements `SpanExporterConfig` directly instead of `From<HoneycombConfig> for OtlpConfig`
+- `OtlpConfig` implements `Default` with spec values (`http://localhost:4317`, 10s timeout)
+- `global::set_meter_provider` moved from `MeterProviderOptions::init_provider` to `Owiwi::finish`
+- Sampler handling extracted into `build_tracer_provider` (shared by `try_init` and `try_init_with`)
+- Shutdown uses `mem::take` before provider shutdown (panic-safe)
+- `HELP_HEADING` no longer gated behind `clap` feature
+- `--service-name` replaces `--otel-service-name`
+- `--resource-attrs` replaces `--otel-resource-attributes`
+- `--trace-directive` requires at least one value (`num_args = 1..`)
+
+### Removed
+
+- `TracerProviderOptions` struct
+- `MeterProviderOptions` struct
+- `From<HoneycombConfig> for OtlpConfig` impl
+- `TryFrom<OtlpConfig> for SpanExporter` impl (replaced by `SpanExporterConfig` trait)
 
 ## [1.1.0] - 2026-03-18
 
@@ -37,5 +74,6 @@ Initial release.
 - `metrics` feature: `SdkMeterProvider` setup with periodic reader
 - `prometheus` feature: Prometheus metrics export (implies `metrics`)
 
+[2.0.0]: https://github.com/aklanti/owiwi/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/aklanti/owiwi/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/aklanti/owiwi/releases/tag/v1.0.0
