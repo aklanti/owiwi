@@ -16,7 +16,7 @@ Opinionated [`tracing`][url-tracing] subscriber with OpenTelemetry export.
 
 ```toml
 [dependencies]
-owiwi = { version = "2.0.0-alpha.0", features = ["console"] }
+owiwi = { version = "2", features = ["console"] }
 tracing = "0.1"
 ```
 
@@ -60,6 +60,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+## Custom backends
+
+Use `try_init_with` with any type that implements [`SpanExporterConfig`][url-span-exporter-config]:
+
+```rust,no_run
+use owiwi::{Owiwi, HoneycombConfig};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = HoneycombConfig::builder()
+        .endpoint("https://api.honeycomb.io".parse()?)
+        .api_key("your-api-key".into())
+        .timeout(std::time::Duration::from_secs(5))
+        .build();
+
+    let guard = Owiwi::builder()
+        .service_name("my-service")
+        .build()
+        .try_init_with(config)?;
+
+    guard.shutdown()?;
+    Ok(())
+}
+```
+
 ## CLI Integration
 
 Flatten `Owiwi` into your CLI struct. Requires the `clap` feature.
@@ -67,13 +91,13 @@ Flatten `Owiwi` into your CLI struct. Requires the `clap` feature.
 ```toml
 [dependencies]
 clap = { version = "4", features = ["derive"] }
-owiwi = { version = "1.1.0", features = ["clap", "honeycomb"] }
+owiwi = { version = "2.0.0", features = ["clap"] }
 tracing = "0.1"
 ```
 
 ```rust,no_run
 use clap::Parser;
-use owiwi::{Owiwi, HoneycombConfig};
+use owiwi::Owiwi;
 
 #[derive(Debug, Clone, Parser)]
 struct Cli {
@@ -91,11 +115,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Backends
 
-| Backend | Config type | Feature |
-|---------|-------------|---------|
-| Any OTLP collector | `OtlpConfig` | *(default)* |
-| Console (stdout) | — | `console` |
-| [Honeycomb](https://honeycomb.io) | `HoneycombConfig` | `honeycomb` |
+| Backend | Config type | Init method | Feature |
+|---------|-------------|-------------|---------|
+| Any OTLP collector | `OtlpConfig` | `try_init` | *(default)* |
+| Console (stdout) | — | `try_init_console` | `console` |
+| [Honeycomb](https://honeycomb.io) | `HoneycombConfig` | `try_init_with` | `honeycomb` |
+| Custom | `impl SpanExporterConfig` | `try_init_with` | — |
 
 ## Environment Variables
 
@@ -109,8 +134,11 @@ Per the [OpenTelemetry spec][url-otel-env]. With `clap`, each has a CLI flag.
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `--otlp-endpoint` | Exporter endpoint |
 | `OTEL_EXPORTER_OTLP_HEADERS` | `--otlp-headers` | Extra gRPC headers |
 | `OTEL_EXPORTER_OTLP_TIMEOUT` | `--otlp-timeout` | Export timeout |
+| `OTEL_TRACES_SAMPLER` | — | Sampler type (`always_on`, `always_off`, `traceidratio`) |
+| `OTEL_TRACES_SAMPLER_ARG` | — | Sampler argument (e.g. ratio for `traceidratio`) |
 | `RUST_LOG` | `--trace-directive` | `info` / `my_crate=debug` |
 | `OWIWI_EXPORT_LOG` | `--export-directive` | Export filter (default: `info`) |
+| `OWIWI_METRICS_INTERVAL` | `--metrics-interval` | Metrics export interval (e.g. `30s`) |
 
 ## Features
 
@@ -147,5 +175,6 @@ Inspired by [Instrumenting Axum][url-instrumenting-axum-blog].
 [url-serde-deserialize]: https://docs.rs/serde/1/serde/trait.Deserialize.html
 [url-tracing]: https://docs.rs/tracing/0.1
 [url-owiwi-guard]: https://docs.rs/owiwi/latest/owiwi/struct.OwiwiGuard.html
+[url-span-exporter-config]: https://docs.rs/owiwi/latest/owiwi/trait.SpanExporterConfig.html
 [url-otel-env]: https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/
 [url-instrumenting-axum-blog]: https://determinate.systems/blog/instrumenting-axum/
