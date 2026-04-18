@@ -1,5 +1,63 @@
 # Changelog
 
+## [3.0.0] - Unreleased
+
+### Added
+
+- `TraceExporter` enum for trace backend selection (`Otlp`, `Honeycomb`, `Console`)
+- `MetricExporter` enum for metric backend selection (`None`, `Prometheus`, `Console`)
+- `Owiwi::sampler` field (moved from `OtlpConfig`), applies to any trace backend
+- `TraceExporter::build_provider` and `MetricExporter::build_provider` for constructing providers directly
+- `OtlpConfig::default()` reads `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_TIMEOUT`, and `OTEL_EXPORTER_OTLP_HEADERS` env vars
+
+### Changed
+
+- Single `try_init` method dispatches on `trace_exporter` and `metric_exporter` fields
+- `Owiwi` fields are now public again; mutation after clap parsing is supported
+- `is_disabled` takes `&self` (no longer mutates `no_telemetry`)
+- `disable_sdk` field renamed to `no_telemetry`
+- Service name resolution now reads `OTEL_SERVICE_NAME` in the builder path (previously only the clap path read it)
+- `OtlpConfig` no longer derives `clap::Args`. Endpoint, timeout, headers, and TLS are programmatic only.
+- `HoneycombConfig` converts to `OtlpConfig` via `From` (trait-based wiring removed)
+- `DEFAULT_OTLP_TIMEOUT` is a `Duration` const instead of a parsed string
+
+### Removed
+
+- `Owiwi::try_init_with` method. Replaced by `TraceExporter::Honeycomb` + `try_init`.
+- `Owiwi::try_init_console` method. Replaced by `TraceExporter::Console` + `try_init`.
+- `Owiwi::try_init_with_metrics` method. Set `metric_exporter` field and call `try_init`.
+- `Owiwi::new`. Use `Owiwi::default()` or `Owiwi::builder().build()`.
+- `OtlpConfig::new`. Use `OtlpConfig::default()` or `OtlpConfig::builder()...build()`.
+- `SpanExporterConfig` trait
+- `OtlpConfig::init_provider`. Use `TraceExporter::build_provider` instead.
+- `OtlpConfig::sampler` field. Moved to `Owiwi::sampler`.
+- `OtlpConfig::build_exporter` is now pub (was indirectly called via trait)
+- `--otlp-endpoint`, `--otlp-timeout`, `--otlp-headers` CLI flags (and `env = OTEL_EXPORTER_OTLP_*` wiring)
+
+### Migration
+
+```diff
+- let guard = Owiwi::new().try_init_console()?;
++ let guard = Owiwi::builder()
++     .trace_exporter(TraceExporter::Console)
++     .build()
++     .try_init()?;
+
+- let guard = Owiwi::builder().build().try_init_with(honeycomb_config)?;
++ let guard = Owiwi::builder()
++     .trace_exporter(TraceExporter::Honeycomb(honeycomb_config))
++     .build()
++     .try_init()?;
+
+- let guard = owiwi.try_init_with_metrics(prom_config)?;
++ let guard = Owiwi::builder()
++     .metric_exporter(MetricExporter::Prometheus(prom_config))
++     .build()
++     .try_init()?;
+```
+
+CLI users of 2.x who relied on `--otlp-endpoint` etc. must configure OTLP programmatically or flatten `OtlpConfig` separately into their CLI struct.
+
 ## [2.1.0] - 2026-04-18
 
 ### Changed
@@ -80,7 +138,8 @@ Initial release.
 - `metrics` feature: `SdkMeterProvider` setup with periodic reader
 - `prometheus` feature: Prometheus metrics export (implies `metrics`)
 
-[2.1.0]: https://github.com/aklanti/owiwi/compare/v2.0.0...HEAD
+[3.0.0]: https://github.com/aklanti/owiwi/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/aklanti/owiwi/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/aklanti/owiwi/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/aklanti/owiwi/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/aklanti/owiwi/releases/tag/v1.0.0

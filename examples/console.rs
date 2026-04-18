@@ -3,12 +3,14 @@
 #![allow(warnings)]
 
 use owiwi::Owiwi;
+use owiwi::TraceExporter;
 
 fn main() -> owiwi::Result<()> {
     let guard = Owiwi::builder()
         .service_name("console-example")
+        .trace_exporter(TraceExporter::Console)
         .build()
-        .try_init_console()?;
+        .try_init()?;
     tracing::info!("hello from console  exporter");
 
     {

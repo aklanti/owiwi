@@ -8,6 +8,7 @@ use bon::Builder;
 use clap_verbosity_flag::Verbosity;
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::trace::Sampler;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use tracing::Subscriber;
 use tracing_error::ErrorLayer;
@@ -26,8 +27,8 @@ use super::OwiwiGuard;
 use super::env_vars;
 use super::error::ErrorKind;
 use super::error::Result;
+use super::trace::TraceExporter;
 use crate::EventFormat;
-use crate::OtlpConfig;
 
 /// Default service name
 const DEFAULT_SERVICE_NAME: &str = "unknown_service";
@@ -49,7 +50,7 @@ pub struct Owiwi {
             env = env_vars::OTEL_SERVICE_NAME,
         )
     )]
-    #[builder(default=DEFAULT_SERVICE_NAME, into)]
+    #[builder(default, into)]
     pub service_name: String,
     /// Resource attributes.
     #[cfg_attr(
@@ -66,10 +67,21 @@ pub struct Owiwi {
     #[builder(default)]
     pub resource_attrs: Vec<(String, String)>,
 
-    /// Tracer provider configuration.
-    #[cfg_attr(feature = "clap", command(flatten))]
+    /// Trace backend. Defaults to OTLP with spec values.
+    #[cfg_attr(feature = "clap", arg(skip))]
     #[builder(default)]
-    pub otlp: OtlpConfig,
+    pub trace_exporter: TraceExporter,
+
+    /// Span sampler. Defaults to the SDK default value
+    /// when not set and `OTEL_TRACES_SAMPLER` is absent.
+    #[cfg_attr(feature = "clap", arg(skip))]
+    pub sampler: Option<Sampler>,
+
+    /// Metric backend. Defaults to no metrics export.
+    #[cfg(feature = "metrics")]
+    #[cfg_attr(feature = "clap", arg(skip))]
+    #[builder(default)]
+    pub metric_exporter: super::metrics::MetricExporter,
 
     /// Metrics exports interval
     #[cfg(feature = "metrics")]
@@ -91,7 +103,7 @@ pub struct Owiwi {
         feature = "clap",
         arg(
             long = "trace-directive",
-            help = "Trace filter (e.g. info, my_crate=debug)",
+            help = "Trace filter",
             value_delimiter = ',',
             num_args = 1..,
             help_heading = HELP_HEADING,
@@ -105,7 +117,7 @@ pub struct Owiwi {
         feature = "clap",
         arg(
             long = "export-directive",
-            help = "Export filter (e.g. info, my_crate=debug)",
+            help = "Export filter",
             value_delimiter = ',',
             num_args = 1..,
             env = env_vars::OWIWI_EXPORT_LOG,
@@ -128,13 +140,13 @@ pub struct Owiwi {
     )]
     #[builder(default)]
     pub event_format: EventFormat,
-    /// Verbosity level
+    /// Verbosity flags
     #[cfg(feature = "clap")]
     #[command(flatten)]
     #[builder(default)]
     pub verbose: Verbosity,
 
-    /// Disables all telemetry.
+    /// Disables all telemetry when `true`.
     #[cfg_attr(
         feature = "clap",
         arg(
@@ -155,185 +167,42 @@ impl Default for Owiwi {
 }
 
 impl Owiwi {
-    /// Initializes the tracing provider with the given exporter configuration.
+    /// Initializes the tracing and optionally metrics provider.
     ///
     /// Sets up a [`tracing_subscriber`] registry with an OpenTelemetry layer,
-    /// error layer, env filter, and the configured event formatter.
+    /// error layer, and a formatting layer. It dispatches on [`Self::trace_exporter`]
+    /// and [`Self::metric_exporter`] to build the configured providers.
     ///
     /// Returns an [`OwiwiGuard`] that must be held for the lifetime of the program.
     ///
     /// # Errors
     ///
     /// Returns an error if the exporter cannot be built, filter directives
-    /// are invalid, or a global subscriber is already set.
+    /// are invalid, or a global subscriber is already set, or no tokio runtime is available.
     ///
     /// # Examples
     ///
     /// ```no_run
     /// use owiwi::Owiwi;
     ///
-    /// let owiwi = Owiwi::builder().service_name("owiwi-test").build();
-    /// let _guard = owiwi.try_init()?;
+    /// let guard = Owiwi::builder()
+    ///     .service_name("owiwi-test")
+    ///     .build()
+    ///     .try_init()?;
     /// # Ok::<_, owiwi::Error>(())
     /// ```
     pub fn try_init(mut self) -> Result<OwiwiGuard> {
         if self.is_disabled() {
             return self.noop();
         }
-
-        let otlp = std::mem::take(&mut self.otlp);
-        let resource = self.build_resource();
-        let tracer_provider = otlp.init_provider(resource)?;
-
-        self.finish(
-            tracer_provider,
-            #[cfg(feature = "metrics")]
-            None,
-        )
-    }
-
-    /// Initializes the tracing provider with a custom exporter configuration.
-    ///
-    /// Use this when the default [`OtlpConfig`] (from the builder or CLI) is not
-    /// the desired backend. The sampler is still read from the builder's
-    /// [`OtlpConfig::sampler`] field or the `OTEL_TRACES_SAMPLER` env var.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the exporter cannot be built, filter directives
-    /// are invalid, no tokio runtime is available, or a global subscriber
-    /// is already set.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use owiwi::OtlpConfig;
-    /// use owiwi::Owiwi;
-    ///
-    /// let config = OtlpConfig::builder()
-    ///     .endpoint("http://collector.internal:4317".parse()?)
-    ///     .timeout(std::time::Duration::from_secs(30))
-    ///     .build();
-    ///
-    /// let guard = Owiwi::builder()
-    ///     .service_name("my-service")
-    ///     .build()
-    ///     .try_init_with(config)?;
-    /// # Ok::<_, Box<dyn std::error::Error>>(())
-    /// ```
-    pub fn try_init_with(mut self, config: impl Into<OtlpConfig>) -> Result<OwiwiGuard> {
-        if self.is_disabled() {
-            return self.noop();
-        }
-
-        let resource = self.build_resource();
-        let tracer_provider = config.into().init_provider(resource)?;
-        self.finish(
-            tracer_provider,
-            #[cfg(feature = "metrics")]
-            None,
-        )
-    }
-
-    /// Initializes the tracing and metrics providers with the given exporter configuration.
-    ///
-    /// Sets up a [`tracing_subscriber`] registry with an OpenTelemetry layer,
-    /// error layer, env filter, and the configured event formatter.
-    ///
-    /// Returns an [`OwiwiGuard`] that must be held for the lifetime of the program.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the exporter cannot be built, filter directives
-    /// are invalid, or a global subscriber is already set.
-    #[cfg(feature = "metrics")]
-    pub fn try_init_with_metrics(
-        mut self,
-        metrics_exporter: impl TryInto<opentelemetry_otlp::MetricExporter, Error = crate::Error>,
-    ) -> Result<OwiwiGuard> {
-        use opentelemetry_sdk::metrics::PeriodicReader;
-        use opentelemetry_sdk::metrics::SdkMeterProvider;
-
-        if self.is_disabled() {
-            return self.noop();
-        }
-
-        let resource = self.build_resource();
-        let exporter = metrics_exporter.try_into()?;
-        let mut builder = PeriodicReader::builder(exporter);
-        if let Some(interval) = self.metrics_interval {
-            builder = builder.with_interval(interval);
-        } else {
-            #[cfg(not(feature = "clap"))]
-            if let Ok(raw) = std::env::var(env_vars::OWIWI_METRICS_INTERVAL) {
-                let interval =
-                    humantime::parse_duration(&raw).map_err(|_err| ErrorKind::ExporterConfig {
-                        reason: format!("invalid metrics interval `{raw}`"),
-                    })?;
-                builder = builder.with_interval(interval);
-            }
-        }
-
-        let meter_provider = SdkMeterProvider::builder()
-            .with_resource(resource.clone())
-            .with_reader(builder.build())
-            .build();
-
-        let otlp = std::mem::take(&mut self.otlp);
-        let tracer_provider = otlp.init_provider(resource)?;
-
-        self.finish(tracer_provider, Some(meter_provider))
-    }
-
-    /// Initializes tracing with a console exporter for local development.
-    ///
-    /// # Examples
-    ///
-    /// ```no_run
-    /// use owiwi::Owiwi;
-    ///
-    /// let _guard = Owiwi::default().try_init_console()?;
-    /// # Ok::<_, owiwi::Error>(())
-    /// ```
-    #[cfg(feature = "console")]
-    pub fn try_init_console(mut self) -> Result<OwiwiGuard> {
-        if self.is_disabled() {
-            return self.noop();
-        }
-
         let resource = self.build_resource();
 
         #[cfg(feature = "metrics")]
-        let meter_provider = {
-            use opentelemetry_sdk::metrics::PeriodicReader;
-            let exporter = opentelemetry_stdout::MetricExporter::default();
+        let meter_provider = std::mem::take(&mut self.metric_exporter)
+            .build_provider(resource.clone(), self.metrics_interval.take())?;
 
-            let mut builder = PeriodicReader::builder(exporter);
-            if let Some(interval) = self.metrics_interval.take() {
-                builder = builder.with_interval(interval);
-            } else {
-                #[cfg(not(feature = "clap"))]
-                if let Ok(raw) = std::env::var(env_vars::OWIWI_METRICS_INTERVAL) {
-                    let interval = humantime::parse_duration(&raw).map_err(|_err| {
-                        ErrorKind::ExporterConfig {
-                            reason: format!("invalid metrics interval `{raw}`"),
-                        }
-                    })?;
-                    builder = builder.with_interval(interval);
-                }
-            }
-
-            let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
-                .with_resource(resource.clone())
-                .with_reader(builder.build())
-                .build();
-            Some(provider)
-        };
-
-        let tracer_provider = SdkTracerProvider::builder()
-            .with_resource(resource)
-            .with_simple_exporter(opentelemetry_stdout::SpanExporter::default())
-            .build();
+        let exporter = std::mem::take(&mut self.trace_exporter);
+        let tracer_provider = exporter.build_provider(resource, self.sampler.take())?;
 
         self.finish(
             tracer_provider,
@@ -393,12 +262,8 @@ impl Owiwi {
     /// Builds an OpenTelemetry [`Resource`].
     fn build_resource(&mut self) -> Resource {
         let service_name = if self.service_name.is_empty() {
-            #[cfg(not(feature = "clap"))]
-            let name = std::env::var(env_vars::OTEL_SERVICE_NAME)
-                .unwrap_or_else(|_| DEFAULT_SERVICE_NAME.to_owned());
-            #[cfg(feature = "clap")]
-            let name = DEFAULT_SERVICE_NAME.to_owned();
-            name
+            std::env::var(env_vars::OTEL_SERVICE_NAME)
+                .unwrap_or_else(|_| DEFAULT_SERVICE_NAME.to_owned())
         } else {
             self.service_name.clone()
         };
@@ -544,15 +409,8 @@ mod tests {
     use super::*;
 
     #[gtest]
-    fn new_returns_default_owiwi() {
-        let owiwi = Owiwi::default();
-        expect_that!(owiwi.service_name, eq("unknown_service"));
-    }
-
-    #[gtest]
     fn build_resource_sets_service_name() {
-        let mut owiwi = Owiwi::default();
-        owiwi.service_name = "test_service".to_owned();
+        let mut owiwi = Owiwi::builder().service_name("test_service").build();
         let resource = owiwi.build_resource();
         expect_that!(resource, pat!(Resource { .. }));
         expect_that!(resource.is_empty(), eq(false));
@@ -575,11 +433,12 @@ mod tests {
 
     #[gtest]
     fn build_resource_with_custom_attributes() {
-        let mut owiwi = Owiwi::default();
-        owiwi.resource_attrs = vec![
-            ("env".to_owned(), "staging".to_owned()),
-            ("region".to_owned(), "us-east-1".to_owned()),
-        ];
+        let mut owiwi = Owiwi::builder()
+            .resource_attrs(vec![
+                ("env".to_owned(), "staging".to_owned()),
+                ("region".to_owned(), "us-east-1".to_owned()),
+            ])
+            .build();
 
         let resource = owiwi.build_resource();
         let env_key = Key::new("env");

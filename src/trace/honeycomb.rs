@@ -31,7 +31,7 @@ impl From<HoneycombConfig> for OtlpConfig {
             .endpoint(config.endpoint)
             .timeout(config.timeout)
             .headers(vec![(
-                "x-honeycom-team".to_owned(),
+                "x-honeycomb-team".to_owned(),
                 config.api_key.expose_secret().to_owned(),
             )])
             .build()

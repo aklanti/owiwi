@@ -10,46 +10,27 @@ Opinionated [`tracing`][url-tracing] subscriber with OpenTelemetry export.
 ## Known Limitations
 
 - gRPC only. `OTEL_EXPORTER_OTLP_PROTOCOL` ignored
-- `OTEL_TRACES_EXPORTER` / `OTEL_METRICS_EXPORTER` not supported
+- Backend selection is programmatic. `OTEL_TRACES_EXPORTER` and `OTEL_METRICS_EXPORTER` are not read.
+- OTLP endpoint/timeout/headers are not exposed as CLI flags. They are read from `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_TIMEOUT`, and `OTEL_EXPORTER_OTLP_HEADERS` via `OtlpConfig::default()`, or set programmatically via the builder.
 
 ## Install
 
 ```toml
 [dependencies]
-owiwi = { version = "2", features = ["console"] }
+owiwi = { version = "2.0.0", features = ["console"] }
 tracing = "0.1"
 ```
 
 ## Usage
 
+Default: OTLP export to `http://localhost:4317`.
+
 ```rust,no_run
 use owiwi::Owiwi;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let owiwi = Owiwi::builder().service_name("my-service").build();
-    let guard = owiwi.try_init_console()?;
-
-    tracing::info!("credential issues");
-
-    guard.shutdown()?;
-    Ok(())
-}
-```
-
-Hold the returned [`OwiwiGuard`][url-owiwi-guard] until shutdown. Dropping it stops export.
-
-## OTLP export
-
-```rust,no_run
-use owiwi::{Owiwi, OtlpConfig};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
     let guard = Owiwi::builder()
         .service_name("my-service")
-        .otlp(OtlpConfig::builder()
-            .endpoint("http://localhost:4317".parse()?)
-            .timeout(std::time::Duration::from_secs(10))
-            .build())
         .build()
         .try_init()?;
 
@@ -60,24 +41,89 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## Custom backends
+Hold the returned [`OwiwiGuard`][url-owiwi-guard] until shutdown. Dropping it stops export.
 
-Use `try_init_with` with any type that implements [`SpanExporterConfig`][url-span-exporter-config]:
+## Custom OTLP endpoint
 
 ```rust,no_run
-use owiwi::{Owiwi, HoneycombConfig};
+use std::time::Duration;
+use owiwi::{Owiwi, TraceExporter, OtlpConfig};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = HoneycombConfig::builder()
-        .endpoint("https://api.honeycomb.io".parse()?)
-        .api_key("your-api-key".into())
-        .timeout(std::time::Duration::from_secs(5))
+    let otlp = OtlpConfig::builder()
+        .endpoint("http://collector.internal:4317".parse()?)
+        .timeout(Duration::from_secs(30))
         .build();
 
     let guard = Owiwi::builder()
         .service_name("my-service")
+        .trace_exporter(TraceExporter::Otlp(otlp))
         .build()
-        .try_init_with(config)?;
+        .try_init()?;
+
+    guard.shutdown()?;
+    Ok(())
+}
+```
+
+## Console (stdout)
+
+```rust,no_run
+use owiwi::{Owiwi, TraceExporter};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let guard = Owiwi::builder()
+        .service_name("my-service")
+        .trace_exporter(TraceExporter::Console)
+        .build()
+        .try_init()?;
+
+    guard.shutdown()?;
+    Ok(())
+}
+```
+
+## Honeycomb
+
+```rust,no_run
+use std::time::Duration;
+use owiwi::{Owiwi, TraceExporter, HoneycombConfig};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let honeycomb = HoneycombConfig::builder()
+        .endpoint("https://api.honeycomb.io".parse()?)
+        .api_key("your-api-key".into())
+        .timeout(Duration::from_secs(5))
+        .build();
+
+    let guard = Owiwi::builder()
+        .service_name("my-service")
+        .trace_exporter(TraceExporter::Honeycomb(honeycomb))
+        .build()
+        .try_init()?;
+
+    guard.shutdown()?;
+    Ok(())
+}
+```
+
+## Metrics
+
+Set `metric_exporter` alongside `trace_exporter`:
+
+```rust,no_run
+use owiwi::{Owiwi, MetricExporter, PrometheusConfig};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let prom = PrometheusConfig::builder()
+        .endpoint("http://prometheus:9090".parse()?)
+        .build();
+
+    let guard = Owiwi::builder()
+        .service_name("my-service")
+        .metric_exporter(MetricExporter::Prometheus(prom))
+        .build()
+        .try_init()?;
 
     guard.shutdown()?;
     Ok(())
@@ -86,7 +132,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## CLI Integration
 
-Flatten `Owiwi` into your CLI struct. Requires the `clap` feature.
+Flatten `Owiwi` into your CLI struct for the non-backend options (service name,
+resource attributes, filters, event format, verbosity, disable flag). Backend
+selection remains programmatic.
 
 ```toml
 [dependencies]
@@ -115,41 +163,42 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Backends
 
-| Backend | Config type | Init method | Feature |
-|---------|-------------|-------------|---------|
-| Any OTLP collector | `OtlpConfig` | `try_init` | *(default)* |
-| Console (stdout) | — | `try_init_console` | `console` |
-| [Honeycomb](https://honeycomb.io) | `HoneycombConfig` | `try_init_with` | `honeycomb` |
-| Custom | `impl SpanExporterConfig` | `try_init_with` | — |
+| Backend | Variant | Feature |
+|---------|---------|---------|
+| Any OTLP collector | TraceExporter::Otlp(OtlpConfig) | *(default)* |
+| Console (stdout) | TraceExporter::Console | console |
+| [Honeycomb](https://honeycomb.io) | TraceExporter::Honeycomb(HoneycombConfig) | honeycomb |
+| Prometheus metrics | MetricExporter::Prometheus(PrometheusConfig) | prometheus |
+| Console metrics | MetricExporter::Console | console + metrics |
 
 ## Environment Variables
 
-Per the [OpenTelemetry spec][url-otel-env]. With `clap`, each has a CLI flag.
+Per the [OpenTelemetry spec][url-otel-env] where applicable. With `clap`, each flagged variable also has a CLI flag.
 
 | Variable | Flag | |
 |----------|------|-|
-| `OTEL_SERVICE_NAME` | `--service-name` | Service name |
-| `OTEL_SDK_DISABLED` | `--no-telemetry` | Disable telemetry |
-| `OTEL_RESOURCE_ATTRIBUTES` | `--resource-attrs` | `key=value,key=value` |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `--otlp-endpoint` | Exporter endpoint |
-| `OTEL_EXPORTER_OTLP_HEADERS` | `--otlp-headers` | Extra gRPC headers |
-| `OTEL_EXPORTER_OTLP_TIMEOUT` | `--otlp-timeout` | Export timeout |
-| `OTEL_TRACES_SAMPLER` | — | Sampler type (`always_on`, `always_off`, `traceidratio`) |
-| `OTEL_TRACES_SAMPLER_ARG` | — | Sampler argument (e.g. ratio for `traceidratio`) |
-| `RUST_LOG` | `--trace-directive` | `info` / `my_crate=debug` |
-| `OWIWI_EXPORT_LOG` | `--export-directive` | Export filter (default: `info`) |
-| `OWIWI_METRICS_INTERVAL` | `--metrics-interval` | Metrics export interval (e.g. `30s`) |
+| OTEL_SERVICE_NAME | --service-name | Service name |
+| OTEL_SDK_DISABLED | --no-telemetry | Disable telemetry |
+| OTEL_RESOURCE_ATTRIBUTES | --resource-attrs | key=value,key=value |
+| OTEL_EXPORTER_OTLP_ENDPOINT |  | OTLP endpoint (read by OtlpConfig::default) |
+| OTEL_EXPORTER_OTLP_TIMEOUT |  | OTLP timeout (read by OtlpConfig::default) |
+| OTEL_EXPORTER_OTLP_HEADERS |  | OTLP headers (read by OtlpConfig::default) |
+| OTEL_TRACES_SAMPLER |  | always_on, always_off, or traceidratio |
+| OTEL_TRACES_SAMPLER_ARG |  | Sampler argument (e.g. ratio for traceidratio) |
+| RUST_LOG | --trace-directive | Terminal filter (info, my_crate=debug) |
+| OWIWI_EXPORT_LOG | --export-directive | Export filter (default: info) |
+| OWIWI_METRICS_INTERVAL | --metrics-interval | Metrics export interval (e.g. 30s) |
 
 ## Features
 
 | Feature | | Default |
 |---------|--|---------|
-| `clap` | CLI flags via [`clap::Args`][url-clap-args] | yes |
-| `serde` | [`Deserialize`][url-serde-deserialize] on config types | yes |
-| `console` | Stdout exporters | no |
-| `honeycomb` | [Honeycomb](https://honeycomb.io) exporter | no |
-| `metrics` | Metrics via `SdkMeterProvider` | no |
-| `prometheus` | Prometheus OTLP export (implies `metrics`) | no |
+| clap | CLI flags via [clap::Args][url-clap-args] | yes |
+| serde | [Deserialize][url-serde-deserialize] on config types | yes |
+| console | Stdout exporters | no |
+| honeycomb | [Honeycomb](https://honeycomb.io) exporter | no |
+| metrics | Metrics via SdkMeterProvider | no |
+| prometheus | Prometheus OTLP export (implies metrics) | no |
 
 ## MSRV
 
@@ -175,6 +224,5 @@ Inspired by [Instrumenting Axum][url-instrumenting-axum-blog].
 [url-serde-deserialize]: https://docs.rs/serde/1/serde/trait.Deserialize.html
 [url-tracing]: https://docs.rs/tracing/0.1
 [url-owiwi-guard]: https://docs.rs/owiwi/latest/owiwi/struct.OwiwiGuard.html
-[url-span-exporter-config]: https://docs.rs/owiwi/latest/owiwi/trait.SpanExporterConfig.html
 [url-otel-env]: https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/
 [url-instrumenting-axum-blog]: https://determinate.systems/blog/instrumenting-axum/

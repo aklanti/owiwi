@@ -6,7 +6,7 @@
 //! - **Transport:** gRPC is the only supported transport protocol.
 //!   `OTEL_EXPORTER_OTLP_PROTOCOL` is not read.
 //! - **Export strategy:** Batch export for OTLP backends. The console exporter
-//!   (`try_init_console`) uses synchronous export for immediate output.
+//!   uses synchronous export for immediate output.
 //!   periodically.
 //! - **Subscriber layers** bottom to top: OpenTelemetry with export filter, `ErrorLayer`,
 //!   fmt with env filter.
@@ -39,6 +39,9 @@ pub use format::EventFormat;
 pub use guard::FilterHandle;
 #[doc(inline)]
 pub use guard::OwiwiGuard;
+#[doc(inline)]
+#[cfg(feature = "metrics")]
+pub use metrics::MetricExporter;
 #[cfg(feature = "prometheus")]
 pub use metrics::PrometheusConfig;
 #[doc(inline)]
@@ -48,5 +51,7 @@ pub use owiwi::Owiwi;
 pub use trace::HoneycombConfig;
 #[doc(inline)]
 pub use trace::OtlpConfig;
+#[doc(inline)]
+pub use trace::TraceExporter;
 /// Help heading for instrumentation options.
 pub const HELP_HEADING: &str = "Instrumentation options";

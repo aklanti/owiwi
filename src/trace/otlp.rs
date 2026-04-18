@@ -6,13 +6,8 @@ use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_otlp::WithTonicConfig;
 use opentelemetry_otlp::tonic_types::metadata::MetadataMap;
 use opentelemetry_otlp::tonic_types::transport::ClientTlsConfig;
-use opentelemetry_sdk::Resource;
-use opentelemetry_sdk::trace::Sampler;
-use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
-#[cfg(feature = "clap")]
-use crate::HELP_HEADING;
 use crate::env_vars;
 use crate::error::Error;
 use crate::error::ErrorKind;
@@ -20,26 +15,14 @@ use crate::error::ErrorKind;
 /// Default OTEL endpoint value
 const DEFAULT_OTLP_ENDPOINT: &str = "http://localhost:4317";
 /// Default timeout value.
-const DEFAULT_OTLP_TIMEOUT: &str = "10s";
+const DEFAULT_OTLP_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Configuration for an OTLP span exporter.
 #[must_use]
 #[derive(Clone, Debug, Builder)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize))]
-#[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct OtlpConfig {
     /// Exporter endpoint.
-    #[cfg_attr(
-        feature = "clap",
-        arg(
-            name = "otlp-endpoint",
-            long,
-            help = "Exporter endpoint",
-            default_value = DEFAULT_OTLP_ENDPOINT,
-            env = env_vars::OTEL_EXPORTER_OTLP_ENDPOINT,
-            help_heading = HELP_HEADING,
-        ),
-    )]
     pub endpoint: Url,
 
     /// Export timeout.
@@ -47,53 +30,35 @@ pub struct OtlpConfig {
         feature = "serde",
         serde(deserialize_with = "humantime_serde::deserialize")
     )]
-    #[cfg_attr(
-        feature = "clap",
-        arg(
-            name = "otlp-timeout",
-            long,
-            help = "Export timeout (e.g. 10s, 5m)",
-            default_value = DEFAULT_OTLP_TIMEOUT,
-            value_parser = humantime::parse_duration,
-            env = env_vars::OTEL_EXPORTER_OTLP_TIMEOUT,
-            help_heading = HELP_HEADING,
-        )
-    )]
     pub timeout: Duration,
 
     /// Additional gRPC metadata headers.
-    #[cfg_attr(
-        feature = "clap",
-        arg(
-            name = "otlp-headers",
-            long,
-            help = "gRPC metadata headers (key=value,key=value)",
-            value_parser = env_vars::parse_key_values,
-            env = env_vars::OTEL_EXPORTER_OTLP_HEADERS,
-            help_heading = HELP_HEADING,
-        )
-    )]
     #[builder(default)]
     pub headers: Vec<(String, String)>,
 
-    /// Span sampler. Defaults to the SDK default to `ParentBased(AlwaysOn)`
-    /// when not set and `OTEL_TRACES_SAMPLER` is absent.
-    #[cfg_attr(feature = "clap", arg(skip))]
-    #[cfg_attr(feature = "serde", serde(skip))]
-    pub sampler: Option<Sampler>,
-
     /// Custom TLS configuration
-    #[cfg_attr(feature = "clap", arg(skip))]
     #[cfg_attr(feature = "serde", serde(skip))]
     pub tls_config: Option<ClientTlsConfig>,
 }
 
 impl OtlpConfig {
-    /// Initializes the tracer provider.
-    pub fn init_provider(self, resource: Resource) -> Result<SdkTracerProvider, Error> {
-        let sampler = self.sampler.clone();
-        let exporter = self.try_into()?;
-        build_tracer_provider(exporter, resource, sampler)
+    /// Builds the OTLP span exporter from this configuration.
+    pub fn build_exporter(self) -> Result<SpanExporter, Error> {
+        let metadata = self.metadata()?;
+
+        let mut builder = SpanExporter::builder()
+            .with_tonic()
+            .with_endpoint(self.endpoint.as_ref())
+            .with_metadata(metadata);
+
+        if self.endpoint.scheme() == "https" {
+            let tls = self
+                .tls_config
+                .unwrap_or_else(|| ClientTlsConfig::default().with_enabled_roots());
+            builder = builder.with_tls_config(tls);
+        }
+
+        Ok(builder.build()?)
     }
 
     /// Builds the gRPC metadata map from all header sources.
@@ -115,80 +80,26 @@ impl OtlpConfig {
 
 impl Default for OtlpConfig {
     fn default() -> Self {
-        let duration = humantime::parse_duration(DEFAULT_OTLP_TIMEOUT).expect("valid duration");
+        let endpoint = std::env::var(env_vars::OTEL_EXPORTER_OTLP_ENDPOINT)
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or_else(|| DEFAULT_OTLP_ENDPOINT.parse().expect("valid URL"));
+
+        let timeout = std::env::var(env_vars::OTEL_EXPORTER_OTLP_TIMEOUT)
+            .ok()
+            .and_then(|s| humantime::parse_duration(&s).ok())
+            .unwrap_or(DEFAULT_OTLP_TIMEOUT);
+
+        let headers = std::env::var(env_vars::OTEL_EXPORTER_OTLP_HEADERS)
+            .ok()
+            .and_then(|s| env_vars::parse_key_values(&s).ok())
+            .unwrap_or_default();
+
         Self::builder()
-            .endpoint(DEFAULT_OTLP_ENDPOINT.parse().expect("valid URL"))
-            .timeout(duration)
+            .endpoint(endpoint)
+            .timeout(timeout)
+            .headers(headers)
             .build()
-    }
-}
-
-impl TryFrom<OtlpConfig> for SpanExporter {
-    type Error = Error;
-    fn try_from(config: OtlpConfig) -> Result<SpanExporter, Error> {
-        let metadata = config.metadata()?;
-
-        let mut builder = SpanExporter::builder()
-            .with_tonic()
-            .with_endpoint(config.endpoint.as_ref())
-            .with_metadata(metadata);
-
-        if config.endpoint.scheme() == "https" {
-            let tls = config
-                .tls_config
-                .unwrap_or_else(|| ClientTlsConfig::default().with_enabled_roots());
-            builder = builder.with_tls_config(tls);
-        }
-
-        Ok(builder.build()?)
-    }
-}
-
-/// Builds a tracer provider from an exporter, resource, and optional sampler.
-pub(crate) fn build_tracer_provider(
-    exporter: SpanExporter,
-    resource: Resource,
-    sampler: Option<Sampler>,
-) -> Result<SdkTracerProvider, Error> {
-    let mut builder = SdkTracerProvider::builder().with_resource(resource);
-    match sampler {
-        Some(sampler) => {
-            builder = builder.with_sampler(sampler);
-        }
-        None => {
-            if let Ok(sampler) = std::env::var(env_vars::OTEL_TRACES_SAMPLER) {
-                let arg = std::env::var(env_vars::OTEL_TRACES_SAMPLER_ARG).ok();
-                let sampler = parse_sampler(&sampler, arg.as_deref())?;
-                builder = builder.with_sampler(sampler);
-            }
-        }
-    }
-
-    Ok(builder.with_batch_exporter(exporter).build())
-}
-
-/// Parses trace sampler
-fn parse_sampler(name: &str, arg: Option<&str>) -> Result<Sampler, Error> {
-    match name {
-        "always_on" => Ok(Sampler::AlwaysOn),
-        "always_off" => Ok(Sampler::AlwaysOff),
-        "traceidratio" => {
-            let ratio: f64 = arg
-                .ok_or_else(|| ErrorKind::ExporterConfig {
-                    reason: String::from("missing trace id ratio"),
-                })?
-                .parse()
-                .map_err(|err| ErrorKind::ExporterConfig {
-                    reason: format!("unable to parse trace id argument `{err}`"),
-                })?;
-            Ok(Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(
-                ratio,
-            ))))
-        }
-        other => Err(ErrorKind::ExporterConfig {
-            reason: format!("invalid sampler `{other}`"),
-        }
-        .into()),
     }
 }
 
@@ -212,7 +123,7 @@ mod tests {
             .timeout(Duration::ZERO)
             .build();
 
-        let result: Result<SpanExporter, _> = config.try_into();
+        let result: Result<SpanExporter, _> = config.build_exporter();
         expect_that!(result, ok(anything()));
     }
 
@@ -236,48 +147,6 @@ mod tests {
             .build();
         let result = config.metadata();
         expect_that!(result, err(anything()));
-    }
-
-    #[tokio::test]
-    #[gtest]
-    async fn init_provider_with_defaults() {
-        let config = OtlpConfig::builder()
-            .endpoint("http://localhost:4317".parse().expect("to be valid"))
-            .timeout(Duration::from_secs(7))
-            .build();
-        let resource = Resource::builder().with_service_name("test").build();
-        let result = config.init_provider(resource);
-        expect_that!(result, ok(anything()));
-    }
-
-    #[gtest]
-    fn parse_sampler_always_on() {
-        let sampler = parse_sampler("always_on", None);
-        expect_that!(sampler, ok(anything()));
-    }
-
-    #[gtest]
-    fn parse_sampler_always_off() {
-        let sampler = parse_sampler("always_off", None);
-        expect_that!(sampler, ok(anything()));
-    }
-
-    #[gtest]
-    fn parse_sampler_traceidratio() {
-        let sampler = parse_sampler("traceidratio", Some("0.5"));
-        expect_that!(sampler, ok(anything()));
-    }
-
-    #[gtest]
-    fn parse_sampler_traceidratio_missing_arg() {
-        let sampler = parse_sampler("traceidratio", None);
-        expect_that!(sampler, err(anything()));
-    }
-
-    #[gtest]
-    fn parse_sampler_invalid_name() {
-        let sampler = parse_sampler("bogus", None);
-        expect_that!(sampler, err(anything()));
     }
 
     #[gtest]

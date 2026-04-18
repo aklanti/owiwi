@@ -13,17 +13,18 @@ use std::time::Duration;
 
 use owiwi::OtlpConfig;
 use owiwi::Owiwi;
+use owiwi::TraceExporter;
 
 fn main() -> owiwi::Result<()> {
     let mut owiwi = Owiwi::builder()
         .service_name("otlp-example")
-        .otlp(
+        .trace_exporter(TraceExporter::Otlp(
             OtlpConfig::builder()
                 .endpoint("http://localhost:4317".parse().expect("valid URL"))
                 .timeout(Duration::from_secs(10))
                 .headers(vec![("x-custom-header".into(), "value".into())])
                 .build(),
-        )
+        ))
         .build();
 
     let guard = owiwi.try_init()?;
