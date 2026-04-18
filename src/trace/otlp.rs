@@ -18,6 +18,11 @@ use crate::env_vars;
 use crate::error::Error;
 use crate::error::ErrorKind;
 
+/// Default OTEL endpoint value
+const DEFAULT_OTLP_ENDPOINT: &str = "http://localhost:4317";
+/// Default timeout value.
+const DEFAULT_OTLP_TIMEOUT: &str = "10s";
+
 /// Configuration for an OTLP span exporter.
 #[must_use]
 #[derive(Clone, Debug, Builder)]
@@ -31,6 +36,7 @@ pub struct OtlpConfig {
             name = "otlp-endpoint",
             long,
             help = "Exporter endpoint (e.g. http://localhost:4317)",
+            default_value = DEFAULT_OTLP_ENDPOINT,
             env = env_vars::OTEL_EXPORTER_OTLP_ENDPOINT,
             help_heading = HELP_HEADING,
         ),
@@ -48,6 +54,7 @@ pub struct OtlpConfig {
             name = "otlp-timeout",
             long,
             help = "Export timeout (e.g. 10s, 5m)",
+            default_value = DEFAULT_OTLP_TIMEOUT,
             value_parser = humantime::parse_duration,
             env = env_vars::OTEL_EXPORTER_OTLP_TIMEOUT,
             help_heading = HELP_HEADING,
@@ -124,6 +131,7 @@ impl Default for OtlpConfig {
 impl SpanExporterConfig for OtlpConfig {
     fn build_exporter(self) -> Result<SpanExporter, Error> {
         let metadata = self.metadata()?;
+
         let mut builder = SpanExporter::builder()
             .with_tonic()
             .with_endpoint(self.endpoint.as_ref())

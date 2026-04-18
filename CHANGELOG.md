@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.0] - 2026-04-18
+
+### Changed
+
+- `--otlp-endpoint` defaults to `http://localhost:4317` and `--otlp-timeout` defaults to `10s`. CLI parsing no longer fails when these flags and env vars are absent.
+
 ## [2.0.0] - 2026-04-10
 
 ### Added
@@ -74,6 +80,7 @@ Initial release.
 - `metrics` feature: `SdkMeterProvider` setup with periodic reader
 - `prometheus` feature: Prometheus metrics export (implies `metrics`)
 
+[2.1.0]: https://github.com/aklanti/owiwi/compare/v2.0.0...HEAD
 [2.0.0]: https://github.com/aklanti/owiwi/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/aklanti/owiwi/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/aklanti/owiwi/releases/tag/v1.0.0
