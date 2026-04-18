@@ -98,7 +98,6 @@ mod tests {
     use googletest::expect_that;
     use googletest::gtest;
     use googletest::matchers::anything;
-    use googletest::matchers::none;
     use googletest::matchers::ok;
 
     use super::*;
@@ -113,6 +112,6 @@ mod tests {
     #[gtest]
     fn noop_guard_has_no_meter_provider() {
         let guard = OwiwiGuard::noop();
-        expect_that!(guard.meter_provider, none());
+        expect_that!(guard.meter_provider, googletest::matchers::none());
     }
 }

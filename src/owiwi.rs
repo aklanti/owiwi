@@ -26,10 +26,8 @@ use super::OwiwiGuard;
 use super::env_vars;
 use super::error::ErrorKind;
 use super::error::Result;
-use super::trace::otlp::build_tracer_provider;
 use crate::EventFormat;
 use crate::OtlpConfig;
-use crate::SpanExporterConfig;
 
 /// Default service name
 const DEFAULT_SERVICE_NAME: &str = "unknown_service";
@@ -46,13 +44,13 @@ pub struct Owiwi {
         feature = "clap",
         arg(
             long,
-            help = "Service name for telemetry (e.g. my-api)",
+            help = "Service name for telemetry",
             default_value = DEFAULT_SERVICE_NAME,
             env = env_vars::OTEL_SERVICE_NAME,
         )
     )]
     #[builder(default=DEFAULT_SERVICE_NAME, into)]
-    service_name: String,
+    pub service_name: String,
     /// Resource attributes.
     #[cfg_attr(
         feature = "clap",
@@ -66,12 +64,12 @@ pub struct Owiwi {
         )
     )]
     #[builder(default)]
-    resource_attrs: Vec<(String, String)>,
+    pub resource_attrs: Vec<(String, String)>,
 
     /// Tracer provider configuration.
     #[cfg_attr(feature = "clap", command(flatten))]
     #[builder(default)]
-    otlp: OtlpConfig,
+    pub otlp: OtlpConfig,
 
     /// Metrics exports interval
     #[cfg(feature = "metrics")]
@@ -86,7 +84,7 @@ pub struct Owiwi {
         help_heading = HELP_HEADING,
     ),
 )]
-    metrics_interval: Option<std::time::Duration>,
+    pub metrics_interval: Option<std::time::Duration>,
 
     /// Trace filter directives to overwrite the default level and `RUST_LOG`.
     #[cfg_attr(
@@ -100,7 +98,7 @@ pub struct Owiwi {
         )
     )]
     #[builder(default)]
-    tracing_directives: Vec<Directive>,
+    pub tracing_directives: Vec<Directive>,
     /// Filter directives for the OpenTelemetry export layer
     /// Defaults to `info`.
     #[cfg_attr(
@@ -115,7 +113,7 @@ pub struct Owiwi {
         )
     )]
     #[builder(default)]
-    export_directives: Vec<Directive>,
+    pub export_directives: Vec<Directive>,
     /// Event output format.
     #[cfg_attr(
         feature = "clap",
@@ -129,12 +127,12 @@ pub struct Owiwi {
         )
     )]
     #[builder(default)]
-    event_format: EventFormat,
+    pub event_format: EventFormat,
     /// Verbosity level
     #[cfg(feature = "clap")]
     #[command(flatten)]
     #[builder(default)]
-    verbose: Verbosity,
+    pub verbose: Verbosity,
 
     /// Disables all telemetry.
     #[cfg_attr(
@@ -147,7 +145,7 @@ pub struct Owiwi {
         )
     )]
     #[builder(default)]
-    disable_sdk: bool,
+    pub no_telemetry: bool,
 }
 
 impl Default for Owiwi {
@@ -157,11 +155,6 @@ impl Default for Owiwi {
 }
 
 impl Owiwi {
-    /// Creates an `Owiwi` with default configuration.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     /// Initializes the tracing provider with the given exporter configuration.
     ///
     /// Sets up a [`tracing_subscriber`] registry with an OpenTelemetry layer,
@@ -228,16 +221,13 @@ impl Owiwi {
     ///     .try_init_with(config)?;
     /// # Ok::<_, Box<dyn std::error::Error>>(())
     /// ```
-    pub fn try_init_with(mut self, config: impl SpanExporterConfig) -> Result<OwiwiGuard> {
+    pub fn try_init_with(mut self, config: impl Into<OtlpConfig>) -> Result<OwiwiGuard> {
         if self.is_disabled() {
             return self.noop();
         }
 
         let resource = self.build_resource();
-        let sampler = self.otlp.sampler.take();
-        let exporter = config.build_exporter()?;
-        let tracer_provider = build_tracer_provider(exporter, resource, sampler)?;
-
+        let tracer_provider = config.into().init_provider(resource)?;
         self.finish(
             tracer_provider,
             #[cfg(feature = "metrics")]
@@ -302,7 +292,7 @@ impl Owiwi {
     /// ```no_run
     /// use owiwi::Owiwi;
     ///
-    /// let _guard = Owiwi::new().try_init_console()?;
+    /// let _guard = Owiwi::default().try_init_console()?;
     /// # Ok::<_, owiwi::Error>(())
     /// ```
     #[cfg(feature = "console")]
@@ -519,11 +509,11 @@ impl Owiwi {
     fn is_disabled(&mut self) -> bool {
         #[cfg(not(feature = "clap"))]
         {
-            self.disable_sdk = std::env::var(env_vars::OTEL_SDK_DISABLED)
+            self.no_telemetry = std::env::var(env_vars::OTEL_SDK_DISABLED)
                 .map(|v| v.eq_ignore_ascii_case("true"))
                 .unwrap_or(false);
         }
-        self.disable_sdk
+        self.no_telemetry
     }
 
     fn noop(self) -> Result<OwiwiGuard> {
@@ -549,13 +539,13 @@ mod tests {
 
     #[gtest]
     fn new_returns_default_owiwi() {
-        let owiwi = Owiwi::new();
+        let owiwi = Owiwi::default();
         expect_that!(owiwi.service_name, eq("unknown_service"));
     }
 
     #[gtest]
     fn build_resource_sets_service_name() {
-        let mut owiwi = Owiwi::new();
+        let mut owiwi = Owiwi::default();
         owiwi.service_name = "test_service".to_owned();
         let resource = owiwi.build_resource();
         expect_that!(resource, pat!(Resource { .. }));
@@ -579,7 +569,7 @@ mod tests {
 
     #[gtest]
     fn build_resource_with_custom_attributes() {
-        let mut owiwi = Owiwi::new();
+        let mut owiwi = Owiwi::default();
         owiwi.resource_attrs = vec![
             ("env".to_owned(), "staging".to_owned()),
             ("region".to_owned(), "us-east-1".to_owned()),
@@ -593,7 +583,7 @@ mod tests {
 
     #[gtest]
     fn filter_layer_defaults_to_info() {
-        let owiwi = Owiwi::new();
+        let owiwi = Owiwi::default();
         let filter = owiwi.filter_layer();
         expect_that!(filter, ok(anything()));
     }

@@ -11,7 +11,6 @@ use opentelemetry_sdk::trace::Sampler;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use url::Url;
 
-use super::SpanExporterConfig;
 #[cfg(feature = "clap")]
 use crate::HELP_HEADING;
 use crate::env_vars;
@@ -90,15 +89,10 @@ pub struct OtlpConfig {
 }
 
 impl OtlpConfig {
-    /// Creates new configuration
-    pub fn new() -> Self {
-        Self::default()
-    }
-
     /// Initializes the tracer provider.
     pub fn init_provider(self, resource: Resource) -> Result<SdkTracerProvider, Error> {
         let sampler = self.sampler.clone();
-        let exporter = self.build_exporter()?;
+        let exporter = self.try_into()?;
         build_tracer_provider(exporter, resource, sampler)
     }
 
@@ -128,17 +122,18 @@ impl Default for OtlpConfig {
     }
 }
 
-impl SpanExporterConfig for OtlpConfig {
-    fn build_exporter(self) -> Result<SpanExporter, Error> {
-        let metadata = self.metadata()?;
+impl TryFrom<OtlpConfig> for SpanExporter {
+    type Error = Error;
+    fn try_from(config: OtlpConfig) -> Result<SpanExporter, Error> {
+        let metadata = config.metadata()?;
 
         let mut builder = SpanExporter::builder()
             .with_tonic()
-            .with_endpoint(self.endpoint.as_ref())
+            .with_endpoint(config.endpoint.as_ref())
             .with_metadata(metadata);
 
-        if self.endpoint.scheme() == "https" {
-            let tls = self
+        if config.endpoint.scheme() == "https" {
+            let tls = config
                 .tls_config
                 .unwrap_or_else(|| ClientTlsConfig::default().with_enabled_roots());
             builder = builder.with_tls_config(tls);
@@ -216,7 +211,7 @@ mod tests {
             .timeout(Duration::ZERO)
             .build();
 
-        let result: Result<SpanExporter, _> = config.build_exporter();
+        let result: Result<SpanExporter, _> = config.try_into();
         expect_that!(result, ok(anything()));
     }
 
