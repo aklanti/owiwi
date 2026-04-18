@@ -506,14 +506,20 @@ impl Owiwi {
         Ok(EnvFilter::try_new("info")?)
     }
 
-    fn is_disabled(&mut self) -> bool {
+    fn is_disabled(&self) -> bool {
+        if self.no_telemetry {
+            return true;
+        }
+
         #[cfg(not(feature = "clap"))]
         {
-            self.no_telemetry = std::env::var(env_vars::OTEL_SDK_DISABLED)
+            return std::env::var(env_vars::OTEL_SDK_DISABLED)
                 .map(|v| v.eq_ignore_ascii_case("true"))
                 .unwrap_or(false);
         }
-        self.no_telemetry
+
+        #[cfg(feature = "clap")]
+        false
     }
 
     fn noop(self) -> Result<OwiwiGuard> {
