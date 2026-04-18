@@ -71,17 +71,21 @@ impl fmt::Display for EventFormat {
 }
 
 impl FromStr for EventFormat {
-    type Err = String;
+    type Err = ParseEventFormatError;
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         let trace_fmt = match value {
             "compact" => Self::Compact,
             "full" => Self::Full,
             "pretty" => Self::Pretty,
-            _ => return Err("invalid trace format".into()),
+            other => return Err(ParseEventFormatError(other.to_string())),
         };
         Ok(trace_fmt)
     }
 }
+
+#[derive(Debug, thiserror::Error)]
+#[error("invalid event format: {0} (expected compact, full or pretty)")]
+pub struct ParseEventFormatError(String);
 
 #[cfg(test)]
 mod tests {
