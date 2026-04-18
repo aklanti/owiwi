@@ -34,7 +34,7 @@ pub struct OtlpConfig {
         arg(
             name = "otlp-endpoint",
             long,
-            help = "Exporter endpoint (e.g. http://localhost:4317)",
+            help = "Exporter endpoint",
             default_value = DEFAULT_OTLP_ENDPOINT,
             env = env_vars::OTEL_EXPORTER_OTLP_ENDPOINT,
             help_heading = HELP_HEADING,
@@ -115,9 +115,10 @@ impl OtlpConfig {
 
 impl Default for OtlpConfig {
     fn default() -> Self {
+        let duration = humantime::parse_duration(DEFAULT_OTLP_TIMEOUT).expect("valid duration");
         Self::builder()
-            .endpoint("http://localhost:4317".parse().expect("valid URL"))
-            .timeout(Duration::from_secs(10))
+            .endpoint(DEFAULT_OTLP_ENDPOINT.parse().expect("valid URL"))
+            .timeout(duration)
             .build()
     }
 }
