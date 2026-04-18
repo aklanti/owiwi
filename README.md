@@ -9,8 +9,8 @@ Opinionated [`tracing`][url-tracing] subscriber with OpenTelemetry export.
 
 ## Known Limitations
 
-- gRPC only. `OTEL_EXPORTER_OTLP_PROTOCOL` ignored
-- Backend selection is programmatic. `OTEL_TRACES_EXPORTER` and `OTEL_METRICS_EXPORTER` are not read.
+- gRPC only. OTEL_EXPORTER_OTLP_PROTOCOL ignored
+- Backend selection is programmatic. OTEL_TRACES_EXPORTER and OTEL_METRICS_EXPORTER are not read.
 - OTLP endpoint/timeout/headers are not exposed as CLI flags. They are read from `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_TIMEOUT`, and `OTEL_EXPORTER_OTLP_HEADERS` via `OtlpConfig::default()`, or set programmatically via the builder.
 
 ## Install
