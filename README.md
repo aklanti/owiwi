@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let guard = Owiwi::builder()
         .service_name("my-service")
-        .trace_exporter(TraceExporter::Otlp(otlp))
+        .traces(TraceExporter::Otlp(otlp))
         .build()
         .try_init()?;
 
@@ -74,7 +74,7 @@ use owiwi::{Owiwi, TraceExporter};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let guard = Owiwi::builder()
         .service_name("my-service")
-        .trace_exporter(TraceExporter::Console)
+        .traces(TraceExporter::Console)
         .build()
         .try_init()?;
 
@@ -109,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Metrics
 
-Set `metric_exporter` alongside `trace_exporter`:
+Set `metrics` alongside `traces`:
 
 ```rust,no_run
 use owiwi::{Owiwi, MetricExporter, PrometheusConfig};
@@ -121,7 +121,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let guard = Owiwi::builder()
         .service_name("my-service")
-        .metric_exporter(MetricExporter::Prometheus(prom))
+        .metrics(MetricExporter::Prometheus(prom))
         .build()
         .try_init()?;
 
