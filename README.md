@@ -17,7 +17,7 @@ Opinionated [`tracing`][url-tracing] subscriber with OpenTelemetry export.
 
 ```toml
 [dependencies]
-owiwi = { version = "2.0.0", features = ["console"] }
+owiwi = { version = "1.0.0", features = ["console"] }
 tracing = "0.1"
 ```
 
@@ -139,7 +139,7 @@ selection remains programmatic.
 ```toml
 [dependencies]
 clap = { version = "4", features = ["derive"] }
-owiwi = { version = "2.0.0", features = ["clap"] }
+owiwi = { version = "1.0.0", features = ["clap"] }
 tracing = "0.1"
 ```
 
