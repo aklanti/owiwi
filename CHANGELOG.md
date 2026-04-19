@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.1.1] - 2026-04-19
+
+### Fixed
+
+- README examples updated to use the renamed `traces` and `metrics` builder methods
+
 ## [3.1.0] - 2026-04-19
 
 ### Changed
@@ -145,6 +151,7 @@ Initial release.
 - `metrics` feature: `SdkMeterProvider` setup with periodic reader
 - `prometheus` feature: Prometheus metrics export (implies `metrics`)
 
+[3.1.1]: https://github.com/aklanti/owiwi/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/aklanti/owiwi/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/aklanti/owiwi/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/aklanti/owiwi/compare/v2.0.0...v2.1.0
