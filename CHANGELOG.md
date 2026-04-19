@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.1.0] - 2026-04-19
+
+### Changed
+
+- `Owiwi::trace_exporter` field renamed to `traces`
+- `Owiwi::metric_exporter` field renamed to `metrics`
+
 ## [3.0.0] - 2026-04-19
 
 ### Added
@@ -138,7 +145,8 @@ Initial release.
 - `metrics` feature: `SdkMeterProvider` setup with periodic reader
 - `prometheus` feature: Prometheus metrics export (implies `metrics`)
 
-[3.0.0]: https://github.com/aklanti/owiwi/compare/v2.1.0...HEAD
+[3.1.0]: https://github.com/aklanti/owiwi/compare/v3.0.0...v3.1.0
+[3.0.0]: https://github.com/aklanti/owiwi/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/aklanti/owiwi/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/aklanti/owiwi/compare/v1.1.0...v2.0.0
 [1.1.0]: https://github.com/aklanti/owiwi/compare/v1.0.0...v1.1.0
