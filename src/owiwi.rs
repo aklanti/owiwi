@@ -70,7 +70,7 @@ pub struct Owiwi {
     /// Trace backend. Defaults to OTLP with spec values.
     #[cfg_attr(feature = "clap", arg(skip))]
     #[builder(default)]
-    pub trace_exporter: TraceExporter,
+    pub traces: TraceExporter,
 
     /// Span sampler. Defaults to the SDK default value
     /// when not set and `OTEL_TRACES_SAMPLER` is absent.
@@ -81,7 +81,7 @@ pub struct Owiwi {
     #[cfg(feature = "metrics")]
     #[cfg_attr(feature = "clap", arg(skip))]
     #[builder(default)]
-    pub metric_exporter: super::metrics::MetricExporter,
+    pub metrics: super::metrics::MetricExporter,
 
     /// Metrics exports interval
     #[cfg(feature = "metrics")]
@@ -198,10 +198,10 @@ impl Owiwi {
         let resource = self.build_resource();
 
         #[cfg(feature = "metrics")]
-        let meter_provider = std::mem::take(&mut self.metric_exporter)
+        let meter_provider = std::mem::take(&mut self.metrics)
             .build_provider(resource.clone(), self.metrics_interval.take())?;
 
-        let exporter = std::mem::take(&mut self.trace_exporter);
+        let exporter = std::mem::take(&mut self.traces);
         let tracer_provider = exporter.build_provider(resource, self.sampler.take())?;
 
         self.finish(

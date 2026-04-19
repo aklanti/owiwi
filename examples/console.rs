@@ -8,7 +8,7 @@ use owiwi::TraceExporter;
 fn main() -> owiwi::Result<()> {
     let guard = Owiwi::builder()
         .service_name("console-example")
-        .trace_exporter(TraceExporter::Console)
+        .traces(TraceExporter::Console)
         .build()
         .try_init()?;
     tracing::info!("hello from console  exporter");

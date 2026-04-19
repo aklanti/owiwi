@@ -18,7 +18,7 @@ use owiwi::TraceExporter;
 fn main() -> owiwi::Result<()> {
     let mut owiwi = Owiwi::builder()
         .service_name("otlp-example")
-        .trace_exporter(TraceExporter::Otlp(
+        .traces(TraceExporter::Otlp(
             OtlpConfig::builder()
                 .endpoint("http://localhost:4317".parse().expect("valid URL"))
                 .timeout(Duration::from_secs(10))

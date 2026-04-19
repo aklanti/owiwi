@@ -23,7 +23,7 @@ fn main() -> owiwi::Result<()> {
         .build();
     let mut owiwi = Owiwi::builder()
         .service_name("honeycomb-example")
-        .trace_exporter(TraceExporter::Honeycomb(config))
+        .traces(TraceExporter::Honeycomb(config))
         .build();
 
     let guard = owiwi.try_init()?;
