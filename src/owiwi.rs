@@ -38,7 +38,11 @@ const DEFAULT_SERVICE_NAME: &str = "unknown_service";
 /// When the `clap` feature is enabled, this type can be flattened into a CLI parser.
 #[must_use]
 #[derive(Clone, Debug, Builder)]
-#[cfg_attr(feature = "clap", derive(clap::Args))]
+#[cfg_attr(
+    feature = "clap",
+    derive(clap::Args),
+    command(next_help_heading=HELP_HEADING)
+)]
 pub struct Owiwi {
     /// Service name.
     #[cfg_attr(
@@ -48,7 +52,6 @@ pub struct Owiwi {
             help = "Service name for telemetry",
             default_value = DEFAULT_SERVICE_NAME,
             env = env_vars::OTEL_SERVICE_NAME,
-            help_heading = HELP_HEADING,
         )
     )]
     #[builder(default, into)]
@@ -62,7 +65,6 @@ pub struct Owiwi {
             help = "Resource attributes (key=value,key=value)",
             value_parser = env_vars::parse_key_values,
             env = env_vars::OTEL_RESOURCE_ATTRIBUTES,
-            help_heading = HELP_HEADING,
         )
     )]
     #[builder(default)]
@@ -94,7 +96,6 @@ pub struct Owiwi {
         help = "Metrics export interval (e.g. 30s, 1m)",
         env = env_vars::OWIWI_METRICS_INTERVAL,
         value_parser = humantime::parse_duration,
-        help_heading = HELP_HEADING,
     ),
 )]
     pub metrics_interval: Option<std::time::Duration>,
@@ -107,7 +108,6 @@ pub struct Owiwi {
             help = "Trace filter",
             value_delimiter = ',',
             num_args = 1..,
-            help_heading = HELP_HEADING,
         )
     )]
     #[builder(default)]
@@ -122,7 +122,6 @@ pub struct Owiwi {
             value_delimiter = ',',
             num_args = 1..,
             env = env_vars::OWIWI_EXPORT_LOG,
-            help_heading = HELP_HEADING,
         )
     )]
     #[builder(default)]
@@ -136,7 +135,6 @@ pub struct Owiwi {
             value_enum,
             help = "Output format for trace events",
             default_value_t = Default::default(),
-            help_heading = HELP_HEADING,
         )
     )]
     #[builder(default)]
@@ -155,7 +153,6 @@ pub struct Owiwi {
             long = "no-telemetry",
             help = "Disable all telemetry",
             env = env_vars::OTEL_SDK_DISABLED,
-            help_heading = HELP_HEADING,
         )
     )]
     #[builder(default)]
