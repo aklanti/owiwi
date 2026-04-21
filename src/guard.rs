@@ -45,7 +45,7 @@ impl OwiwiGuard {
 
     /// Returns a handle for replacing active filter
     #[must_use]
-    pub fn filter_handle(&self) -> Option<&FilterHandle> {
+    pub const fn filter_handle(&self) -> Option<&FilterHandle> {
         self.filter_handle.as_ref()
     }
 

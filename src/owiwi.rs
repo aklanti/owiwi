@@ -371,7 +371,7 @@ impl Owiwi {
         Ok(EnvFilter::try_new("info")?)
     }
 
-    fn is_disabled(&self) -> bool {
+    const fn is_disabled(&self) -> bool {
         if self.no_telemetry {
             return true;
         }
