@@ -150,7 +150,7 @@ pub struct Owiwi {
         feature = "clap",
         arg(
             name = "no-telemetry",
-            long = "no-telemetry",
+            long,
             help = "Disable all telemetry",
             env = env_vars::OTEL_SDK_DISABLED,
         )
