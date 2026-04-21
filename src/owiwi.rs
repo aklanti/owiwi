@@ -48,6 +48,7 @@ pub struct Owiwi {
             help = "Service name for telemetry",
             default_value = DEFAULT_SERVICE_NAME,
             env = env_vars::OTEL_SERVICE_NAME,
+            help_heading = HELP_HEADING,
         )
     )]
     #[builder(default, into)]
@@ -154,6 +155,7 @@ pub struct Owiwi {
             long = "no-telemetry",
             help = "Disable all telemetry",
             env = env_vars::OTEL_SDK_DISABLED,
+            help_heading = HELP_HEADING,
         )
     )]
     #[builder(default)]
