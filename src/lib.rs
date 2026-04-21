@@ -53,5 +53,5 @@ pub use trace::HoneycombConfig;
 pub use trace::OtlpConfig;
 #[doc(inline)]
 pub use trace::TraceExporter;
-/// Help heading for instrumentation options.
-pub const HELP_HEADING: &str = "Instrumentation options";
+/// Help heading for telemetry options.
+pub const HELP_HEADING: &str = "Telemetry";
