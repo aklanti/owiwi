@@ -370,7 +370,11 @@ impl Owiwi {
         Ok(EnvFilter::try_new("info")?)
     }
 
-    const fn is_disabled(&self) -> bool {
+    #[allow(
+        clippy::missing_const_for_fn,
+        reason = "cannot be constify when clap is enabled"
+    )]
+    fn is_disabled(&self) -> bool {
         if self.no_telemetry {
             return true;
         }
