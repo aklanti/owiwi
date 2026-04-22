@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use bon::Builder;
+use jiff::SignedDuration;
 use opentelemetry_otlp::SpanExporter;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_otlp::WithTonicConfig;
@@ -26,10 +27,6 @@ pub struct OtlpConfig {
     pub endpoint: Url,
 
     /// Export timeout.
-    #[cfg_attr(
-        feature = "serde",
-        serde(deserialize_with = "humantime_serde::deserialize")
-    )]
     pub timeout: Duration,
 
     /// Additional gRPC metadata headers.
@@ -87,7 +84,8 @@ impl Default for OtlpConfig {
 
         let timeout = std::env::var(env_vars::OTEL_EXPORTER_OTLP_TIMEOUT)
             .ok()
-            .and_then(|s| humantime::parse_duration(&s).ok())
+            .and_then(|s| s.parse::<SignedDuration>().ok())
+            .and_then(|d| Duration::try_from(d).ok())
             .unwrap_or(DEFAULT_OTLP_TIMEOUT);
 
         let headers = std::env::var(env_vars::OTEL_EXPORTER_OTLP_HEADERS)

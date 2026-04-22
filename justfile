@@ -1,4 +1,4 @@
-set unstable := true
+set unstable
 
 export RUST_LOG := env("RUST_LOG", "debug")
 

@@ -20,10 +20,6 @@ pub struct PrometheusConfig {
     /// Exporter endpoint.
     pub endpoint: Url,
     /// Export timeout.
-    #[cfg_attr(
-        feature = "serde",
-        serde(deserialize_with = "humantime_serde::deserialize")
-    )]
     pub timeout: Option<Duration>,
 
     /// Custom TLS configuration. When `None` and endpoint is HTTPS,

@@ -95,10 +95,9 @@ pub struct Owiwi {
         long,
         help = "Metrics export interval (e.g. 30s, 1m)",
         env = env_vars::OWIWI_METRICS_INTERVAL,
-        value_parser = humantime::parse_duration,
     ),
 )]
-    pub metrics_interval: Option<std::time::Duration>,
+    pub metrics_interval: Option<jiff::SignedDuration>,
 
     /// Trace filter directives to overwrite the default level and `RUST_LOG`.
     #[cfg_attr(
@@ -197,8 +196,18 @@ impl Owiwi {
         let resource = self.build_resource();
 
         #[cfg(feature = "metrics")]
-        let meter_provider = std::mem::take(&mut self.metrics)
-            .build_provider(resource.clone(), self.metrics_interval.take())?;
+        let meter_provider = {
+            let interval = self
+                .metrics_interval
+                .take()
+                .map(|d| {
+                    std::time::Duration::try_from(d).map_err(|err| ErrorKind::ExporterConfig {
+                        reason: format!("invalid metrics interval: {err}"),
+                    })
+                })
+                .transpose()?;
+            std::mem::take(&mut self.metrics).build_provider(resource.clone(), interval)?
+        };
 
         let exporter = std::mem::take(&mut self.traces);
         let tracer_provider = exporter.build_provider(resource, self.sampler.take())?;

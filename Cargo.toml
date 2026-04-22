@@ -13,9 +13,6 @@ rust-version = "1.94.0"
 [package.metadata.docs.rs]
 all-features = true
 
-[package.metadata.cargo-shear]
-ignored = ["humantime-serde"]
-
 [features]
 default = ["clap", "serde"]
 clap = ["dep:clap", "dep:clap-verbosity-flag"]
@@ -23,7 +20,7 @@ console = ["dep:opentelemetry-stdout", "opentelemetry-stdout/metrics"]
 honeycomb = ["dep:secrecy"]
 metrics = ["opentelemetry_sdk/metrics", "opentelemetry-otlp/metrics"]
 prometheus = ["metrics"]
-serde = ["dep:serde", "dep:humantime-serde"]
+serde = ["dep:serde", "jiff/serde"]
 
 [dependencies]
 # Compile-time-checked builder generator
@@ -32,10 +29,8 @@ bon = "3"
 clap = { version = "4", optional = true, features = ["derive", "env"] }
 # Easily add a `--verbose` flag to CLI
 clap-verbosity-flag = { version = "3", optional = true, default-features = false, features = ["tracing"] }
-# A parser and formatter for std::time::{Duration, SystemTime}
-humantime = "2"
-# Serde support for humantime
-humantime-serde = { version = "1", optional = true }
+# A datetime library
+jiff =  "0.2"
 # OpenTelemetry API
 opentelemetry = "0.31"
 # Exporter for OpenTelemetry collector

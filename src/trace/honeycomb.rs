@@ -18,10 +18,6 @@ pub struct HoneycombConfig {
     /// API key.
     pub api_key: SecretString,
     /// Export timeout.
-    #[cfg_attr(
-        feature = "serde",
-        serde(deserialize_with = "humantime_serde::deserialize")
-    )]
     pub timeout: Duration,
 }
 
