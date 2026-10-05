@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-Hold the returned [`OwiwiGuard`][url-owiwi-guard] until shutdown. Dropping it stops export.
+Keep the returned [`OwiwiGuard`][url-owiwi-guard] until shutdown. Dropping it stops export.
 
 ## Custom OTLP endpoint
 
@@ -98,7 +98,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let guard = Owiwi::builder()
         .service_name("my-service")
-        .trace_exporter(TraceExporter::Honeycomb(honeycomb))
+        .traces(TraceExporter::Honeycomb(honeycomb))
         .build()
         .try_init()?;
 
@@ -202,7 +202,7 @@ Per the [OpenTelemetry spec][url-otel-env] where applicable. With `clap`, each f
 
 ## MSRV
 
-1.94.0
+1.98.0
 
 ## Acknowledgments
 

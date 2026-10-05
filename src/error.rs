@@ -43,7 +43,7 @@ pub(crate) enum ErrorKind {
     /// Failed to shut down a provider.
     #[error(transparent)]
     Shutdown(#[from] opentelemetry_sdk::error::OTelSdkError),
-    /// Invalid span exporter configuration.
+    /// The span exporter cannot be built from its configuration.
     #[error("invalid span exporter configuration: {reason}")]
     ExporterConfig { reason: String },
     /// Failed to replace active filter

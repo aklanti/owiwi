@@ -32,7 +32,7 @@ pub enum TraceExporter {
 }
 
 impl TraceExporter {
-    /// Build tracer provider from the exporter backend.
+    /// Builds the tracer provider from the exporter backend.
     pub fn build_provider(
         self,
         resource: Resource,

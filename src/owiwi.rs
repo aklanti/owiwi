@@ -168,10 +168,10 @@ impl Owiwi {
     /// Initializes the tracing and optionally metrics provider.
     ///
     /// Sets up a [`tracing_subscriber`] registry with an OpenTelemetry layer,
-    /// error layer, and a formatting layer. It dispatches on [`Self::trace_exporter`]
-    /// and [`Self::metric_exporter`] to build the configured providers.
+    /// error layer, and a formatting layer. It builds the configured trace and metric
+    /// providers.
     ///
-    /// Returns an [`OwiwiGuard`] that must be held for the lifetime of the program.
+    /// Returns an [`OwiwiGuard`] to keep until the program exits.
     ///
     /// # Errors
     ///

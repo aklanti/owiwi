@@ -8,12 +8,11 @@ use tracing_subscriber::filter::EnvFilter;
 use crate::error::ErrorKind;
 use crate::error::Result;
 
-/// Guard returned by [`Owiwi::try_init`](crate::Owiwi::try_init) and
-/// [`Owiwi::try_init_console`](crate::Owiwi::try_init_console).
+/// Guard returned by [`Owiwi::try_init`](crate::Owiwi::try_init).
 ///
 /// Flushes buffered spans and shuts down the underlying [`SdkTracerProvider`]
-/// when dropped. Must be held for the lifetime of the program; dropping it
-/// early stops telemetry export.
+/// when dropped. Keep it until the program exits. Dropping it early stops
+/// telemetry export.
 #[derive(Debug)]
 pub struct OwiwiGuard {
     pub(crate) tracer_provider: SdkTracerProvider,
