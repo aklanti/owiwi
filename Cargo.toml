@@ -83,8 +83,8 @@ non_snake_case = "allow"
 trivial_numeric_casts = "warn"
 unsafe_code = "forbid"
 unused_import_braces = "warn"
-unused-lifetimes = "warn"
-unused-macro-rules = "warn"
+unused_lifetimes = "warn"
+unused_macro-rules = "warn"
 unused_must_use = "deny"
 
 [lints.rustdoc]

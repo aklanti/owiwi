@@ -46,7 +46,7 @@ pub(crate) enum ErrorKind {
     /// The span exporter cannot be built from its configuration.
     #[error("invalid span exporter configuration: {reason}")]
     ExporterConfig { reason: String },
-    /// Failed to replace active filter
+    /// A failure to replace the active filter.
     #[error(transparent)]
     FilterReload(#[from] tracing_subscriber::reload::Error),
     #[error("no tokio runtime found. owiwi requires a running tokio runtime for batch export")]

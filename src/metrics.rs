@@ -27,7 +27,7 @@ pub enum MetricExporter {
     /// No metrics export.
     #[default]
     None,
-    /// Export metrics via OTLP to a Prometheus-compatible endpoint
+    /// Export through OTLP to a Prometheus-compatible endpoint.
     #[cfg(feature = "prometheus")]
     Prometheus(PrometheusConfig),
 }

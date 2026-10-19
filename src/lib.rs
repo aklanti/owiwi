@@ -1,21 +1,16 @@
 //! Opinionated [`tracing`] subscriber with OpenTelemetry export.
 //!
-//! Sends traces to any of the exporters defined in the [`trace`] module.
+//! Sends traces to any [`TraceExporter`] backend.
 //!
 //! ## Decisions
-//! - **Transport:** gRPC is the only supported transport protocol.
-//!   `OTEL_EXPORTER_OTLP_PROTOCOL` is not read.
-//! - **Export strategy:** Batch export for OTLP backends. The console exporter
-//!   uses synchronous export for immediate output.
-//!   periodically.
-//! - **Subscriber layers** bottom to top: OpenTelemetry with export filter, `ErrorLayer`,
-//!   fmt with env filter.
-//! - **Backend selection** This is determined by which initialization method you call, not
-//!   by the `OTEL_TRACES_EXPORTER`.
-//! - **TLS:** It's auto-enabled for HTTPS endpoints using system roots but can be configured.
-//! - **Ignored environment variables:** `OTEL_TRACES_EXPORTER` and `OTEL_METRICS_EXPORTER` are
-//!   spec-defined but not read. The backend selection is determined by which initialization method
-//!   you call, not by environment.
+//! - **Transport:** gRPC is the only transport. `OTEL_EXPORTER_OTLP_PROTOCOL` is not read.
+//! - **Export strategy:** OTLP backends export in batches, and the console exporter writes each
+//!   span as it ends.
+//! - **Subscriber layers**, bottom to top: OpenTelemetry with the export filter, `ErrorLayer`,
+//!   and fmt with the env filter.
+//! - **Backend selection:** the builder's `traces` and `metrics` exporters pick the backends.
+//!   `OTEL_TRACES_EXPORTER` and `OTEL_METRICS_EXPORTER` are not read.
+//! - **TLS:** an HTTPS endpoint uses the system roots, unless the exporter's config sets its own.
 
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(docsrs, feature(doc_cfg))]

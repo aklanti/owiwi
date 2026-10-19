@@ -109,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Metrics
 
-Set `metrics` alongside `traces`:
+Set `metrics` as well as `traces`:
 
 ```rust,no_run
 use owiwi::{Owiwi, MetricExporter, PrometheusConfig};

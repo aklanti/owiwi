@@ -1,6 +1,6 @@
 //! Generic OTLP exporter setup.
 //!
-//! Works with any OTLP-compatible backend
+//! Works with any OTLP-compatible backend.
 //!
 //! ```sh
 //! # Start a local OTLP collector, then:

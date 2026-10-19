@@ -12,7 +12,7 @@ pub const OTEL_RESOURCE_ATTRIBUTES: &str = "OTEL_RESOURCE_ATTRIBUTES";
 pub const OTEL_SDK_DISABLED: &str = "OTEL_SDK_DISABLED";
 /// Service name for telemetry identification.
 pub const OTEL_SERVICE_NAME: &str = "OTEL_SERVICE_NAME";
-/// Sampler type
+/// The sampler type.
 pub const OTEL_TRACES_SAMPLER: &str = "OTEL_TRACES_SAMPLER";
 /// Sampler argument. For `traceidratio`, this is the ratio.
 pub const OTEL_TRACES_SAMPLER_ARG: &str = "OTEL_TRACES_SAMPLER_ARG";
@@ -20,7 +20,7 @@ pub const OTEL_TRACES_SAMPLER_ARG: &str = "OTEL_TRACES_SAMPLER_ARG";
 /// OpenTelemetry collector, independent of terminal output `RUST_LOG`
 /// Accepts the same syntax as `RUST_LOG` and default to `info`
 pub const OWIWI_EXPORT_LOG: &str = "OWIWI_EXPORT_LOG";
-/// Metrics export interval
+/// The metrics export interval.
 pub const OWIWI_METRICS_INTERVAL: &str = "OWIWI_METRICS_INTERVAL";
 
 /// Parses a comma-separated list of `key=value` entries.
@@ -38,7 +38,7 @@ pub(super) fn parse_key_values(header: &str) -> Result<Vec<(String, String)>, Pa
         .collect()
 }
 
-/// Error parsing a key=value list
+/// An error parsing a `key=value` list.
 #[derive(Debug, thiserror::Error)]
 #[error("invalid header: expected `key=value`, got `{entry}`")]
 pub(super) struct ParseKeyValueError {

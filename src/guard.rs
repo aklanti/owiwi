@@ -10,9 +10,8 @@ use crate::error::Result;
 
 /// Guard returned by [`Owiwi::try_init`](crate::Owiwi::try_init).
 ///
-/// Flushes buffered spans and shuts down the underlying [`SdkTracerProvider`]
-/// when dropped. Keep it until the program exits. Dropping it early stops
-/// telemetry export.
+/// Dropping it shuts down the trace and metric providers, which flushes buffered spans. Keep it
+/// until the program exits.
 #[derive(Debug)]
 pub struct OwiwiGuard {
     pub(crate) tracer_provider: SdkTracerProvider,
@@ -42,7 +41,7 @@ impl OwiwiGuard {
         Ok(())
     }
 
-    /// Returns a handle for replacing active filter
+    /// Returns a handle that replaces the active filter.
     #[must_use]
     pub const fn filter_handle(&self) -> Option<&FilterHandle> {
         self.filter_handle.as_ref()

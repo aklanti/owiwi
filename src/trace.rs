@@ -16,7 +16,7 @@ use crate::env_vars;
 use crate::error::Error;
 use crate::error::ErrorKind;
 
-/// Trace backend selection
+/// The trace backend.
 #[derive(Clone, Debug)]
 pub enum TraceExporter {
     /// Export span to stdout.
@@ -27,7 +27,7 @@ pub enum TraceExporter {
     #[cfg(feature = "honeycomb")]
     Honeycomb(HoneycombConfig),
 
-    /// Export via OTLP/gRPC to a collector
+    /// Export through OTLP/gRPC to a collector.
     Otlp(OtlpConfig),
 }
 
@@ -89,7 +89,7 @@ fn build_tracer_provider(
     Ok(builder.with_batch_exporter(exporter).build())
 }
 
-/// Parses trace sampler
+/// Parses a trace sampler from its name and argument.
 fn parse_sampler(name: &str, arg: Option<&str>) -> Result<Sampler, Error> {
     match name {
         "always_on" => Ok(Sampler::AlwaysOn),

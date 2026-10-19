@@ -30,7 +30,7 @@ use super::error::Result;
 use super::trace::TraceExporter;
 use crate::EventFormat;
 
-/// Default service name
+/// The default service name.
 const DEFAULT_SERVICE_NAME: &str = "unknown_service";
 
 /// Configuration for initializing a [`tracing`] subscriber with OpenTelemetry.
@@ -86,7 +86,7 @@ pub struct Owiwi {
     #[builder(default)]
     pub metrics: super::metrics::MetricExporter,
 
-    /// Metrics exports interval
+    /// The metrics export interval.
     #[cfg(feature = "metrics")]
     #[cfg_attr(
     feature = "clap",
@@ -138,7 +138,7 @@ pub struct Owiwi {
     )]
     #[builder(default)]
     pub event_format: EventFormat,
-    /// Verbosity flags
+    /// The verbosity flags.
     #[cfg(feature = "clap")]
     #[command(flatten)]
     #[builder(default)]
@@ -165,18 +165,14 @@ impl Default for Owiwi {
 }
 
 impl Owiwi {
-    /// Initializes the tracing and optionally metrics provider.
-    ///
-    /// Sets up a [`tracing_subscriber`] registry with an OpenTelemetry layer,
-    /// error layer, and a formatting layer. It builds the configured trace and metric
-    /// providers.
+    /// Builds the configured trace and metric providers and installs the global subscriber.
     ///
     /// Returns an [`OwiwiGuard`] to keep until the program exits.
     ///
     /// # Errors
     ///
-    /// Returns an error if the exporter cannot be built, filter directives
-    /// are invalid, or a global subscriber is already set, or no tokio runtime is available.
+    /// Returns an error when an exporter or filter is invalid, a global subscriber is already set,
+    /// or no Tokio runtime is running.
     ///
     /// # Examples
     ///

@@ -13,7 +13,7 @@ use crate::env_vars;
 use crate::error::Error;
 use crate::error::ErrorKind;
 
-/// Default OTEL endpoint value
+/// The default OTLP endpoint.
 const DEFAULT_OTLP_ENDPOINT: &str = "http://localhost:4317";
 /// Default timeout value.
 const DEFAULT_OTLP_TIMEOUT: Duration = Duration::from_secs(10);
@@ -33,7 +33,7 @@ pub struct OtlpConfig {
     #[builder(default)]
     pub headers: Vec<(String, String)>,
 
-    /// Custom TLS configuration
+    /// A TLS configuration to use instead of the system roots.
     #[cfg_attr(feature = "serde", serde(skip))]
     pub tls_config: Option<ClientTlsConfig>,
 }
