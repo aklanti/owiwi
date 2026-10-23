@@ -32,13 +32,13 @@ clap-verbosity-flag = { version = "3", optional = true, default-features = false
 # A datetime library
 jiff =  "0.2"
 # OpenTelemetry API
-opentelemetry = "0.31"
+opentelemetry = "0.33"
 # Exporter for OpenTelemetry collector
-opentelemetry-otlp = { version = "0.31", default-features = false, features = ["grpc-tonic", "trace", "tls-roots", "tls"] }
+opentelemetry-otlp = { version = "0.33", default-features = false, features = ["grpc-tonic", "trace", "tls-aws-lc"] }
 # OpenTelemetry Sdout exporter
-opentelemetry-stdout = { version = "0.31", optional = true }
+opentelemetry-stdout = { version = "0.33", optional = true }
 # OpenTelemetry observability framework SDK
-opentelemetry_sdk = { version = "0.31", features = ["rt-tokio"] }
+opentelemetry_sdk = { version = "0.33", features = ["rt-tokio"] }
 # A simple secret keeping library
 secrecy = { version = "0.10", features = ["serde"], optional = true }
 # Serialize and deserialize data structure
@@ -46,13 +46,13 @@ serde = { version = "1", features = ["derive"], optional = true }
 # Provides `derive(Error)``
 thiserror = "2"
 # Asynchronous runtime
-tokio = "1.52"
+tokio = "1"
 # A framework for instrumentation
 tracing = "0.1"
 # Utilities for enriching error handling with tracing diagnostic information.
 tracing-error = "0.2"
 # OpenTelemetry-compatible distributed tracing systems for processing and visualization.
-tracing-opentelemetry = "0.32"
+tracing-opentelemetry = "0.34"
 # Utilities for implementing and composing tracing subscribers
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # URL library, based on the WHATWG URL standard
@@ -62,9 +62,9 @@ url = { version = "2.5", features = ["serde"] }
 # A rich assertion and matcher library inspired by GoogleTest for C++
 googletest = { version = "0.14", features = ["proptest"] }
 # A property-based testing and shrinking library
-proptest = "1.8"
+proptest = "1.12"
 # Enable fixture based testing
-rstest = "0.26"
+rstest = "0.28"
 # Asynchronous runtime
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 
@@ -84,7 +84,7 @@ trivial_numeric_casts = "warn"
 unsafe_code = "forbid"
 unused_import_braces = "warn"
 unused_lifetimes = "warn"
-unused_macro-rules = "warn"
+unused_macro_rules = "warn"
 unused_must_use = "deny"
 
 [lints.rustdoc]
