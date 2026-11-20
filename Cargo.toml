@@ -30,7 +30,7 @@ clap = { version = "4", optional = true, features = ["derive", "env"] }
 # Easily add a `--verbose` flag to CLI
 clap-verbosity-flag = { version = "3", optional = true, default-features = false, features = ["tracing"] }
 # A datetime library
-jiff =  "0.2"
+jiff =  "1"
 # OpenTelemetry API
 opentelemetry = "0.33"
 # Exporter for OpenTelemetry collector
